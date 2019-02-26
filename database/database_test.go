@@ -1,6 +1,17 @@
 package database
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
+
+type profile struct {
+	ID       int
+	Nickname string
+	Record   int
+	Win      int
+	Loss     int
+}
 
 func TestCorrectDBInit(t *testing.T) {
 	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
@@ -44,5 +55,77 @@ func TestIncorrectDBClose(t *testing.T) {
 	err := dbm.Close()
 	if err == nil {
 		t.Errorf("test for ERROR Failed - doesn't return error incorrect database connection close")
+	}
+}
+
+func TestCorrectFind(t *testing.T) {
+	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
+	if err != nil {
+		t.Errorf("test for OK Failed - can't connect to database")
+	}
+	expected := &profile{
+		ID:       1,
+		Nickname: "test",
+		Record:   0,
+		Win:      0,
+		Loss:     0,
+	}
+
+	query := `SELECT id, nickname, record, win, loss FROM profile WHERE id = $1`
+	result := &profile{}
+	if err := dbm.Find(result, query); err != nil {
+		t.Errorf("test for OK Failed - get error on correct data")
+	}
+
+	if *result != *expected {
+		t.Errorf("test for OK Failed - results not match\nGot:\n%v\nExpected:\n%v", result, expected)
+	}
+}
+
+func TestCorrectFindAll(t *testing.T) {
+	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
+	if err != nil {
+		t.Errorf("test for OK Failed - can't connect to database")
+	}
+
+	expected := []profile{
+		{
+			ID:       1,
+			Nickname: "test",
+			Record:   0,
+			Win:      0,
+			Loss:     0,
+		},
+		{
+			ID:       2,
+			Nickname: "Ivan",
+			Record:   0,
+			Win:      0,
+			Loss:     0,
+		},
+	}
+
+	query := `SELECT id, nickname, record, win, loss FROM profile`
+	result := []profile{}
+	if err := dbm.FindAll(&result, query); err != nil {
+		t.Errorf("test for OK Failed - get error on correct data")
+	}
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("test for OK Failed - results not match\nGot:\n%v\nExpected:\n%v", result, expected)
+	}
+}
+
+func TestIncorrectFind(t *testing.T) {
+	dbm := &Manager{}
+	if err := dbm.Find(struct{}{}, ""); err == nil {
+		t.Errorf("test for ERROR Failed - doesn't return error on incorrect data")
+	}
+}
+
+func TestIncorrectFindAll(t *testing.T) {
+	dbm := &Manager{}
+	if err := dbm.FindAll([]struct{}{}, ""); err == nil {
+		t.Errorf("test for ERROR Failed - doesn't return error on incorrect data")
 	}
 }
