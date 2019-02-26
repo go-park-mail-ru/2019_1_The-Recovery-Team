@@ -47,3 +47,25 @@ func (manager *Manager) Close() error {
 	manager.db = nil
 	return err
 }
+
+// Find returns first data witch satisfies query with args
+func (manager *Manager) Find(result interface{}, query string, args ...interface{}) error {
+	dbo, err := manager.DB()
+	if err != nil {
+		return err
+	}
+
+	err = dbo.Get(result, query, args...)
+	return err
+}
+
+// FindAll returns all data witch satisfies query with args
+func (manager *Manager) FindAll(result interface{}, query string, args ...interface{}) error {
+	dbo, err := manager.DB()
+	if err != nil {
+		return err
+	}
+
+	err = dbo.Select(result, query, args...)
+	return err
+}
