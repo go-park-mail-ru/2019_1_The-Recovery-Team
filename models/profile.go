@@ -1,5 +1,6 @@
 package models
 
+//easyjson:json
 type Profile struct {
 	ID       uint   `json:"id"`
 	Email    string `json:"email,omitempty"`
@@ -8,6 +9,7 @@ type Profile struct {
 	Score
 }
 
+//easyjson:json
 type Score struct {
 	Record int `json:"record"`
 	Win    int `json:"win"`
