@@ -62,6 +62,7 @@ func TestCorrectFind(t *testing.T) {
 	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
 	if err != nil {
 		t.Errorf("test for OK Failed - can't connect to database")
+		return
 	}
 	expected := &profile{
 		ID:       1,
@@ -73,8 +74,9 @@ func TestCorrectFind(t *testing.T) {
 
 	query := `SELECT id, nickname, record, win, loss FROM profile WHERE id = $1`
 	result := &profile{}
-	if err := dbm.Find(result, query); err != nil {
+	if err := dbm.Find(result, query, 1); err != nil {
 		t.Errorf("test for OK Failed - get error on correct data")
+		return
 	}
 
 	if *result != *expected {
@@ -86,6 +88,7 @@ func TestCorrectFindAll(t *testing.T) {
 	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
 	if err != nil {
 		t.Errorf("test for OK Failed - can't connect to database")
+		return
 	}
 
 	expected := []profile{
@@ -109,6 +112,7 @@ func TestCorrectFindAll(t *testing.T) {
 	result := []profile{}
 	if err := dbm.FindAll(&result, query); err != nil {
 		t.Errorf("test for OK Failed - get error on correct data")
+		return
 	}
 
 	if !reflect.DeepEqual(result, expected) {
