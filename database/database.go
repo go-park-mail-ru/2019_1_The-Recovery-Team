@@ -1,7 +1,7 @@
 package database
 
 import (
-	"errors"
+	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
@@ -29,20 +29,15 @@ func InitDatabaseManager(username, password, host, name string) (*Manager, error
 }
 
 // DB returns connection to database
-func (manager *Manager) DB() (*sqlx.DB, error) {
-	if manager.db == nil {
-		return nil, errors.New("database manager isn't initialized")
-	}
-
-	return manager.db, nil
+func (manager *Manager) DB() *sqlx.DB {
+	return manager.db
 }
 
 // Close closes connection to database
 func (manager *Manager) Close() error {
 	if manager.db == nil {
-		return errors.New("database manager isn't initialized")
+		return nil
 	}
-
 	err := manager.db.Close()
 	manager.db = nil
 	return err
@@ -50,22 +45,46 @@ func (manager *Manager) Close() error {
 
 // Find returns first data witch satisfies query with args
 func (manager *Manager) Find(result interface{}, query string, args ...interface{}) error {
-	dbo, err := manager.DB()
-	if err != nil {
-		return err
-	}
-
-	err = dbo.Get(result, query, args...)
+	dbo := manager.DB()
+	err := dbo.Get(result, query, args...)
 	return err
 }
 
 // FindAll returns all data witch satisfies query with args
 func (manager *Manager) FindAll(result interface{}, query string, args ...interface{}) error {
-	dbo, err := manager.DB()
+	dbo := manager.DB()
+	err := dbo.Select(result, query, args...)
+	return err
+}
+
+// FindWithField checks existence of row with field value
+func (manager *Manager) FindWithField(table, field, value string) (bool, error) {
+	var result string
+	dbo := manager.DB()
+	query := `SELECT ` + field + ` FROM ` + table + ` WHERE LOWER(` + field + `)` + ` = LOWER($1)`
+	err := dbo.Get(&result, query, value)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// Create adds a new entry
+func (manager *Manager) Create(result interface{}, query string, args ...interface{}) error {
+	dbo := manager.DB()
+	row := dbo.QueryRowx(query, args...)
+	if row.Err() != nil {
+		return row.Err()
+	}
+
+	err := row.StructScan(result)
 	if err != nil {
 		return err
 	}
-
-	err = dbo.Select(result, query, args...)
-	return err
+	return nil
 }
