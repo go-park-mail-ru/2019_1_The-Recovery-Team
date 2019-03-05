@@ -88,3 +88,14 @@ func (manager *Manager) Create(result interface{}, query string, args ...interfa
 	}
 	return nil
 }
+
+// Update updates data
+func (manager *Manager) Update(query string, args ...interface{}) error {
+	dbo := manager.DB()
+	_, err := dbo.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
