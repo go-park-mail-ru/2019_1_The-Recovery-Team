@@ -3,8 +3,8 @@ package router
 import (
 	"net/http"
 
-	"api/database"
 	"api/handlers"
+	"api/models"
 )
 
 // Route contains data about route
@@ -12,7 +12,7 @@ type Route struct {
 	Name    string
 	Method  string
 	Pattern string
-	Handler func(*database.Manager) http.HandlerFunc
+	Handler func(*models.Env) http.HandlerFunc
 }
 
 // Routes contains all routes

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"api/database"
+	"api/models"
 	"api/router"
 )
 
@@ -13,6 +14,10 @@ func main() {
 		panic(err)
 	}
 
-	router := router.InitRouter(dbm)
+	env := &models.Env{
+		Dbm: dbm,
+	}
+
+	router := router.InitRouter(env)
 	panic(http.ListenAndServe(":9090", router))
 }

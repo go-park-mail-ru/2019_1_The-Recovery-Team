@@ -1,13 +1,13 @@
 package router
 
 import (
-	"api/database"
+	"api/models"
 
 	"github.com/gorilla/mux"
 )
 
 // InitRouter returns router with inintialized handlers
-func InitRouter(dbm *database.Manager) *mux.Router {
+func InitRouter(env *models.Env) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
 		handler := route.Handler
@@ -15,7 +15,7 @@ func InitRouter(dbm *database.Manager) *mux.Router {
 			Methods(route.Method).
 			Path(route.Pattern).
 			Name(route.Name).
-			Handler(handler(dbm))
+			Handler(handler(env))
 	}
 	return router
 }

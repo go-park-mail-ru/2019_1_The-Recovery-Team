@@ -10,13 +10,12 @@ import (
 	"github.com/mailru/easyjson"
 	"golang.org/x/crypto/bcrypt"
 
-	"api/database"
 	"api/models"
 
 	"github.com/gorilla/mux"
 )
 
-func saveAvatar(dbm *database.Manager, avatar multipart.File, filename, dir string, id uint64) (string, error) {
+func saveAvatar(env *models.Env, avatar multipart.File, filename, dir string, id uint64) (string, error) {
 	filename, err := filesystem.HashFileName(filename, id)
 	if err != nil {
 		return "", err
@@ -28,7 +27,7 @@ func saveAvatar(dbm *database.Manager, avatar multipart.File, filename, dir stri
 	}
 
 	avatarPath := "/" + dir + filename
-	err = dbm.Update(QueryUpdateProfileAvatar, avatarPath, id)
+	err = env.Dbm.Update(QueryUpdateProfileAvatar, avatarPath, id)
 	if err != nil {
 		return "", err
 	}
@@ -43,17 +42,17 @@ func hashAndSalt(pwd string) (string, error) {
 	return string(hash), nil
 }
 
-func updateProfile(dbm *database.Manager, id uint64, newInfo *models.ProfileInfo) error {
+func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) error {
 	var set string
 	if newInfo.Nickname != "" {
-		exists, _ := dbm.FindWithField("profile", "nickname", newInfo.Nickname)
+		exists, _ := env.Dbm.FindWithField("profile", "nickname", newInfo.Nickname)
 		if exists {
 			return errors.New("nickname already exists")
 		}
 		set = set + "nickname = :nickname"
 	}
 	if newInfo.Email != "" {
-		exists, _ := dbm.FindWithField("profile", "email", newInfo.Email)
+		exists, _ := env.Dbm.FindWithField("profile", "email", newInfo.Email)
 		if exists {
 			return errors.New("email already exists")
 		}
@@ -69,7 +68,7 @@ func updateProfile(dbm *database.Manager, id uint64, newInfo *models.ProfileInfo
 		set = set + "password = :password"
 	}
 
-	dbo := dbm.DB()
+	dbo := env.Dbm.DB()
 	if set != "" {
 		query := `UPDATE profile SET ` + set + ` WHERE id = :id`
 		_, err := dbo.NamedExec(query, &models.Profile{
@@ -81,11 +80,11 @@ func updateProfile(dbm *database.Manager, id uint64, newInfo *models.ProfileInfo
 	return nil
 }
 
-func checkFieldHandler(dbm *database.Manager, table, field string) http.HandlerFunc {
+func checkFieldHandler(env *models.Env, table, field string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		value, _ := vars[field]
-		exists, _ := dbm.FindWithField(table, field, value)
+		exists, _ := env.Dbm.FindWithField(table, field, value)
 		if exists {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -96,13 +95,13 @@ func checkFieldHandler(dbm *database.Manager, table, field string) http.HandlerF
 }
 
 // GetProfile returns handler with environment which processes request for getting profile by id
-func GetProfile(dbm *database.Manager) http.HandlerFunc {
+func GetProfile(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := vars["id"]
 
 		profile := &models.Profile{}
-		err := dbm.Find(profile, QueryProfileById, id)
+		err := env.Dbm.Find(profile, QueryProfileById, id)
 		if err != nil {
 			message := models.HandlerError{
 				Description: "user doesn't exist",
@@ -116,17 +115,17 @@ func GetProfile(dbm *database.Manager) http.HandlerFunc {
 }
 
 // CheckProfileEmail returns handler with environment which checks existence of profile email
-func CheckProfileEmail(dbm *database.Manager) http.HandlerFunc {
-	return checkFieldHandler(dbm, "profile", "email")
+func CheckProfileEmail(env *models.Env) http.HandlerFunc {
+	return checkFieldHandler(env, "profile", "email")
 }
 
 // CheckProfileNickname returns handler with environment which checks existence of profile nickname
-func CheckProfileNickname(dbm *database.Manager) http.HandlerFunc {
-	return checkFieldHandler(dbm, "profile", "nickname")
+func CheckProfileNickname(env *models.Env) http.HandlerFunc {
+	return checkFieldHandler(env, "profile", "nickname")
 }
 
 // GetProfiles returns handler with environment which processes request for getting profiles order by score
-func GetProfiles(dbm *database.Manager) http.HandlerFunc {
+func GetProfiles(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		limit, limitErr := strconv.ParseInt(r.FormValue("limit"), 10, 64)
 		offset, offsetErr := strconv.ParseInt(r.FormValue("start"), 10, 64)
@@ -136,19 +135,19 @@ func GetProfiles(dbm *database.Manager) http.HandlerFunc {
 		switch {
 		case limitErr == nil && offsetErr == nil:
 			{
-				dbm.FindAll(&result, QueryProfilesWithLimitAndOffset, limit, offset)
+				env.Dbm.FindAll(&result, QueryProfilesWithLimitAndOffset, limit, offset)
 			}
 		case limitErr == nil:
 			{
-				dbm.FindAll(&result, QueryProfilesWithLimit, limit)
+				env.Dbm.FindAll(&result, QueryProfilesWithLimit, limit)
 			}
 		case offsetErr == nil:
 			{
-				dbm.FindAll(&result, QueryProfilesWithOffset, offset)
+				env.Dbm.FindAll(&result, QueryProfilesWithOffset, offset)
 			}
 		default:
 			{
-				dbm.FindAll(&result, QueryProfiles)
+				env.Dbm.FindAll(&result, QueryProfiles)
 			}
 		}
 
@@ -167,7 +166,7 @@ func GetProfiles(dbm *database.Manager) http.HandlerFunc {
 }
 
 // PutProfile returns handler with environment which updates profile
-func PutProfile(dbm *database.Manager) http.HandlerFunc {
+func PutProfile(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -182,7 +181,7 @@ func PutProfile(dbm *database.Manager) http.HandlerFunc {
 			return
 		}
 
-		err = updateProfile(dbm, id, newInfo)
+		err = updateProfile(env, id, newInfo)
 		if err != nil {
 			message := models.HandlerError{
 				Description: err.Error(),
@@ -196,7 +195,7 @@ func PutProfile(dbm *database.Manager) http.HandlerFunc {
 }
 
 // PostProfile returns handler with environment which creates profile
-func PostProfile(dbm *database.Manager) http.HandlerFunc {
+func PostProfile(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
 		if err != nil {
@@ -214,7 +213,7 @@ func PostProfile(dbm *database.Manager) http.HandlerFunc {
 			Password: r.FormValue("password"),
 		}
 
-		if exists, err := dbm.FindWithField("profile", "email", newProfile.Email); err != nil || exists {
+		if exists, err := env.Dbm.FindWithField("profile", "email", newProfile.Email); err != nil || exists {
 			message := models.HandlerError{
 				Description: "email already exists",
 			}
@@ -222,7 +221,7 @@ func PostProfile(dbm *database.Manager) http.HandlerFunc {
 			return
 		}
 
-		if exists, err := dbm.FindWithField("profile", "nickname", newProfile.Nickname); err != nil || exists {
+		if exists, err := env.Dbm.FindWithField("profile", "nickname", newProfile.Nickname); err != nil || exists {
 			message := models.HandlerError{
 				Description: "nickname already exists",
 			}
@@ -237,7 +236,7 @@ func PostProfile(dbm *database.Manager) http.HandlerFunc {
 		}
 
 		result := &models.Profile{}
-		err = dbm.Create(result, QueryInsertProfile, newProfile.Email, newProfile.Nickname, password)
+		err = env.Dbm.Create(result, QueryInsertProfile, newProfile.Email, newProfile.Nickname, password)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -255,7 +254,7 @@ func PostProfile(dbm *database.Manager) http.HandlerFunc {
 			filename := header.Filename
 			dir := "upload/img/"
 
-			if avatarPath, err := saveAvatar(dbm, avatar, filename, dir, result.ID); err == nil {
+			if avatarPath, err := saveAvatar(env, avatar, filename, dir, result.ID); err == nil {
 				result.Avatar = avatarPath
 			}
 		}
@@ -265,7 +264,7 @@ func PostProfile(dbm *database.Manager) http.HandlerFunc {
 }
 
 // PutAvatar adds or updates profile avatar
-func PutAvatar(dbm *database.Manager) http.HandlerFunc {
+func PutAvatar(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -285,7 +284,7 @@ func PutAvatar(dbm *database.Manager) http.HandlerFunc {
 		filename := header.Filename
 		dir := "upload/img/"
 
-		if _, err := saveAvatar(dbm, avatar, filename, dir, id); err != nil {
+		if _, err := saveAvatar(env, avatar, filename, dir, id); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
