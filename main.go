@@ -14,7 +14,5 @@ func main() {
 	}
 
 	router := router.InitRouter(dbm)
-	if err := http.ListenAndServe(":9090", router); err != nil {
-		panic(err)
-	}
+	panic(http.ListenAndServe(":9090", router))
 }
