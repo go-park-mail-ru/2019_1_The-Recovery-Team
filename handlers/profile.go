@@ -16,23 +16,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func saveAvatar(dbm *database.Manager, avatar multipart.File, filename, dir string, id uint64) error {
+func saveAvatar(dbm *database.Manager, avatar multipart.File, filename, dir string, id uint64) (string, error) {
 	filename, err := filesystem.HashFileName(filename, id)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = filesystem.SaveFile(avatar, dir, filename)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	avatarPath := "/" + dir + filename
 	err = dbm.Update(QueryUpdateProfileAvatar, avatarPath, id)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return avatarPath, nil
 }
 
 func hashAndSalt(pwd string) (string, error) {
@@ -198,14 +198,20 @@ func PutProfile(dbm *database.Manager) http.HandlerFunc {
 // PostProfile returns handler with environment which creates profile
 func PostProfile(dbm *database.Manager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		newProfile := &models.ProfileRegistration{}
-		err := unmarshalJSONBodyToStruct(r, newProfile)
+		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
 		if err != nil {
-			message := models.HandlerError{
-				Description: "incorrect data",
-			}
-			writeResponseJSON(w, http.StatusBadRequest, message)
+			w.WriteHeader(http.StatusBadRequest)
 			return
+		}
+		if r.FormValue("nickname") == "" || r.FormValue("email") == "" || r.FormValue("password") == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		newProfile := &models.ProfileRegistration{
+			Email:    r.FormValue("email"),
+			Nickname: r.FormValue("nickname"),
+			Password: r.FormValue("password"),
 		}
 
 		if exists, err := dbm.FindWithField("profile", "email", newProfile.Email); err != nil || exists {
@@ -237,6 +243,23 @@ func PostProfile(dbm *database.Manager) http.HandlerFunc {
 			return
 		}
 
+		err = r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
+		if err != nil {
+			writeResponseJSON(w, http.StatusOK, result)
+			return
+		}
+
+		avatar, header, err := r.FormFile("avatar")
+		defer avatar.Close()
+		if err == nil {
+			filename := header.Filename
+			dir := "upload/img/"
+
+			if avatarPath, err := saveAvatar(dbm, avatar, filename, dir, result.ID); err == nil {
+				result.Avatar = avatarPath
+			}
+		}
+
 		writeResponseJSON(w, http.StatusOK, result)
 	}
 }
@@ -262,7 +285,7 @@ func PutAvatar(dbm *database.Manager) http.HandlerFunc {
 		filename := header.Filename
 		dir := "upload/img/"
 
-		if err := saveAvatar(dbm, avatar, filename, dir, id); err != nil {
+		if _, err := saveAvatar(dbm, avatar, filename, dir, id); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
