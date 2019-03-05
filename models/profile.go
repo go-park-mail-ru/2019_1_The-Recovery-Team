@@ -2,7 +2,8 @@ package models
 
 //easyjson:json
 type Profile struct {
-	ID uint64 `json:"id,omitempty"`
+	ID     uint64 `json:"id,omitempty"`
+	Avatar string `json:avatar,omitempty`
 	ProfileInfo
 	Score
 }
