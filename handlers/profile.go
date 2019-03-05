@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"api/filesystem"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -13,6 +15,25 @@ import (
 
 	"github.com/gorilla/mux"
 )
+
+func saveAvatar(dbm *database.Manager, avatar multipart.File, filename, dir string, id uint64) error {
+	filename, err := filesystem.HashFileName(filename, id)
+	if err != nil {
+		return err
+	}
+
+	err = filesystem.SaveFile(avatar, dir, filename)
+	if err != nil {
+		return err
+	}
+
+	avatarPath := "/" + dir + filename
+	err = dbm.Update(QueryUpdateProfileAvatar, avatarPath, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func hashAndSalt(pwd string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
@@ -217,5 +238,35 @@ func PostProfile(dbm *database.Manager) http.HandlerFunc {
 		}
 
 		writeResponseJSON(w, http.StatusOK, result)
+	}
+}
+
+// PutAvatar adds or updates profile avatar
+func PutAvatar(dbm *database.Manager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, _ := strconv.ParseUint(vars["id"], 10, 64)
+
+		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		avatar, header, err := r.FormFile("avatar")
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		defer avatar.Close()
+		filename := header.Filename
+		dir := "upload/img/"
+
+		if err := saveAvatar(dbm, avatar, filename, dir, id); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
 }

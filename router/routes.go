@@ -55,4 +55,10 @@ var routes = Routes{
 		"/profiles/{id:[0-9]+}",
 		handlers.PutProfile,
 	},
+	{
+		"UpdateProfileAvatar",
+		"PUT",
+		"/profiles/{id:[0-9]+}/avatar",
+		handlers.PutAvatar,
+	},
 }
