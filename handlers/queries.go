@@ -10,4 +10,5 @@ const (
 	QueryProfileByNickname          = `SELECT nickname FROM profile WHERE LOWER(nickname) = LOWER($1)`
 	QueryInsertProfile              = `INSERT INTO profile (email, nickname, password) VALUES ($1, $2, $3) RETURNING id, email, nickname`
 	QueryProfileUnsafe              = `SELECT id, email, nickname, record, win, loss FROM profile WHERE id = $1`
+	QueryUpdateProfileAvatar        = `UPDATE profile SET avatar = $1 WHERE id = $2`
 )
