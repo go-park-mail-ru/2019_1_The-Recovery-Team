@@ -29,17 +29,9 @@ func TestIncorrectDBInit(t *testing.T) {
 
 func TestCorrectDBManagerGet(t *testing.T) {
 	dbm, _ := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
-	db, err := dbm.DB()
-	if err != nil || db == nil {
+	db := dbm.DB()
+	if db == nil {
 		t.Errorf("test for OK Failed - doesn't return initialized database instance")
-	}
-}
-
-func TestIncorrectDBManagerGet(t *testing.T) {
-	dbm := &Manager{}
-	db, err := dbm.DB()
-	if db != nil || err == nil {
-		t.Errorf("test for ERROR Failed - doesn't return error on getting uninitialized database instance")
 	}
 }
 
@@ -53,7 +45,7 @@ func TestCorrectDBClose(t *testing.T) {
 func TestIncorrectDBClose(t *testing.T) {
 	dbm := &Manager{}
 	err := dbm.Close()
-	if err == nil {
+	if err != nil {
 		t.Errorf("test for ERROR Failed - doesn't return error incorrect database connection close")
 	}
 }
@@ -117,19 +109,5 @@ func TestCorrectFindAll(t *testing.T) {
 
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("test for OK Failed - results not match\nGot:\n%v\nExpected:\n%v", result, expected)
-	}
-}
-
-func TestIncorrectFind(t *testing.T) {
-	dbm := &Manager{}
-	if err := dbm.Find(struct{}{}, ""); err == nil {
-		t.Errorf("test for ERROR Failed - doesn't return error on incorrect data")
-	}
-}
-
-func TestIncorrectFindAll(t *testing.T) {
-	dbm := &Manager{}
-	if err := dbm.FindAll([]struct{}{}, ""); err == nil {
-		t.Errorf("test for ERROR Failed - doesn't return error on incorrect data")
 	}
 }
