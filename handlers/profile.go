@@ -7,9 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mailru/easyjson"
-	"golang.org/x/crypto/bcrypt"
-
 	"api/models"
 
 	"github.com/gorilla/mux"
@@ -32,14 +29,6 @@ func saveAvatar(env *models.Env, avatar multipart.File, filename, dir string, id
 		return "", err
 	}
 	return avatarPath, nil
-}
-
-func hashAndSalt(pwd string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hash), nil
 }
 
 func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) error {
@@ -153,15 +142,10 @@ func GetProfiles(env *models.Env) http.HandlerFunc {
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			message := models.HandlerError{
-				Description: "server error",
-			}
-			easyjson.MarshalToHTTPResponseWriter(message, w)
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
-		easyjson.MarshalToHTTPResponseWriter(result, w)
+		writeResponseJSON(w, http.StatusOK, result)
 	}
 }
 
@@ -174,19 +158,13 @@ func PutProfile(env *models.Env) http.HandlerFunc {
 		newInfo := &models.ProfileInfo{}
 		err := unmarshalJSONBodyToStruct(r, newInfo)
 		if err != nil {
-			message := models.HandlerError{
-				Description: "incorrect data",
-			}
-			writeResponseJSON(w, http.StatusBadRequest, message)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		err = updateProfile(env, id, newInfo)
 		if err != nil {
-			message := models.HandlerError{
-				Description: err.Error(),
-			}
-			writeResponseJSON(w, http.StatusForbidden, message)
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -208,9 +186,11 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 		}
 
 		newProfile := &models.ProfileRegistration{
-			Email:    r.FormValue("email"),
 			Nickname: r.FormValue("nickname"),
-			Password: r.FormValue("password"),
+			ProfileLogin: models.ProfileLogin{
+				Email:    r.FormValue("email"),
+				Password: r.FormValue("password"),
+			},
 		}
 
 		if exists, err := env.Dbm.FindWithField("profile", "email", newProfile.Email); err != nil || exists {
@@ -263,7 +243,7 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 	}
 }
 
-// PutAvatar adds or updates profile avatar
+// PutAvatar returns handler with environment which adds or updates profile avatar
 func PutAvatar(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
