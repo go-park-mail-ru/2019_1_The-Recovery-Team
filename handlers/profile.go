@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"api/filesystem"
+	"api/middleware"
 	"errors"
 	"mime/multipart"
 	"net/http"
 	"strconv"
+	"time"
 
 	"api/models"
 
@@ -83,26 +85,6 @@ func checkFieldHandler(env *models.Env, table, field string) http.HandlerFunc {
 	}
 }
 
-// GetProfile returns handler with environment which processes request for getting profile by id
-func GetProfile(env *models.Env) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, _ := vars["id"]
-
-		profile := &models.Profile{}
-		err := env.Dbm.Find(profile, QueryProfileById, id)
-		if err != nil {
-			message := models.HandlerError{
-				Description: "user doesn't exist",
-			}
-			writeResponseJSON(w, http.StatusNotFound, message)
-			return
-		}
-
-		writeResponseJSON(w, http.StatusOK, profile)
-	}
-}
-
 // CheckProfileEmail returns handler with environment which checks existence of profile email
 func CheckProfileEmail(env *models.Env) http.HandlerFunc {
 	return checkFieldHandler(env, "profile", "email")
@@ -149,16 +131,54 @@ func GetProfiles(env *models.Env) http.HandlerFunc {
 	}
 }
 
+// GetProfile returns handler with environment which processes request for getting profile by id
+func GetProfile(env *models.Env) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, _ := strconv.ParseUint(vars["id"], 10, 64)
+
+		profileID := r.Context().Value(middleware.ProfileID)
+		if profileID != id {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		profile := &models.Profile{}
+		err := env.Dbm.Find(profile, QueryProfileById, id)
+		if err != nil {
+			message := models.HandlerError{
+				Description: "user doesn't exist",
+			}
+			writeResponseJSON(w, http.StatusNotFound, message)
+			return
+		}
+
+		writeResponseJSON(w, http.StatusOK, profile)
+	}
+}
+
 // PutProfile returns handler with environment which updates profile
 func PutProfile(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := strconv.ParseUint(vars["id"], 10, 64)
 
+		profileID := r.Context().Value(middleware.ProfileID)
+		if profileID != id {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
 		newInfo := &models.ProfileInfo{}
 		err := unmarshalJSONBodyToStruct(r, newInfo)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		newInfo.Password, err = hashAndSalt(newInfo.Password)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
@@ -239,6 +259,19 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 			}
 		}
 
+		token, err := env.Sm.Set(result.ID, 24*time.Hour)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_id",
+			Value:    token,
+			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
+			HttpOnly: true,
+		})
+
 		writeResponseJSON(w, http.StatusOK, result)
 	}
 }
@@ -248,6 +281,12 @@ func PutAvatar(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := strconv.ParseUint(vars["id"], 10, 64)
+
+		profileID := r.Context().Value(middleware.ProfileID)
+		if profileID != id {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
 
 		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
 		if err != nil {
