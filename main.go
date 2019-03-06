@@ -1,6 +1,8 @@
 package main
 
 import (
+	"api/filesystem"
+	"api/middleware"
 	"api/session"
 	"net/http"
 
@@ -26,5 +28,9 @@ func main() {
 	}
 
 	router := router.InitRouter(env)
+
+	fs := filesystem.InitFileserverHandler("/upload/", "./upload")
+	router.PathPrefix("/upload/").Handler(middleware.Authentication(env, fs))
+
 	panic(http.ListenAndServe(":9090", router))
 }
