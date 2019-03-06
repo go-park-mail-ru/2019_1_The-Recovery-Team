@@ -1,6 +1,7 @@
 package main
 
 import (
+	"api/session"
 	"net/http"
 
 	"api/database"
@@ -14,8 +15,14 @@ func main() {
 		panic(err)
 	}
 
+	sm, err := session.InitSessionManager("", "", "localhost")
+	if err != nil {
+		panic(err)
+	}
+
 	env := &models.Env{
 		Dbm: dbm,
+		Sm:  sm,
 	}
 
 	router := router.InitRouter(env)
