@@ -248,14 +248,7 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 // PutAvatar returns handler with environment which adds or updates profile avatar
 func PutAvatar(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, _ := strconv.ParseUint(vars["id"], 10, 64)
-
-		profileID := r.Context().Value(middleware.ProfileID)
-		if profileID != id {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
+		id := r.Context().Value(middleware.ProfileID).(uint64)
 
 		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
 		if err != nil {

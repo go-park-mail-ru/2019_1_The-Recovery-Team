@@ -52,7 +52,7 @@ var routes = Routes{
 	{
 		"UpdateProfileAvatar",
 		"PUT",
-		"/profiles/{id:[0-9]+}/avatar",
+		"/avatars",
 		[]middleware.MiddlewareWithEnv{middleware.Authentication},
 		handlers.PutAvatar,
 	},
