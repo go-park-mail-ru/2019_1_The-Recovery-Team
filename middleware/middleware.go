@@ -3,7 +3,6 @@ package middleware
 import (
 	"api/models"
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -22,7 +21,6 @@ func Authentication(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
 		ctx := r.Context()
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
-			fmt.Println(err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
