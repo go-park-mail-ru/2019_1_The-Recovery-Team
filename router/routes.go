@@ -61,4 +61,10 @@ var routes = Routes{
 		"/profiles/{id:[0-9]+}/avatar",
 		handlers.PutAvatar,
 	},
+	{
+		"CreateSession",
+		"POST",
+		"/sessions",
+		handlers.PostSession,
+	},
 }

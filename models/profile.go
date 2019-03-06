@@ -24,8 +24,13 @@ type ProfileInfo struct {
 
 //easyjson:json
 type ProfileRegistration struct {
-	Email    string `json:"email"`
 	Nickname string `json:"nickname"`
+	ProfileLogin
+}
+
+//easyjson:json
+type ProfileLogin struct {
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
