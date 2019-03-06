@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"api/middleware"
 	"api/models"
 	"database/sql"
 	"net/http"
@@ -41,6 +42,23 @@ func PostSession(env *models.Env) http.HandlerFunc {
 			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
 			HttpOnly: true,
 		})
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// DeleteSession returns handler with environment which deletes session
+func DeleteSession(env *models.Env) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionID := r.Context().Value(middleware.SessionID)
+		err := env.Sm.Delete(sessionID.(string))
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		cookie, _ := r.Cookie("session_id")
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		http.SetCookie(w, cookie)
 		w.WriteHeader(http.StatusOK)
 	}
 }

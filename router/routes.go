@@ -24,14 +24,14 @@ var routes = Routes{
 	{
 		"GetProfiles",
 		"GET",
-		"/profiles/",
+		"/profiles",
 		[]middleware.MiddlewareWithEnv{middleware.Authentication},
 		handlers.GetProfiles,
 	},
 	{
 		"CreateProfile",
 		"POST",
-		"/profiles/",
+		"/profiles",
 		[]middleware.MiddlewareWithEnv{},
 		handlers.PostProfile,
 	},
@@ -76,5 +76,12 @@ var routes = Routes{
 		"/sessions",
 		[]middleware.MiddlewareWithEnv{},
 		handlers.PostSession,
+	},
+	{
+		"DeleteSession",
+		"DELETE",
+		"/sessions",
+		[]middleware.MiddlewareWithEnv{middleware.Authentication},
+		handlers.DeleteSession,
 	},
 }

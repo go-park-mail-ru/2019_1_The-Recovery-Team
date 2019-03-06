@@ -3,6 +3,7 @@ package middleware
 import (
 	"api/models"
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -11,6 +12,7 @@ type key int
 
 const (
 	ProfileID key = iota
+	SessionID
 )
 
 type MiddlewareWithEnv func(*models.Env, http.HandlerFunc) http.HandlerFunc
@@ -20,6 +22,7 @@ func Authentication(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
 		ctx := r.Context()
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
+			fmt.Println(err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -33,6 +36,7 @@ func Authentication(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		ctx = context.WithValue(ctx, ProfileID, id)
+		ctx = context.WithValue(ctx, SessionID, cookie.Value)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
