@@ -71,63 +71,32 @@ func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) erro
 	return nil
 }
 
-func checkFieldHandler(env *models.Env, table, field string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		value, _ := vars[field]
-		exists, _ := env.Dbm.FindWithField(table, field, value)
-		if exists {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		w.WriteHeader(http.StatusNotFound)
+func checkField(env *models.Env, w http.ResponseWriter, table, field, value string) {
+	exists, _ := env.Dbm.FindWithField(table, field, value)
+	if exists {
+		w.WriteHeader(http.StatusOK)
+		return
 	}
+	w.WriteHeader(http.StatusNotFound)
 }
 
-// CheckProfileEmail returns handler with environment which checks existence of profile email
-func CheckProfileEmail(env *models.Env) http.HandlerFunc {
-	return checkFieldHandler(env, "profile", "email")
-}
-
-// CheckProfileNickname returns handler with environment which checks existence of profile nickname
-func CheckProfileNickname(env *models.Env) http.HandlerFunc {
-	return checkFieldHandler(env, "profile", "nickname")
-}
-
-// GetProfiles returns handler with environment which processes request for getting profiles order by score
+// GetProfiles returns handler with environment which processes request for checking email or nickname existens
 func GetProfiles(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		limit, limitErr := strconv.ParseInt(r.FormValue("limit"), 10, 64)
-		offset, offsetErr := strconv.ParseInt(r.FormValue("start"), 10, 64)
+		email := r.FormValue("email")
+		nickname := r.FormValue("nickname")
 
-		result := models.Profiles{}
-		var err error
-		switch {
-		case limitErr == nil && offsetErr == nil:
-			{
-				env.Dbm.FindAll(&result, QueryProfilesWithLimitAndOffset, limit, offset)
-			}
-		case limitErr == nil:
-			{
-				env.Dbm.FindAll(&result, QueryProfilesWithLimit, limit)
-			}
-		case offsetErr == nil:
-			{
-				env.Dbm.FindAll(&result, QueryProfilesWithOffset, offset)
-			}
-		default:
-			{
-				env.Dbm.FindAll(&result, QueryProfiles)
-			}
-		}
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+		if email != "" {
+			checkField(env, w, "profile", "email", email)
 			return
 		}
 
-		writeResponseJSON(w, http.StatusOK, result)
+		if nickname != "" {
+			checkField(env, w, "profile", "nickname", nickname)
+			return
+		}
+
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
