@@ -14,8 +14,10 @@ const (
 	SessionID
 )
 
+// MiddlewareWithEnv middleleware with env
 type MiddlewareWithEnv func(*models.Env, http.HandlerFunc) http.HandlerFunc
 
+// Authentication middleware to check authentication
 func Authentication(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
