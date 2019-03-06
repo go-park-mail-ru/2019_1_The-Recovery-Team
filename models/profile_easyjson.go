@@ -472,7 +472,7 @@ func easyjson521a5691DecodeApiModels5(in *jlexer.Lexer, out *Profile) {
 		switch key {
 		case "id":
 			out.ID = uint64(in.Uint64())
-		case "Avatar":
+		case "avatar":
 			out.Avatar = string(in.String())
 		case "record":
 			out.Record = int(in.Int())
@@ -510,8 +510,8 @@ func easyjson521a5691EncodeApiModels5(out *jwriter.Writer, in Profile) {
 		}
 		out.Uint64(uint64(in.ID))
 	}
-	{
-		const prefix string = ",\"Avatar\":"
+	if in.Avatar != "" {
+		const prefix string = ",\"avatar\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
