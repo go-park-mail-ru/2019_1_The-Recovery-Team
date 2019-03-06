@@ -8,6 +8,18 @@ import (
 	"time"
 )
 
+// GetSession returns handler with environment whick gets profile id of current session
+func GetSession(env *models.Env) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.Context().Value(middleware.ProfileID)
+		result := &models.Profile{
+			ID: id.(uint64),
+		}
+		writeResponseJSON(w, http.StatusOK, result)
+		return
+	}
+}
+
 // PostSession returns handler with environment which creates session
 func PostSession(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

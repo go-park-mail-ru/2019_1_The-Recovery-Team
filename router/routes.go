@@ -71,6 +71,13 @@ var routes = Routes{
 		handlers.PutAvatar,
 	},
 	{
+		"GetSession",
+		"GET",
+		"/sessions",
+		[]middleware.MiddlewareWithEnv{middleware.Authentication},
+		handlers.GetSession,
+	},
+	{
 		"CreateSession",
 		"POST",
 		"/sessions",
