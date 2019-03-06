@@ -43,20 +43,6 @@ var routes = Routes{
 		handlers.GetProfile,
 	},
 	{
-		"CheckProfileEmail",
-		"GET",
-		"/profiles/email/{email}",
-		[]middleware.MiddlewareWithEnv{},
-		handlers.CheckProfileEmail,
-	},
-	{
-		"CheckProfileNickname",
-		"GET",
-		"/profiles/nickname/{nickname}",
-		[]middleware.MiddlewareWithEnv{},
-		handlers.CheckProfileNickname,
-	},
-	{
 		"UpdateProfile",
 		"PUT",
 		"/profiles/{id:[0-9]+}",
@@ -90,5 +76,12 @@ var routes = Routes{
 		"/sessions",
 		[]middleware.MiddlewareWithEnv{middleware.Authentication},
 		handlers.DeleteSession,
+	},
+	{
+		"GetScoreboard",
+		"GET",
+		"/scores",
+		[]middleware.MiddlewareWithEnv{middleware.Authentication},
+		handlers.GetScoreboard,
 	},
 }
