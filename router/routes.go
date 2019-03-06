@@ -1,6 +1,7 @@
 package router
 
 import (
+	"api/middleware"
 	"net/http"
 
 	"api/handlers"
@@ -9,10 +10,11 @@ import (
 
 // Route contains data about route
 type Route struct {
-	Name    string
-	Method  string
-	Pattern string
-	Handler func(*models.Env) http.HandlerFunc
+	Name        string
+	Method      string
+	Pattern     string
+	Middlewares []middleware.MiddlewareWithEnv
+	Handler     func(*models.Env) http.HandlerFunc
 }
 
 // Routes contains all routes
@@ -23,48 +25,56 @@ var routes = Routes{
 		"GetProfiles",
 		"GET",
 		"/profiles/",
+		[]middleware.MiddlewareWithEnv{middleware.Authentication},
 		handlers.GetProfiles,
 	},
 	{
 		"CreateProfile",
 		"POST",
 		"/profiles/",
+		[]middleware.MiddlewareWithEnv{},
 		handlers.PostProfile,
 	},
 	{
 		"GetProfileById",
 		"GET",
 		"/profiles/{id:[0-9]+}",
+		[]middleware.MiddlewareWithEnv{middleware.Authentication},
 		handlers.GetProfile,
 	},
 	{
 		"CheckProfileEmail",
 		"GET",
 		"/profiles/email/{email}",
+		[]middleware.MiddlewareWithEnv{},
 		handlers.CheckProfileEmail,
 	},
 	{
 		"CheckProfileNickname",
 		"GET",
 		"/profiles/nickname/{nickname}",
+		[]middleware.MiddlewareWithEnv{},
 		handlers.CheckProfileNickname,
 	},
 	{
 		"UpdateProfile",
 		"PUT",
 		"/profiles/{id:[0-9]+}",
+		[]middleware.MiddlewareWithEnv{middleware.Authentication},
 		handlers.PutProfile,
 	},
 	{
 		"UpdateProfileAvatar",
 		"PUT",
 		"/profiles/{id:[0-9]+}/avatar",
+		[]middleware.MiddlewareWithEnv{middleware.Authentication},
 		handlers.PutAvatar,
 	},
 	{
 		"CreateSession",
 		"POST",
 		"/sessions",
+		[]middleware.MiddlewareWithEnv{},
 		handlers.PostSession,
 	},
 }
