@@ -2,9 +2,12 @@ package database
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 // Manager is a wrapper around sqlx.DB
@@ -25,7 +28,33 @@ func InitDatabaseManager(username, password, host, name string) (*Manager, error
 		return nil, err
 	}
 
+	err = manager.migrate()
+	if err != nil {
+		return nil, err
+	}
+
 	return manager, nil
+}
+
+func (manager *Manager) migrate() error {
+	dbo := manager.DB()
+	if dbo == nil {
+		return errors.New("connection doesn't exist")
+	}
+
+	migrations := &migrate.FileMigrationSource{
+		Dir: "migrations",
+	}
+
+	number, err := migrate.Exec(dbo.DB, "postgres", migrations, migrate.Up)
+	if err != nil {
+		return err
+	}
+	if number != 0 {
+		fmt.Printf("Make %d migrations", number)
+	}
+
+	return nil
 }
 
 // DB returns connection to database
