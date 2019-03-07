@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS profile (
     email citext UNIQUE NOT NULL CHECK (email <> ''),
     password varchar(64) NOT NULL CHECK (password <> ''),
     nickname citext UNIQUE NOT NULL CHECK (nickname <> ''),
-    avatar TEXT,
+    avatar TEXT DEFAULT '',
 
     record INTEGER DEFAULT 0,
     win INTEGER DEFAULT 0,

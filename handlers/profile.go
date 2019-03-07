@@ -218,8 +218,8 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 		}
 
 		avatar, header, err := r.FormFile("avatar")
-		defer avatar.Close()
 		if err == nil {
+			defer avatar.Close()
 			filename := header.Filename
 			dir := "upload/img/"
 
