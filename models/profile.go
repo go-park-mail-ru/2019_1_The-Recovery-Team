@@ -10,9 +10,9 @@ type Profile struct {
 
 //easyjson:json
 type Score struct {
-	Record int `json:"record,omitempty"`
-	Win    int `json:"win,omitempty"`
-	Loss   int `json:"loss,omitempty"`
+	Record int `json:"record"`
+	Win    int `json:"win"`
+	Loss   int `json:"loss"`
 }
 
 //easyjson:json

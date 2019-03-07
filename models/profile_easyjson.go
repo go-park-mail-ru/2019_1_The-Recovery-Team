@@ -56,7 +56,7 @@ func easyjson521a5691EncodeApiModels(out *jwriter.Writer, in Score) {
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Record != 0 {
+	{
 		const prefix string = ",\"record\":"
 		if first {
 			first = false
@@ -66,7 +66,7 @@ func easyjson521a5691EncodeApiModels(out *jwriter.Writer, in Score) {
 		}
 		out.Int(int(in.Record))
 	}
-	if in.Win != 0 {
+	{
 		const prefix string = ",\"win\":"
 		if first {
 			first = false
@@ -76,7 +76,7 @@ func easyjson521a5691EncodeApiModels(out *jwriter.Writer, in Score) {
 		}
 		out.Int(int(in.Win))
 	}
-	if in.Loss != 0 {
+	{
 		const prefix string = ",\"loss\":"
 		if first {
 			first = false
@@ -520,7 +520,7 @@ func easyjson521a5691EncodeApiModels5(out *jwriter.Writer, in Profile) {
 		}
 		out.String(string(in.Avatar))
 	}
-	if in.Record != 0 {
+	{
 		const prefix string = ",\"record\":"
 		if first {
 			first = false
@@ -530,7 +530,7 @@ func easyjson521a5691EncodeApiModels5(out *jwriter.Writer, in Profile) {
 		}
 		out.Int(int(in.Record))
 	}
-	if in.Win != 0 {
+	{
 		const prefix string = ",\"win\":"
 		if first {
 			first = false
@@ -540,7 +540,7 @@ func easyjson521a5691EncodeApiModels5(out *jwriter.Writer, in Profile) {
 		}
 		out.Int(int(in.Win))
 	}
-	if in.Loss != 0 {
+	{
 		const prefix string = ",\"loss\":"
 		if first {
 			first = false
