@@ -17,8 +17,8 @@
 
 ## Docker-compose
 
-docker build -t api . -f Dockerfile
-docker-compose -f docker-compose.yml up
+`docker build -t api . -f Dockerfile`
+`docker-compose -f docker-compose.yml up`
 
 ## Репозиторий фронтенда
  
