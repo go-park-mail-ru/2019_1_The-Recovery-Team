@@ -5,7 +5,7 @@ const (
 	QueryProfilesWithLimit          = `SELECT nickname, avatar, record, win, loss FROM profile ORDER BY record LIMIT $1`
 	QueryProfilesWithOffset         = `SELECT nickname, avatar, record, win, loss FROM profile ORDER BY record OFFSET $1`
 	QueryProfilesWithLimitAndOffset = `SELECT nickname, avatar, record, win, loss FROM profile ORDER BY record LIMIT $1 OFFSET $2`
-	QueryProfileById                = `SELECT nickname, avatar, record, win, loss FROM profile WHERE id = $1`
+	QueryProfileById                = `SELECT nickname, email, avatar, record, win, loss FROM profile WHERE id = $1`
 	QueryProfileByEmail             = `SELECT email FROM profile WHERE LOWER(email) = LOWER($1)`
 	QueryProfileByNickname          = `SELECT nickname FROM profile WHERE LOWER(nickname) = LOWER($1)`
 	QueryInsertProfile              = `INSERT INTO profile (email, nickname, password) VALUES ($1, $2, $3) RETURNING id, email, nickname`
