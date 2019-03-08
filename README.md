@@ -15,6 +15,12 @@
 
 ## Ссылка на игру
 
+## Docker-compose
+
+`docker build -t api . -f Dockerfile`
+
+`docker-compose -f docker-compose.yml up`
+
 ## Репозиторий фронтенда
  
 [Фронтенд](https://github.com/go-park-mail-ru/2019_1_The-Recovery-Team)
