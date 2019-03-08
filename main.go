@@ -1,15 +1,18 @@
 package main
 
 import (
+	"api/database"
+	_ "api/docs"
 	"api/filesystem"
 	"api/middleware"
-	"api/session"
-	"net/http"
-
-	"api/database"
 	"api/models"
 	"api/router"
+	"api/session"
+	"net/http"
+	"github.com/swaggo/http-swagger"
 )
+
+// @host 127.0.0.1:8080
 
 func main() {
 	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands")
@@ -31,6 +34,8 @@ func main() {
 
 	fs := filesystem.InitFileserverHandler("/upload/", "./upload")
 	router.PathPrefix("/upload/").Handler(middleware.Authentication(env, fs))
+
+	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	panic(http.ListenAndServe(":8080", router))
 }

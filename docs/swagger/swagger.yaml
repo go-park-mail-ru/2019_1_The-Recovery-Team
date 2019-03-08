@@ -1,0 +1,290 @@
+basePath: '{{.BasePath}}'
+definitions:
+  models.Profile:
+    properties:
+      avatar:
+        type: string
+      email:
+        example: test@mail.ru
+        type: string
+      id:
+        example: 1
+        type: integer
+      loss:
+        example: 50
+        type: integer
+      nickname:
+        example: test
+        type: string
+      password:
+        example: password
+        type: string
+      record:
+        example: 1500
+        type: integer
+      win:
+        example: 100
+        type: integer
+    type: object
+  models.ProfileInfo:
+    properties:
+      email:
+        example: test@mail.ru
+        type: string
+      nickname:
+        example: test
+        type: string
+      password:
+        example: password
+        type: string
+    type: object
+  models.ProfileLogin:
+    properties:
+      email:
+        type: string
+      password:
+        example: password
+        type: string
+    type: object
+  models.Profiles:
+    items:
+      properties:
+        avatar:
+          type: string
+        email:
+          example: test@mail.ru
+          type: string
+        id:
+          example: 1
+          type: integer
+        loss:
+          example: 50
+          type: integer
+        nickname:
+          example: test
+          type: string
+        password:
+          example: password
+          type: string
+        record:
+          example: 1500
+          type: integer
+        win:
+          example: 100
+          type: integer
+      type: object
+    type: array
+host: 127.0.0.1:8080
+info:
+  contact: {}
+  description: '{{.Description}}'
+  license: {}
+  title: '{{.Title}}'
+  version: '{{.Version}}'
+paths:
+  /avatars:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update profile avatar
+      operationId: put-avatar
+      parameters:
+      - description: Avatar
+        in: body
+        name: avatar
+        schema:
+          type: object
+      responses:
+        "204":
+          description: Profile avatar is updated successfully
+        "400":
+          description: Incorrect request data
+        "403":
+          description: Not authorized
+        "500":
+          description: Database error
+      summary: Put avatar
+  /profiles:
+    get:
+      description: Check profile existence with email or nickname
+      operationId: get-profiles
+      parameters:
+      - description: Profile email
+        in: path
+        name: email
+        type: string
+      - description: Profile nickname
+        in: path
+        name: nickname
+        type: string
+      responses:
+        "204":
+          description: Profile found successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Not found
+        "500":
+          description: Database error
+      summary: Get profiles
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create profile
+      operationId: post-profile
+      parameters:
+      - description: Email, nickname, password
+        in: body
+        name: profile_info
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProfileInfo'
+          type: object
+      - description: Avatar
+        in: body
+        name: avatar
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile created successfully
+          schema:
+            $ref: '#/definitions/models.Profile'
+            type: object
+        "400":
+          description: Incorrect request data
+        "500":
+          description: Database error
+      summary: Post profile
+  /profiles/{id}:
+    get:
+      description: Get profile info (for profile owner returns info with email)
+      operationId: get-profile
+      parameters:
+      - description: Profile ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile found successfully
+          schema:
+            $ref: '#/definitions/models.Profile'
+            type: object
+        "403":
+          description: Not authorized
+        "404":
+          description: Not found
+        "500":
+          description: Database error
+      summary: Get profile
+    put:
+      consumes:
+      - application/json
+      description: Update profile info
+      operationId: put-profile
+      parameters:
+      - description: Profile ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Email, nickname, password
+        in: body
+        name: profile_info
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProfileInfo'
+          type: object
+      responses:
+        "204":
+          description: Profile info is updated successfully
+        "400":
+          description: Incorrect request data
+        "403":
+          description: Not authorized
+        "404":
+          description: Not found
+        "500":
+          description: Database error
+      summary: Put profile
+  /scores:
+    get:
+      description: Get scoreboard
+      operationId: get-scoreboard
+      parameters:
+      - description: limit number
+        in: query
+        name: limit
+        type: integer
+      - description: start index
+        in: query
+        name: start
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Scoreboard found successfully
+          schema:
+            $ref: '#/definitions/models.Profiles'
+            type: object
+        "403":
+          description: Not authorized
+        "500":
+          description: Database error
+      summary: Get scoreboard
+  /sessions:
+    delete:
+      description: Deletes client session
+      operationId: delete-session
+      responses:
+        "200":
+          description: Session is deleted successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Session not found
+      summary: Delete session
+    get:
+      description: Get profile id of authorized client
+      operationId: get-session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile ID found successfully
+          schema:
+            type: int
+        "403":
+          description: Not authorized
+      summary: Get session
+    post:
+      consumes:
+      - application/json
+      description: Creates client session
+      operationId: post-session
+      parameters:
+      - description: Email, password
+        in: body
+        name: profile_login
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProfileLogin'
+          type: object
+      responses:
+        "200":
+          description: Session is created successfully
+        "400":
+          description: Incorrect request data
+        "403":
+          description: Not authorized
+        "422":
+          description: Unprocessable request data
+      summary: Post session
+swagger: "2.0"

@@ -9,6 +9,13 @@ import (
 )
 
 // GetSession returns handler with environment whick gets profile id of current session
+// @Summary Get session
+// @Description Get profile id of authorized client
+// @ID get-session
+// @Produce json
+// @Success 200 int models.Profile.ID "Profile ID found successfully"
+// @Failure 403 "Not authorized"
+// @Router /sessions [GET]
 func GetSession(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.Context().Value(middleware.ProfileID)
@@ -21,6 +28,16 @@ func GetSession(env *models.Env) http.HandlerFunc {
 }
 
 // PostSession returns handler with environment which creates session
+// @Summary Post session
+// @Description Creates client session
+// @ID post-session
+// @Accept json
+// @Param profile_login body models.ProfileLogin true "Email, password"
+// @Success 200 "Session is created successfully"
+// @Failure 400 "Incorrect request data"
+// @Failure 422 "Unprocessable request data"
+// @Failure 403 "Not authorized"
+// @Router /sessions [POST]
 func PostSession(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		profile := &models.ProfileLogin{}
@@ -59,6 +76,13 @@ func PostSession(env *models.Env) http.HandlerFunc {
 }
 
 // DeleteSession returns handler with environment which deletes session
+// @Summary Delete session
+// @Description Deletes client session
+// @ID delete-session
+// @Success 200 "Session is deleted successfully"
+// @Failure 404 "Session not found"
+// @Failure 403 "Not authorized"
+// @Router /sessions [DELETE]
 func DeleteSession(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sessionID := r.Context().Value(middleware.SessionID)

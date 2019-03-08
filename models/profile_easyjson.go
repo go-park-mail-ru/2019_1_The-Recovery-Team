@@ -510,7 +510,7 @@ func easyjson521a5691EncodeApiModels5(out *jwriter.Writer, in Profile) {
 		}
 		out.Uint64(uint64(in.ID))
 	}
-	if in.Avatar != "" {
+	{
 		const prefix string = ",\"avatar\":"
 		if first {
 			first = false

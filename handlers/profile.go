@@ -3,6 +3,7 @@ package handlers
 import (
 	"api/filesystem"
 	"api/middleware"
+	"database/sql"
 	"errors"
 	"mime/multipart"
 	"net/http"
@@ -74,13 +75,23 @@ func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) erro
 func checkField(env *models.Env, w http.ResponseWriter, table, field, value string) {
 	exists, _ := env.Dbm.FindWithField(table, field, value)
 	if exists {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	w.WriteHeader(http.StatusNotFound)
 }
 
 // GetProfiles returns handler with environment which processes request for checking email or nickname existens
+// @Summary Get profiles
+// @Description Check profile existence with email or nickname
+// @ID get-profiles
+// @Param email path string false "Profile email"
+// @Param nickname path string false "Profile nickname"
+// @Success 204 "Profile found successfully"
+// @Failure 403 "Not authorized"
+// @Failure 404 "Not found"
+// @Failure 500 "Database error"
+// @Router /profiles [GET]
 func GetProfiles(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
@@ -101,32 +112,54 @@ func GetProfiles(env *models.Env) http.HandlerFunc {
 }
 
 // GetProfile returns handler with environment which processes request for getting profile by id
+// @Summary Get profile
+// @Description Get profile info (for profile owner returns info with email)
+// @ID get-profile
+// @Produce json
+// @Param id path int true "Profile ID"
+// @Success 200 {object} models.Profile "Profile found successfully"
+// @Failure 403 "Not authorized"
+// @Failure 404 "Not found"
+// @Failure 500 "Database error"
+// @Router /profiles/{id} [GET]
 func GetProfile(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := strconv.ParseUint(vars["id"], 10, 64)
 
-		profileID := r.Context().Value(middleware.ProfileID)
-		if profileID != id {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-
 		profile := &models.Profile{}
 		err := env.Dbm.Find(profile, QueryProfileById, id)
 		if err != nil {
-			message := models.HandlerError{
-				Description: "user doesn't exist",
+			if err == sql.ErrNoRows {
+				w.WriteHeader(http.StatusNotFound)
+				return
+				w.WriteHeader(http.StatusInternalServerError)
+				return
 			}
-			writeResponseJSON(w, http.StatusNotFound, message)
-			return
-		}
 
-		writeResponseJSON(w, http.StatusOK, profile)
+			profileID := r.Context().Value(middleware.ProfileID)
+			if profileID != id {
+				profile.Email = ""
+			}
+
+			writeResponseJSON(w, http.StatusOK, profile)
+		}
 	}
 }
 
 // PutProfile returns handler with environment which updates profile
+// @Summary Put profile
+// @Description Update profile info
+// @ID put-profile
+// @Accept json
+// @Param id path int true "Profile ID"
+// @Param profile_info body models.ProfileInfo true "Email, nickname, password"
+// @Success 204 "Profile info is updated successfully"
+// @Failure 400 "Incorrect request data"
+// @Failure 403 "Not authorized"
+// @Failure 404 "Not found"
+// @Failure 500 "Database error"
+// @Router /profiles/{id} [PUT]
 func PutProfile(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -157,11 +190,22 @@ func PutProfile(env *models.Env) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 // PostProfile returns handler with environment which creates profile
+// @Summary Post profile
+// @Description Create profile
+// @ID post-profile
+// @Accept multipart/form-data
+// @Produce json
+// @Param profile_info body models.ProfileInfo true "Email, nickname, password"
+// @Param avatar body png false "Avatar"
+// @Success 200 {object} models.Profile "Profile created successfully"
+// @Failure 400 "Incorrect request data"
+// @Failure 500 "Database error"
+// @Router /profiles [POST]
 func PostProfile(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
@@ -246,6 +290,16 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 }
 
 // PutAvatar returns handler with environment which adds or updates profile avatar
+// @Summary Put avatar
+// @Description Update profile avatar
+// @ID put-avatar
+// @Accept multipart/form-data
+// @Param avatar body png false "Avatar"
+// @Success 204 "Profile avatar is updated successfully"
+// @Failure 400 "Incorrect request data"
+// @Failure 403 "Not authorized"
+// @Failure 500 "Database error"
+// @Router /avatars [PUT]
 func PutAvatar(env *models.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.Context().Value(middleware.ProfileID).(uint64)
@@ -270,6 +324,6 @@ func PutAvatar(env *models.Env) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
