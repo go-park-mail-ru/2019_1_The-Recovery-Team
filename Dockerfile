@@ -9,6 +9,4 @@ FROM alpine
 WORKDIR /app
 COPY --from=builder /src/api .
 COPY migrations migrations
-EXPOSE 8080
 CMD ["./api"]
-# CMD ["sh", "-c", "./api"]
