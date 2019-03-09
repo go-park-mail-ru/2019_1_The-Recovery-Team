@@ -133,17 +133,17 @@ func GetProfile(env *models.Env) http.HandlerFunc {
 			if err == sql.ErrNoRows {
 				w.WriteHeader(http.StatusNotFound)
 				return
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
 
-			profileID := r.Context().Value(middleware.ProfileID)
-			if profileID != id {
-				profile.Email = ""
 			}
-
-			writeResponseJSON(w, http.StatusOK, profile)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
+		profileID := r.Context().Value(middleware.ProfileID)
+		if profileID != id {
+			profile.Email = ""
+		}
+
+		writeResponseJSON(w, http.StatusOK, profile)
 	}
 }
 
