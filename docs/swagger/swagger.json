@@ -283,7 +283,11 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Session is created successfully"
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Profile"
+                        }
                     },
                     "400": {
                         "description": "Incorrect request data"

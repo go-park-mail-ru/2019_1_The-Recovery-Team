@@ -277,7 +277,10 @@ paths:
           type: object
       responses:
         "200":
-          description: Session is created successfully
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Profile'
+            type: object
         "400":
           description: Incorrect request data
         "403":
