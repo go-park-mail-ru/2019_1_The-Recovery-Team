@@ -2,10 +2,15 @@ package models
 
 //easyjson:json
 type Profile struct {
-	ID     uint64 `json:"id,omitempty" example:"1"`
-	Avatar string `json:"avatar,omitempty example:"upload/img/1.png"`
+	ID uint64 `json:"id,omitempty" example:"1"`
+	ProfileAvatar
 	ProfileInfo
 	Score
+}
+
+//easyjson:json
+type ProfileAvatar struct {
+	Avatar string `json:"avatar,omitempty" example:"upload/img/1.png"`
 }
 
 //easyjson:json

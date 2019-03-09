@@ -16,6 +16,9 @@
                 "consumes": [
                     "multipart/form-data"
                 ],
+                "produces": [
+                    "application/json"
+                ],
                 "summary": "Put avatar",
                 "operationId": "put-avatar",
                 "parameters": [
@@ -29,8 +32,12 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "Profile avatar is updated successfully"
+                    "200": {
+                        "description": "Profile avatar is updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.ProfileAvatar"
+                        }
                     },
                     "400": {
                         "description": "Incorrect request data"
@@ -323,7 +330,8 @@
             "type": "object",
             "properties": {
                 "avatar": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "upload/img/1.png"
                 },
                 "email": {
                     "type": "string",
@@ -352,6 +360,15 @@
                 "win": {
                     "type": "integer",
                     "example": 100
+                }
+            }
+        },
+        "models.ProfileAvatar": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
                 }
             }
         },
@@ -390,7 +407,8 @@
                 "type": "object",
                 "properties": {
                     "avatar": {
-                        "type": "string"
+                        "type": "string",
+                        "example": "upload/img/1.png"
                     },
                     "email": {
                         "type": "string",
