@@ -14,7 +14,6 @@ import (
 // @Param limit query int false "limit number"
 // @Param start query int false "start index"
 // @Success 200 {object} models.Profiles "Scoreboard found successfully"
-// @Failure 403 "Not authorized"
 // @Failure 500 "Database error"
 // @Router /scores [GET]
 func GetScoreboard(env *models.Env) http.HandlerFunc {

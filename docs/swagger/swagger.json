@@ -236,9 +236,6 @@
                             "$ref": "#/definitions/models.Profiles"
                         }
                     },
-                    "403": {
-                        "description": "Not authorized"
-                    },
                     "500": {
                         "description": "Database error"
                     }

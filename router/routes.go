@@ -81,7 +81,7 @@ var routes = Routes{
 		"GetScoreboard",
 		"GET",
 		"/scores",
-		[]middleware.MiddlewareWithEnv{middleware.Authentication},
+		[]middleware.MiddlewareWithEnv{},
 		handlers.GetScoreboard,
 	},
 }

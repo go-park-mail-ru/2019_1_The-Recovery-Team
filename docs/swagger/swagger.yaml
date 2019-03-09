@@ -234,8 +234,6 @@ paths:
           schema:
             $ref: '#/definitions/models.Profiles'
             type: object
-        "403":
-          description: Not authorized
         "500":
           description: Database error
       summary: Get scoreboard
