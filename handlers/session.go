@@ -72,6 +72,7 @@ func PostSession(env *models.Env) http.HandlerFunc {
 			HttpOnly: true,
 		})
 
+		result.Password = ""
 		writeResponseJSON(w, http.StatusOK, result)
 	}
 }
