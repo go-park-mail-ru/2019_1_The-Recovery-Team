@@ -14,7 +14,7 @@ type Route struct {
 	Method      string
 	Pattern     string
 	Middlewares []middleware.MiddlewareWithEnv
-	Handler     func(*models.Env) http.HandlerFunc
+	HandlerFunc func(*models.Env) http.HandlerFunc
 }
 
 // Routes contains all routes

@@ -42,10 +42,21 @@ github.com/swaggo/files
 github.com/swaggo/http-swagger
 # github.com/swaggo/swag v1.4.1
 github.com/swaggo/swag
+# go.uber.org/atomic v1.3.2
+go.uber.org/atomic
+# go.uber.org/multierr v1.1.0
+go.uber.org/multierr
+# go.uber.org/zap v1.9.1
+go.uber.org/zap
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/zapcore
+go.uber.org/zap/buffer
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
 # golang.org/x/crypto v0.0.0-20190228161510-8dd112bcdc25
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
-# golang.org/x/net v0.0.0-20181005035420-146acd28ed58
+# golang.org/x/net v0.0.0-20181220203305-927f97764cc3
 golang.org/x/net/webdav
 golang.org/x/net/context
 golang.org/x/net/webdav/internal/xml
@@ -56,12 +67,12 @@ golang.org/x/text/width
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
 golang.org/x/text/transform
-# golang.org/x/tools v0.0.0-20190114222345-bf090417da8b
+# golang.org/x/tools v0.0.0-20190118193359-16909d206f00
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
 # gopkg.in/gorp.v1 v1.7.2
 gopkg.in/gorp.v1
-# gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

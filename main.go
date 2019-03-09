@@ -8,8 +8,8 @@ import (
 	"api/models"
 	"api/router"
 	"api/session"
-	"net/http"
 	"github.com/swaggo/http-swagger"
+	"net/http"
 )
 
 // @host 127.0.0.1:8080
@@ -30,12 +30,12 @@ func main() {
 		Sm:  sm,
 	}
 
-	router := router.InitRouter(env)
+	mainRouter := router.InitRouter(env)
 
 	fs := filesystem.InitFileserverHandler("/upload/", "./upload")
-	router.PathPrefix("/upload/").Handler(middleware.Authentication(env, fs))
+	mainRouter.PathPrefix("/upload/").Handler(middleware.Authentication(env, fs))
 
-	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	mainRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	panic(http.ListenAndServe(":8080", router))
+	panic(http.ListenAndServe(":8080", mainRouter))
 }
