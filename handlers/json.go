@@ -7,14 +7,14 @@ import (
 	"github.com/mailru/easyjson"
 )
 
-func unmarshalJSONBodyToStruct(r *http.Request, strct easyjson.Unmarshaler) error {
+func unmarshalJSONBodyToStruct(r *http.Request, s easyjson.Unmarshaler) error {
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
 		return err
 	}
 
-	err = easyjson.Unmarshal(body, strct)
+	err = easyjson.Unmarshal(body, s)
 	if err != nil {
 		return err
 	}
