@@ -294,8 +294,9 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 // @Description Update profile avatar
 // @ID put-avatar
 // @Accept multipart/form-data
+// @Produce json
 // @Param avatar body png false "Avatar"
-// @Success 204 "Profile avatar is updated successfully"
+// @Success 200 {object} models.ProfileAvatar "Profile avatar is updated successfully"
 // @Failure 400 "Incorrect request data"
 // @Failure 403 "Not authorized"
 // @Failure 500 "Database error"
@@ -319,11 +320,15 @@ func PutAvatar(env *models.Env) http.HandlerFunc {
 		filename := header.Filename
 		dir := "upload/img/"
 
-		if _, err := saveAvatar(env, avatar, filename, dir, id); err != nil {
+		avatarPath, err := saveAvatar(env, avatar, filename, dir, id)
+		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		result := &models.ProfileAvatar{
+			Avatar: avatarPath,
+		}
+		writeResponseJSON(w, http.StatusOK, result)
 	}
 }

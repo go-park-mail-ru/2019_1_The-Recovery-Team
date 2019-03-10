@@ -3,6 +3,7 @@ definitions:
   models.Profile:
     properties:
       avatar:
+        example: upload/img/1.png
         type: string
       email:
         example: test@mail.ru
@@ -25,6 +26,12 @@ definitions:
       win:
         example: 100
         type: integer
+    type: object
+  models.ProfileAvatar:
+    properties:
+      avatar:
+        example: upload/img/1.png
+        type: string
     type: object
   models.ProfileInfo:
     properties:
@@ -50,6 +57,7 @@ definitions:
     items:
       properties:
         avatar:
+          example: upload/img/1.png
           type: string
         email:
           example: test@mail.ru
@@ -94,9 +102,14 @@ paths:
         name: avatar
         schema:
           type: object
+      produces:
+      - application/json
       responses:
-        "204":
+        "200":
           description: Profile avatar is updated successfully
+          schema:
+            $ref: '#/definitions/models.ProfileAvatar'
+            type: object
         "400":
           description: Incorrect request data
         "403":
@@ -277,7 +290,10 @@ paths:
           type: object
       responses:
         "200":
-          description: Session is created successfully
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Profile'
+            type: object
         "400":
           description: Incorrect request data
         "403":
