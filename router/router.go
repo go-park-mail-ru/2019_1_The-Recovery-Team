@@ -23,7 +23,7 @@ func InitRouter(env *models.Env) *mux.Router {
 			handler = middlewareWrapper(env, handler)
 		}
 		router.
-			Methods(route.Method).
+			Methods(route.Method, "OPTIONS").
 			Path(route.Pattern).
 			Name(route.Name).
 			Handler(handler)
