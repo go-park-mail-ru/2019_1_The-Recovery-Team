@@ -5,6 +5,7 @@ import (
 	"api/middleware"
 	"database/sql"
 	"errors"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -43,6 +44,7 @@ func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) erro
 		}
 		set = set + "nickname = :nickname"
 	}
+
 	if newInfo.Email != "" {
 		exists, _ := env.Dbm.FindWithField("profile", "email", newInfo.Email)
 		if exists {
@@ -53,7 +55,13 @@ func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) erro
 		}
 		set = set + "email = :email"
 	}
+
 	if newInfo.Password != "" {
+		passwordHash, err := hashAndSalt(newInfo.Password)
+		if err != nil {
+			return err
+		}
+		newInfo.Password = passwordHash
 		if set != "" {
 			set = set + ", "
 		}
@@ -88,6 +96,7 @@ func checkField(env *models.Env, w http.ResponseWriter, table, field, value stri
 // @Param email path string false "Profile email"
 // @Param nickname path string false "Profile nickname"
 // @Success 204 "Profile found successfully"
+// @Failure 400 "Incorrect request data"
 // @Failure 403 "Not authorized"
 // @Failure 404 "Not found"
 // @Failure 500 "Database error"
@@ -177,12 +186,7 @@ func PutProfile(env *models.Env) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
-		newInfo.Password, err = hashAndSalt(newInfo.Password)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		fmt.Println(newInfo.Password)
 
 		err = updateProfile(env, id, newInfo)
 		if err != nil {

@@ -1,14 +1,14 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "{{.Description}}",
-        "title": "{{.Title}}",
+        "description": "This is a super game.",
+        "title": "Sad Islands API",
         "contact": {},
         "license": {},
-        "version": "{{.Version}}"
+        "version": "1.0"
     },
-    "host": "127.0.0.1:8080",
-    "basePath": "{{.BasePath}}",
+    "host": "104.248.28.45",
+    "basePath": "/api/v1",
     "paths": {
         "/avatars": {
             "put": {
@@ -73,6 +73,9 @@
                 "responses": {
                     "204": {
                         "description": "Profile found successfully"
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
                     },
                     "403": {
                         "description": "Not authorized"
@@ -293,7 +296,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Session is created successfully",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/models.Profile"
@@ -354,7 +357,7 @@
                 },
                 "password": {
                     "type": "string",
-                    "example": "password"
+                    "example": "-"
                 },
                 "record": {
                     "type": "integer",
@@ -388,7 +391,7 @@
                 },
                 "password": {
                     "type": "string",
-                    "example": "password"
+                    "example": "-"
                 }
             }
         },
@@ -396,7 +399,8 @@
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "test@mail.ru"
                 },
                 "password": {
                     "type": "string",

@@ -33,7 +33,7 @@ func GetSession(env *models.Env) http.HandlerFunc {
 // @ID post-session
 // @Accept json
 // @Param profile_login body models.ProfileLogin true "Email, password"
-// @Success 200 {object} models.Profile Session is created successfully"
+// @Success 200 {object} models.Profile "Session is created successfully"
 // @Failure 400 "Incorrect request data"
 // @Failure 422 "Unprocessable request data"
 // @Failure 403 "Not authorized"

@@ -12,7 +12,12 @@ import (
 	"net/http"
 )
 
-// @host 127.0.0.1:8080
+// @title Sad Islands API
+// @version 1.0
+// @description This is a super game.
+
+// @host 104.248.28.45
+// @BasePath /api/v1
 
 func main() {
 	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands")
