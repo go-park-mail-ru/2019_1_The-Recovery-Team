@@ -16,6 +16,7 @@ func InitRouter(env *models.Env) *mux.Router {
 			handler = middlewareWrapper(env, handler)
 		}
 		router.
+			PathPrefix("/api/v1/").
 			Methods(route.Method, "OPTIONS").
 			Path(route.Pattern).
 			Name(route.Name).
