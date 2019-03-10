@@ -4,12 +4,12 @@ import (
 	"api/database"
 	_ "api/docs"
 	"api/filesystem"
-	"api/middleware"
 	"api/models"
 	"api/router"
 	"api/session"
-	"github.com/swaggo/http-swagger"
 	"net/http"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title Sad Islands API
@@ -38,7 +38,7 @@ func main() {
 	mainRouter := router.InitRouter(env)
 
 	fs := filesystem.InitFileserverHandler("/upload/", "./upload")
-	mainRouter.PathPrefix("/upload/").Handler(middleware.Authentication(env, fs))
+	mainRouter.PathPrefix("/upload/").Handler(fs)
 
 	mainRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
