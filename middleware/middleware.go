@@ -72,28 +72,14 @@ func CORSMiddleware(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-// func RecoverMiddleware(next http.HandlerFunc) http.HandlerFunc {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		defer func() {
-// 			if err := recover(); err != nil {
-// 				logger.Error("[PANIC]: ", err, " at ", string(debug.Stack()))
-// 				w.WriteHeader(http.StatusInternalServerError)
-// 			}
-// 		}()
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
-
-// func AccessLogMiddleware(next http.HandlerFunc) http.HandlerFunc {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		start := time.Now()
-// 		next.ServeHTTP(w, r)
-
-// 		logger.Infow(r.URL.Path,
-// 			"method", r.Method,
-// 			"remote_addr", r.RemoteAddr,
-// 			"url", r.URL.Path,
-// 			"work_time", time.Since(start).String(),
-// 		)
-// 	})
-// }
+// RecoverMiddleware catches panic
+func RecoverMiddleware(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
