@@ -19,6 +19,8 @@ var allowedOrigins = map[string]interface{}{
 	"http://127.0.0.1:8080":     struct{}{},
 	"http://localhost:5000":     struct{}{},
 	"http://localhost:8080":     struct{}{},
+	"http://104.248.28.45":      struct{}{},
+	"https://104.248.28.45":     struct{}{},
 	"https://sadislands.now.sh": struct{}{},
 	"http://sadislands.ru":      struct{}{},
 	"https://sadislands.ru":     struct{}{},
