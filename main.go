@@ -4,6 +4,7 @@ import (
 	"api/database"
 	_ "api/docs"
 	"api/filesystem"
+	"api/middleware"
 	"api/models"
 	"api/router"
 	"api/session"
@@ -38,7 +39,7 @@ func main() {
 	mainRouter := router.InitRouter(env)
 
 	fs := filesystem.InitFileserverHandler("/upload/", "./upload")
-	mainRouter.PathPrefix("/upload/").Handler(fs)
+	mainRouter.PathPrefix("/upload/").Handler(middleware.Authentication(env, fs))
 
 	mainRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
