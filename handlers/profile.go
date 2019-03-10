@@ -186,7 +186,7 @@ func PutProfile(env *models.Env) http.HandlerFunc {
 
 		err = updateProfile(env, id, newInfo)
 		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
