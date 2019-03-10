@@ -40,4 +40,7 @@ type ProfileLogin struct {
 }
 
 //easyjson:json
-type Profiles []Profile
+type Profiles struct {
+	List  []Profile
+	Total int `json:"total" example:"50"`
+}

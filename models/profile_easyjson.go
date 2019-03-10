@@ -115,44 +115,93 @@ func (v *Score) UnmarshalEasyJSON(l *jlexer.Lexer) {
 func easyjson521a5691DecodeApiModels1(in *jlexer.Lexer, out *Profiles) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
 		in.Skip()
-		*out = nil
-	} else {
-		in.Delim('[')
-		if *out == nil {
-			if !in.IsDelim(']') {
-				*out = make(Profiles, 0, 1)
-			} else {
-				*out = Profiles{}
-			}
-		} else {
-			*out = (*out)[:0]
-		}
-		for !in.IsDelim(']') {
-			var v1 Profile
-			(v1).UnmarshalEasyJSON(in)
-			*out = append(*out, v1)
-			in.WantComma()
-		}
-		in.Delim(']')
+		return
 	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "List":
+			if in.IsNull() {
+				in.Skip()
+				out.List = nil
+			} else {
+				in.Delim('[')
+				if out.List == nil {
+					if !in.IsDelim(']') {
+						out.List = make([]Profile, 0, 1)
+					} else {
+						out.List = []Profile{}
+					}
+				} else {
+					out.List = (out.List)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v1 Profile
+					(v1).UnmarshalEasyJSON(in)
+					out.List = append(out.List, v1)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "total":
+			out.Total = int(in.Int())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
 	if isTopLevel {
 		in.Consumed()
 	}
 }
 func easyjson521a5691EncodeApiModels1(out *jwriter.Writer, in Profiles) {
-	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v2, v3 := range in {
-			if v2 > 0 {
-				out.RawByte(',')
-			}
-			(v3).MarshalEasyJSON(out)
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"List\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
+		if in.List == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v2, v3 := range in.List {
+				if v2 > 0 {
+					out.RawByte(',')
+				}
+				(v3).MarshalEasyJSON(out)
+			}
+			out.RawByte(']')
+		}
 	}
+	{
+		const prefix string = ",\"total\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int(int(in.Total))
+	}
+	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface

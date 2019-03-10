@@ -54,34 +54,15 @@ definitions:
         type: string
     type: object
   models.Profiles:
-    items:
-      properties:
-        avatar:
-          example: upload/img/1.png
-          type: string
-        email:
-          example: test@mail.ru
-          type: string
-        id:
-          example: 1
-          type: integer
-        loss:
-          example: 50
-          type: integer
-        nickname:
-          example: test
-          type: string
-        password:
-          example: password
-          type: string
-        record:
-          example: 1500
-          type: integer
-        win:
-          example: 100
-          type: integer
-      type: object
-    type: array
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/models.Profile'
+        type: array
+      total:
+        example: 50
+        type: integer
+    type: object
 host: 127.0.0.1:8080
 info:
   contact: {}
@@ -247,6 +228,8 @@ paths:
           schema:
             $ref: '#/definitions/models.Profiles'
             type: object
+        "400":
+          description: Incorrect request data
         "500":
           description: Database error
       summary: Get scoreboard
