@@ -307,6 +307,7 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_id",
 			Value:    token,
+			Path:     "/",
 			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
 			HttpOnly: true,
 		})
