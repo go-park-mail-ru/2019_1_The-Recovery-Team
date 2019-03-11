@@ -5,7 +5,6 @@ import (
 	"api/middleware"
 	"database/sql"
 	"errors"
-	"fmt"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -35,7 +34,7 @@ func saveAvatar(env *models.Env, avatar multipart.File, filename, dir string, id
 	return avatarPath, nil
 }
 
-func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) error {
+func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileUpdate) error {
 	var set string
 	if newInfo.Nickname != "" {
 		exists, _ := env.Dbm.FindWithField("profile", "nickname", newInfo.Nickname)
@@ -71,9 +70,12 @@ func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) erro
 	dbo := env.Dbm.DB()
 	if set != "" {
 		query := `UPDATE profile SET ` + set + ` WHERE id = :id`
-		_, err := dbo.NamedExec(query, &models.Profile{
-			ID:          id,
-			ProfileInfo: *newInfo,
+		_, err := dbo.NamedExec(query, &struct {
+			ID uint64
+			models.ProfileUpdate
+		}{
+			ID:            id,
+			ProfileUpdate: *newInfo,
 		})
 		return err
 	}
@@ -167,6 +169,7 @@ func GetProfile(env *models.Env) http.HandlerFunc {
 // @Failure 400 "Incorrect request data"
 // @Failure 403 "Not authorized"
 // @Failure 404 "Not found"
+// @Failure 422 "Incorrrect current password"
 // @Failure 500 "Database error"
 // @Router /profiles/{id} [PUT]
 func PutProfile(env *models.Env) http.HandlerFunc {
@@ -180,13 +183,32 @@ func PutProfile(env *models.Env) http.HandlerFunc {
 			return
 		}
 
-		newInfo := &models.ProfileInfo{}
+		newInfo := &models.ProfileUpdate{}
 		err := unmarshalJSONBodyToStruct(r, newInfo)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		fmt.Println(newInfo.Password)
+
+		if newInfo.Password != "" {
+			if newInfo.PasswordOld != "" {
+				var currentPassword string
+				err := env.Dbm.Find(&currentPassword, QueryProfilePassword, id)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				if matches, err := verifyPassword(newInfo.PasswordOld, currentPassword); !matches || err != nil {
+					w.WriteHeader(http.StatusUnprocessableEntity)
+					return
+				}
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+		}
 
 		err = updateProfile(env, id, newInfo)
 		if err != nil {

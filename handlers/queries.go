@@ -13,4 +13,5 @@ const (
 	QueryUpdateProfileAvatar        = `UPDATE profile SET avatar = $1 WHERE id = $2`
 	QueryProfileByEmailWithPassword = `SELECT id, email, nickname, password, avatar FROM profile WHERE LOWER(email) = LOWER($1)`
 	QueryCountProfilesNumber        = `SELECT COUNT(*) FROM profile`
+	QueryProfilePassword            = `SELECT password FROM profile WHERE id = $1`
 )

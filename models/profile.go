@@ -34,6 +34,12 @@ type ProfileRegistration struct {
 }
 
 //easyjson:json
+type ProfileUpdate struct {
+	ProfileInfo
+	PasswordOld string `json:"password_old" example:"password_old"`
+}
+
+//easyjson:json
 type ProfileLogin struct {
 	Email    string `json:"email" example:"test@mail.ru"`
 	Password string `json:"password" example:"password"`

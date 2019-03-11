@@ -207,6 +207,8 @@ paths:
           description: Not authorized
         "404":
           description: Not found
+        "422":
+          description: Incorrrect current password
         "500":
           description: Database error
       summary: Put profile
