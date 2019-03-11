@@ -15,6 +15,12 @@
 
 ## Ссылка на игру
 
+http://104.248.28.45/
+
+## Доукментация API
+
+http://104.248.28.45:8080/swagger/index.html
+
 ## Docker-compose
 
 `docker-compose up --build`

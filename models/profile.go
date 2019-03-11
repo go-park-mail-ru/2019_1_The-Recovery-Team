@@ -24,7 +24,7 @@ type Score struct {
 type ProfileInfo struct {
 	Email    string `json:"email,omitempty" example:"test@mail.ru"`
 	Nickname string `json:"nickname,omitempty" example:"test"`
-	Password string `json:"password,omitempty" example:"password"`
+	Password string `json:"password,omitempty" example:"-"`
 }
 
 //easyjson:json
@@ -34,10 +34,19 @@ type ProfileRegistration struct {
 }
 
 //easyjson:json
+type ProfileUpdate struct {
+	ProfileInfo
+	PasswordOld string `json:"password_old" example:"password_old"`
+}
+
+//easyjson:json
 type ProfileLogin struct {
-	Email    string `json:"email" example:"test@mail.ru`
+	Email    string `json:"email" example:"test@mail.ru"`
 	Password string `json:"password" example:"password"`
 }
 
 //easyjson:json
-type Profiles []Profile
+type Profiles struct {
+	List  []Profile
+	Total int `json:"total" example:"50"`
+}

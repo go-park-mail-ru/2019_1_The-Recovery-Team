@@ -1,4 +1,4 @@
-basePath: '{{.BasePath}}'
+basePath: /api/v1
 definitions:
   models.Profile:
     properties:
@@ -18,7 +18,7 @@ definitions:
         example: test
         type: string
       password:
-        example: password
+        example: '-'
         type: string
       record:
         example: 1500
@@ -42,53 +42,35 @@ definitions:
         example: test
         type: string
       password:
-        example: password
+        example: '-'
         type: string
     type: object
   models.ProfileLogin:
     properties:
       email:
+        example: test@mail.ru
         type: string
       password:
         example: password
         type: string
     type: object
   models.Profiles:
-    items:
-      properties:
-        avatar:
-          example: upload/img/1.png
-          type: string
-        email:
-          example: test@mail.ru
-          type: string
-        id:
-          example: 1
-          type: integer
-        loss:
-          example: 50
-          type: integer
-        nickname:
-          example: test
-          type: string
-        password:
-          example: password
-          type: string
-        record:
-          example: 1500
-          type: integer
-        win:
-          example: 100
-          type: integer
-      type: object
-    type: array
-host: 127.0.0.1:8080
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/models.Profile'
+        type: array
+      total:
+        example: 50
+        type: integer
+    type: object
+host: 104.248.28.45
 info:
   contact: {}
-  description: '{{.Description}}'
+  description: This is a super game.
   license: {}
-  title: '{{.Title}}'
-  version: '{{.Version}}'
+  title: Sad Islands API
+  version: "1.0"
 paths:
   /avatars:
     put:
@@ -133,6 +115,8 @@ paths:
       responses:
         "204":
           description: Profile found successfully
+        "400":
+          description: Incorrect request data
         "403":
           description: Not authorized
         "404":
@@ -223,6 +207,8 @@ paths:
           description: Not authorized
         "404":
           description: Not found
+        "422":
+          description: Incorrrect current password
         "500":
           description: Database error
       summary: Put profile
@@ -247,6 +233,8 @@ paths:
           schema:
             $ref: '#/definitions/models.Profiles'
             type: object
+        "400":
+          description: Incorrect request data
         "500":
           description: Database error
       summary: Get scoreboard
@@ -290,7 +278,7 @@ paths:
           type: object
       responses:
         "200":
-          description: OK
+          description: Session is created successfully
           schema:
             $ref: '#/definitions/models.Profile'
             type: object

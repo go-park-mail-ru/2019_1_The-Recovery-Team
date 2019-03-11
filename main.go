@@ -4,15 +4,20 @@ import (
 	"api/database"
 	_ "api/docs"
 	"api/filesystem"
-	"api/middleware"
 	"api/models"
 	"api/router"
 	"api/session"
-	"github.com/swaggo/http-swagger"
 	"net/http"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// @host 127.0.0.1:8080
+// @title Sad Islands API
+// @version 1.0
+// @description This is a super game.
+
+// @host 104.248.28.45
+// @BasePath /api/v1
 
 func main() {
 	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands")
@@ -33,7 +38,7 @@ func main() {
 	mainRouter := router.InitRouter(env)
 
 	fs := filesystem.InitFileserverHandler("/upload/", "./upload")
-	mainRouter.PathPrefix("/upload/").Handler(middleware.Authentication(env, fs))
+	mainRouter.PathPrefix("/upload/").Handler(fs)
 
 	mainRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 

@@ -34,7 +34,7 @@ func saveAvatar(env *models.Env, avatar multipart.File, filename, dir string, id
 	return avatarPath, nil
 }
 
-func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) error {
+func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileUpdate) error {
 	var set string
 	if newInfo.Nickname != "" {
 		exists, _ := env.Dbm.FindWithField("profile", "nickname", newInfo.Nickname)
@@ -43,6 +43,7 @@ func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) erro
 		}
 		set = set + "nickname = :nickname"
 	}
+
 	if newInfo.Email != "" {
 		exists, _ := env.Dbm.FindWithField("profile", "email", newInfo.Email)
 		if exists {
@@ -53,7 +54,13 @@ func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) erro
 		}
 		set = set + "email = :email"
 	}
+
 	if newInfo.Password != "" {
+		passwordHash, err := hashAndSalt(newInfo.Password)
+		if err != nil {
+			return err
+		}
+		newInfo.Password = passwordHash
 		if set != "" {
 			set = set + ", "
 		}
@@ -63,9 +70,12 @@ func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileInfo) erro
 	dbo := env.Dbm.DB()
 	if set != "" {
 		query := `UPDATE profile SET ` + set + ` WHERE id = :id`
-		_, err := dbo.NamedExec(query, &models.Profile{
-			ID:          id,
-			ProfileInfo: *newInfo,
+		_, err := dbo.NamedExec(query, &struct {
+			ID uint64
+			models.ProfileUpdate
+		}{
+			ID:            id,
+			ProfileUpdate: *newInfo,
 		})
 		return err
 	}
@@ -88,6 +98,7 @@ func checkField(env *models.Env, w http.ResponseWriter, table, field, value stri
 // @Param email path string false "Profile email"
 // @Param nickname path string false "Profile nickname"
 // @Success 204 "Profile found successfully"
+// @Failure 400 "Incorrect request data"
 // @Failure 403 "Not authorized"
 // @Failure 404 "Not found"
 // @Failure 500 "Database error"
@@ -158,6 +169,7 @@ func GetProfile(env *models.Env) http.HandlerFunc {
 // @Failure 400 "Incorrect request data"
 // @Failure 403 "Not authorized"
 // @Failure 404 "Not found"
+// @Failure 422 "Incorrrect current password"
 // @Failure 500 "Database error"
 // @Router /profiles/{id} [PUT]
 func PutProfile(env *models.Env) http.HandlerFunc {
@@ -171,22 +183,36 @@ func PutProfile(env *models.Env) http.HandlerFunc {
 			return
 		}
 
-		newInfo := &models.ProfileInfo{}
+		newInfo := &models.ProfileUpdate{}
 		err := unmarshalJSONBodyToStruct(r, newInfo)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		newInfo.Password, err = hashAndSalt(newInfo.Password)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+		if newInfo.Password != "" {
+			if newInfo.PasswordOld != "" {
+				var currentPassword string
+				err := env.Dbm.Find(&currentPassword, QueryProfilePassword, id)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				if matches, err := verifyPassword(newInfo.PasswordOld, currentPassword); !matches || err != nil {
+					w.WriteHeader(http.StatusUnprocessableEntity)
+					return
+				}
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
 		}
 
 		err = updateProfile(env, id, newInfo)
 		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -281,6 +307,7 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_id",
 			Value:    token,
+			Path:     "/",
 			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
 			HttpOnly: true,
 		})

@@ -6,13 +6,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// func setupHandler(next http.HandlerFunc) http.HandlerFunc {
-// 	next = middleware.CORSMiddleware(next)
-// 	next = middleware.AccessLogMiddleware(next)
-// 	next = middleware.RecoverMiddleware(next)
-// 	return next
-// }
-
 // InitRouter returns router with inintialized handlers
 func InitRouter(env *models.Env) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
@@ -23,7 +16,8 @@ func InitRouter(env *models.Env) *mux.Router {
 			handler = middlewareWrapper(env, handler)
 		}
 		router.
-			Methods(route.Method).
+			PathPrefix("/api/v1/").
+			Methods(route.Method, "OPTIONS").
 			Path(route.Pattern).
 			Name(route.Name).
 			Handler(handler)

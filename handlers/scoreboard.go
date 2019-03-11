@@ -14,6 +14,7 @@ import (
 // @Param limit query int false "limit number"
 // @Param start query int false "start index"
 // @Success 200 {object} models.Profiles "Scoreboard found successfully"
+// @Failure 400 "Incorrect request data"
 // @Failure 500 "Database error"
 // @Router /scores [GET]
 func GetScoreboard(env *models.Env) http.HandlerFunc {
@@ -21,24 +22,31 @@ func GetScoreboard(env *models.Env) http.HandlerFunc {
 		limit, limitErr := strconv.ParseInt(r.FormValue("limit"), 10, 64)
 		offset, offsetErr := strconv.ParseInt(r.FormValue("start"), 10, 64)
 
-		result := models.Profiles{}
+		if limitErr == nil && limit > 25 {
+			limit = 25
+		}
+
+		result := models.Profiles{
+			List: []models.Profile{},
+		}
 		var err error
 		switch {
 		case limitErr == nil && offsetErr == nil:
 			{
-				env.Dbm.FindAll(&result, QueryProfilesWithLimitAndOffset, limit, offset)
+				env.Dbm.FindAll(&result.List, QueryProfilesWithLimitAndOffset, limit, offset)
 			}
 		case limitErr == nil:
 			{
-				env.Dbm.FindAll(&result, QueryProfilesWithLimit, limit)
+				env.Dbm.FindAll(&result.List, QueryProfilesWithLimit, limit)
 			}
 		case offsetErr == nil:
 			{
-				env.Dbm.FindAll(&result, QueryProfilesWithOffset, offset)
+				env.Dbm.FindAll(&result.List, QueryProfilesWithOffset, offset)
 			}
 		default:
 			{
-				env.Dbm.FindAll(&result, QueryProfiles)
+				w.WriteHeader(http.StatusBadRequest)
+				return
 			}
 		}
 
@@ -46,6 +54,8 @@ func GetScoreboard(env *models.Env) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		env.Dbm.Find(&result.Total, QueryCountProfilesNumber)
 
 		writeResponseJSON(w, http.StatusOK, result)
 	}
