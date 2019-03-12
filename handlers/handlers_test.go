@@ -1,79 +1,107 @@
 package handlers
 
-//type TestCase struct {
-//	ID      string
-//	Result  *Result
-//	IsError bool
-//}
-//
-//type Result struct {
-//	Description string
-//	SessionID   int
-//}
+import (
+	"api/database"
+	"api/models"
+	"api/session"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/jmoiron/sqlx"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
 
-//func GetProfileDummy(w http.ResponseWriter, r *http.Request) {
-//	key := r.FormValue("id")
-//
-//	switch key {
-//	case "42":
-//		w.WriteHeader(http.StatusOK)
-//		_, _ = io.WriteString(w, `{"session_id": 123123123, "description" : "Profile found successfully"}`)
-//	case "__not_auth":
-//		w.WriteHeader(http.StatusForbidden)
-//		_, _ = io.WriteString(w, `{"description" : "Not authorized"}`)
-//	case "__not_exist":
-//		w.WriteHeader(http.StatusNotFound)
-//		_, _ = io.WriteString(w, `{"description" : "Not found"}`)
-//	case "__database_error":
-//		fallthrough
-//	default:
-//		w.WriteHeader(http.StatusInternalServerError)
-//		_, _ = io.WriteString(w, `{"description" : "Database error"}`)
-//	}
-//}
-//
-//func TestGetProfile(t *testing.T) {
-//	cases := [] TestCase{
-//		TestCase{
-//			ID: "42",
-//			Result: &Result{
-//				SessionID: 123123123,
-//				Description: "Profile found successfully",
-//			},
-//		},
-//		TestCase{
-//			ID: "__not_auth",
-//			Result: &Result{
-//				Description: "Not authorized",
-//			},
-//		},
-//		TestCase{
-//			ID: "__not_exist",
-//			Result: &Result{
-//				Description: "Not found",
-//			},
-//		},
-//		TestCase{
-//			ID: "__database_error",
-//			Result: &Result{
-//				Description: "Database error",
-//			},
-//		},
-//	}
-//
-//	ts := httptest.NewServer(http.HandlerFunc(GetProfileDummy))
-//	for caseNum, item := range cases {
-//		result, err := c.Checkout(item.ID)
-//
-//		if err != nil && !item.IsError {
-//			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
-//		}
-//		if err == nil && item.IsError {
-//			t.Errorf("[%d] expected error, got nil", caseNum)
-//		}
-//		if !reflect.DeepEqual(item.Result, result) {
-//			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, item.Result, result)
-//		}
-//	}
-//	ts.Close()
-//}
+func TestGetProfileOK(t *testing.T) {
+	var mockDb, _, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDb.Close()
+	sqlxDB := sqlx.NewDb(mockDb, "sqlmock")
+	dbm := &database.Manager{}
+	sm := &session.Manager{}
+	dbm.SetDB(sqlxDB)
+	env := &models.Env{
+		Dbm: dbm,
+		Sm:  sm,
+	}
+
+	req, err := http.NewRequest("GET", "/profiles", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := GetProfile(env)
+	handler.ServeHTTP(rr, req)
+	expected := http.StatusInternalServerError
+	if status := rr.Code; status != expected {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, expected)
+	}
+}
+
+func TestPutProfile(t *testing.T) {
+	var mockDb, _, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDb.Close()
+	sqlxDB := sqlx.NewDb(mockDb, "sqlmock")
+	dbm := &database.Manager{}
+	sm := &session.Manager{}
+	dbm.SetDB(sqlxDB)
+	env := &models.Env{
+		Dbm: dbm,
+		Sm:  sm,
+	}
+
+	req, err := http.NewRequest("PUT", "/profiles", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := PutProfile(env)
+	handler.ServeHTTP(rr, req)
+	expected := http.StatusForbidden
+	if status := rr.Code; status != expected {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, expected)
+	}
+}
+
+func TestPostProfile(t *testing.T) {
+	var mockDb, _, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDb.Close()
+	sqlxDB := sqlx.NewDb(mockDb, "sqlmock")
+	dbm := &database.Manager{}
+	sm := &session.Manager{}
+	dbm.SetDB(sqlxDB)
+	env := &models.Env{
+		Dbm: dbm,
+		Sm:  sm,
+	}
+
+	req, err := http.NewRequest("POST", "/profiles", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := PostProfile(env)
+	handler.ServeHTTP(rr, req)
+	expected := http.StatusBadRequest
+	if status := rr.Code; status != expected {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, expected)
+	}
+}
+
+func TestGetSession(t *testing.T) {
+
+}
+
+func TestPostSession(t *testing.T) {
+
+}

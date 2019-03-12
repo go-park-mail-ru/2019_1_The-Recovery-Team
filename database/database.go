@@ -7,7 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
-	migrate "github.com/rubenv/sql-migrate"
+	"github.com/rubenv/sql-migrate"
 )
 
 // Manager is a wrapper around sqlx.DB
@@ -55,6 +55,10 @@ func (manager *Manager) migrate() error {
 	}
 
 	return nil
+}
+
+func (manager *Manager) SetDB(val *sqlx.DB) {
+	manager.db = val
 }
 
 // DB returns connection to database
