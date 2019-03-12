@@ -8,6 +8,7 @@ import (
 	"api/router"
 	"api/session"
 	"net/http"
+	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -20,6 +21,8 @@ import (
 // @BasePath /api/v1
 
 func main() {
+	time.Sleep(30 * time.Second)
+
 	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands")
 	if err != nil {
 		panic(err)
