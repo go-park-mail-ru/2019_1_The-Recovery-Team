@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/swaggo/http-swagger"
 )
 
 // @title Sad Islands API
@@ -24,7 +24,7 @@ func main() {
 	// Crutch for docker-compose (((
 	time.Sleep(30 * time.Second)
 
-	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands")
+	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands", "migrations/")
 	if err != nil {
 		panic(err)
 	}

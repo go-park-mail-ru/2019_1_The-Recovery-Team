@@ -57,6 +57,8 @@ var env = models.Env{
 	Sm:  sm,
 }
 
+const baseUrl = "http://127.0.0.1:8080/api/v1"
+
 func TestGetProfile(t *testing.T) {
 	fmt.Println("[ERROR]", err)
 	profile := &models.Profile{
@@ -87,7 +89,7 @@ func TestGetProfile(t *testing.T) {
 	}
 
 	for number, item := range cases {
-		u := "http://127.0.0.1:8080/api/v1/profiles/"
+		u := baseUrl + "/profiles/"
 		vars := map[string]string{
 			"id": strconv.FormatUint(item.ProfileID, 10),
 		}
@@ -95,17 +97,21 @@ func TestGetProfile(t *testing.T) {
 		req = mux.SetURLVars(req, vars)
 		w := httptest.NewRecorder()
 		GetProfile(&env)(w, req)
-
-		if w.Code != item.StatusCode {
+		expected := item.StatusCode
+		if w.Code != expected {
 			t.Errorf("[%d] wrong StatusCode: got %d, expected %d",
-				number, w.Code, item.StatusCode)
+				number, w.Code, expected)
 			return
 		}
 
 		resp := w.Result()
-		defer resp.Body.Close()
-		b, _ := ioutil.ReadAll(resp.Body)
 
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			t.Error(err)
+		}
+
+		resp.Body.Close()
 		body := string(b)
 		if body != item.Response {
 			t.Errorf("[%d] wrong Response: got %+v, expected %+v",
@@ -195,23 +201,33 @@ func TestPostProfile(t *testing.T) {
 
 	for number, item := range cases {
 		var buf bytes.Buffer
-		writter := multipart.NewWriter(&buf)
+		writer := multipart.NewWriter(&buf)
 
 		if item.ProfileRegistration.Nickname != "" {
-			writter.WriteField("nickname", item.ProfileRegistration.Nickname)
+			err = writer.WriteField("nickname", item.ProfileRegistration.Nickname)
+			if err != nil {
+				t.Error(err)
+			}
 		}
 		if item.ProfileRegistration.Email != "" {
-			writter.WriteField("email", item.ProfileRegistration.Email)
+			err = writer.WriteField("email", item.ProfileRegistration.Email)
+			if err != nil {
+				t.Error(err)
+			}
 		}
 		if item.ProfileRegistration.Password != "" {
-			writter.WriteField("password", item.ProfileRegistration.Password)
+			err = writer.WriteField("password", item.ProfileRegistration.Password)
+			if err != nil {
+				t.Error(err)
+			}
 		}
-		writter.Close()
+		err = writer.Close()
+		t.Error(err)
 
 		u := "http://127.0.0.1:8080/api/v1/profiles"
 
 		req := httptest.NewRequest("POST", u, bytes.NewReader(buf.Bytes()))
-		req.Header.Set("Content-Type", writter.FormDataContentType())
+		req.Header.Set("Content-Type", writer.FormDataContentType())
 
 		w := httptest.NewRecorder()
 		PostProfile(&env)(w, req)
@@ -223,9 +239,9 @@ func TestPostProfile(t *testing.T) {
 		}
 
 		resp := w.Result()
-		defer resp.Body.Close()
 		var created models.Profile
 		body, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
 		if err != nil {
 			t.Errorf("Process response error")
 			return
@@ -233,7 +249,10 @@ func TestPostProfile(t *testing.T) {
 
 		if err := easyjson.UnmarshalFromReader(bytes.NewReader(body), &created); err == nil && resp.StatusCode == http.StatusOK {
 			created.ID = 0
-			body, _ = easyjson.Marshal(created)
+			body, err = easyjson.Marshal(created)
+			if err != nil {
+				t.Error(err)
+			}
 		}
 
 		if string(body) != item.Response {
@@ -295,7 +314,7 @@ func TestPutProfile(t *testing.T) {
 	}
 
 	for number, item := range cases {
-		u := "http://127.0.0.1:8080/api/v1/profiles/"
+		u := baseUrl + "/profiles/"
 		vars := map[string]string{
 			"id": strconv.FormatUint(item.ProfileID, 10),
 		}
@@ -337,7 +356,7 @@ func TestGetProfiles(t *testing.T) {
 	}
 
 	for number, item := range cases {
-		u := "http://127.0.0.1:8080/api/v1/profiles"
+		u := baseUrl + "/profiles"
 		if item.Email != "" {
 			u = u + "?email=" + item.Email
 		} else if item.Nickname != "" {
