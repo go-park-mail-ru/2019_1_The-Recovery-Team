@@ -34,11 +34,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer dbm.Close()
 
 	sm, err := session.InitSessionManager("", "", "redis:6379")
 	if err != nil {
 		panic(err)
 	}
+	defer sm.Close()
 
 	env := &models.Env{
 		Dbm: dbm,

@@ -28,6 +28,15 @@ func (manager *Manager) SM() *redis.Conn {
 	return &manager.sm
 }
 
+// Close closes connection to redis
+func (manager *Manager) Close() error {
+	if manager.sm == nil {
+		return nil
+	}
+	err := manager.sm.Close()
+	return err
+}
+
 // Set sets value to redis
 func (manager *Manager) Set(profileID uint64, expires time.Duration) (string, error) {
 	token := uuid.NewV4()
