@@ -239,15 +239,27 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if r.FormValue("nickname") == "" || r.FormValue("email") == "" || r.FormValue("password") == "" {
+
+		nickname := r.FormValue("nickname")
+		email := r.FormValue("email")
+
+		if nickname == "" || email == "" || r.FormValue("password") == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
+		if !VerifyEmail(email) {
+			message := models.HandlerError{
+				Description: "email is incorrect",
+			}
+			writeResponseJSON(w, http.StatusBadRequest, message)
+			return
+		}
+
 		newProfile := &models.ProfileRegistration{
-			Nickname: r.FormValue("nickname"),
+			Nickname: nickname,
 			ProfileLogin: models.ProfileLogin{
-				Email:    r.FormValue("email"),
+				Email:    email,
 				Password: r.FormValue("password"),
 			},
 		}
