@@ -221,7 +221,9 @@ func TestPostProfile(t *testing.T) {
 			}
 		}
 		err = writer.Close()
-		t.Error(err)
+		if err != nil {
+			t.Error(err)
+		}
 
 		u := "http://127.0.0.1:8080/api/v1/profiles"
 
