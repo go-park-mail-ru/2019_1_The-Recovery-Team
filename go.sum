@@ -1,6 +1,8 @@
 9fans.net/go v0.0.0-20181112161441-237454027057 h1:OcHlKWkAMJEF1ndWLGxp5dnJQkYM/YImUOvsBoz6h5E=
 9fans.net/go v0.0.0-20181112161441-237454027057/go.mod h1:diCsxrliIURU9xsYtjCp5AbpQKqdhKmf0ujWDUSkfoY=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/DATA-DOG/go-sqlmock v1.3.3 h1:CWUqKXe0s8A2z6qCgkP4Kru7wC11YoAnoupUKFDnH08=
+github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/PuerkitoBio/purell v1.1.0 h1:rmGxhojJlM0tuKtfdvliR84CFHljx9ag64t2xmVkjK4=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
@@ -244,6 +246,8 @@ github.com/karrick/godirwalk v1.7.5/go.mod h1:2c9FRhkDxdIbgkOnCEvnSWs71Bhugbl46s
 github.com/karrick/godirwalk v1.7.7/go.mod h1:2c9FRhkDxdIbgkOnCEvnSWs71Bhugbl46shStcFDJ34=
 github.com/karrick/godirwalk v1.7.8/go.mod h1:2c9FRhkDxdIbgkOnCEvnSWs71Bhugbl46shStcFDJ34=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:CzGEWj7cYgsdH8dAjBGEr58BoE7ScuLd+fwFZ44+/x8=
+github.com/keegancsmith/rpc v1.1.0 h1:bXVRk3EzbtrEegTGKxNTc+St1lR7t/Z1PAO8misBnCc=
+github.com/keegancsmith/rpc v1.1.0/go.mod h1:Xow74TKX34OPPiPCdz6x1o9c0SCxRqGxDuKGk7ZOo8s=
 github.com/konsorten/go-windows-terminal-sequences v0.0.0-20180402223658-b729f2633dfe/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
@@ -345,6 +349,8 @@ github.com/spf13/viper v1.2.1/go.mod h1:P4AexN0a+C9tGAnUFNwDMYYZv3pjFuvmeiMyKRaN
 github.com/spf13/viper v1.3.1/go.mod h1:ZiWeW+zYFKm7srdB9IoDzzZXaJaI5eL9QjNiN/DMA2s=
 github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518 h1:iD+PFTQwKEmbwSdwfvP5ld2WEI/g7qbdhmHJ2ASfYGs=
 github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518/go.mod h1:CKI4AZ4XmGV240rTHfO0hfE83S6/a3/Q1siZJ/vXf7A=
+github.com/stamblerre/gocode v0.0.0-20190213022308-8cc90faaf476 h1:KtMuvAziiZPINAWNvK1cNpAcqCHbDwNhpLbQw0rg6YY=
+github.com/stamblerre/gocode v0.0.0-20190213022308-8cc90faaf476/go.mod h1:EM2T8YDoTCvGXbEpFHxarbpv7VE26QD1++Cb1Pbh7Gs=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=

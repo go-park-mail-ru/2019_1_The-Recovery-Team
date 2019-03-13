@@ -33,15 +33,27 @@ func GetScoreboard(env *models.Env) http.HandlerFunc {
 		switch {
 		case limitErr == nil && offsetErr == nil:
 			{
-				env.Dbm.FindAll(&result.List, QueryProfilesWithLimitAndOffset, limit, offset)
+				err := env.Dbm.FindAll(&result.List, QueryProfilesWithLimitAndOffset, limit, offset)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
 			}
 		case limitErr == nil:
 			{
-				env.Dbm.FindAll(&result.List, QueryProfilesWithLimit, limit)
+				err := env.Dbm.FindAll(&result.List, QueryProfilesWithLimit, limit)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
 			}
 		case offsetErr == nil:
 			{
-				env.Dbm.FindAll(&result.List, QueryProfilesWithOffset, offset)
+				err := env.Dbm.FindAll(&result.List, QueryProfilesWithOffset, offset)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
 			}
 		default:
 			{
@@ -55,7 +67,11 @@ func GetScoreboard(env *models.Env) http.HandlerFunc {
 			return
 		}
 
-		env.Dbm.Find(&result.Total, QueryCountProfilesNumber)
+		err = env.Dbm.Find(&result.Total, QueryCountProfilesNumber)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		writeResponseJSON(w, http.StatusOK, result)
 	}

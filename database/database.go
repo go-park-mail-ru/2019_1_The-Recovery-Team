@@ -3,11 +3,9 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"fmt"
-
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
-	migrate "github.com/rubenv/sql-migrate"
+	"github.com/rubenv/sql-migrate"
 )
 
 // Manager is a wrapper around sqlx.DB
@@ -16,7 +14,7 @@ type Manager struct {
 }
 
 // InitDatabaseManager initialize manager with connection to database
-func InitDatabaseManager(username, password, host, name string) (*Manager, error) {
+func InitDatabaseManager(username, password, host, name, migrationsPath string) (*Manager, error) {
 	var err error
 	manager := &Manager{}
 	manager.db, err = sqlx.Open("postgres", "postgres://"+username+":"+password+"@"+host+"/"+name+"?sslmode=disable")
@@ -28,7 +26,7 @@ func InitDatabaseManager(username, password, host, name string) (*Manager, error
 		return nil, err
 	}
 
-	err = manager.migrate()
+	err = manager.migrate(migrationsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -36,23 +34,36 @@ func InitDatabaseManager(username, password, host, name string) (*Manager, error
 	return manager, nil
 }
 
-func (manager *Manager) migrate() error {
+func InitMockDatabaseManager(db *sql.DB) (*Manager, error) {
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+	manager := &Manager{
+		db: sqlxDB,
+	}
+
+	return manager, nil
+}
+
+func (manager *Manager) migrate(migrationsPath string) error {
 	dbo := manager.DB()
 	if dbo == nil {
 		return errors.New("connection doesn't exist")
 	}
 
 	migrations := &migrate.FileMigrationSource{
-		Dir: "migrations",
+		Dir: migrationsPath,
 	}
 
-	number, err := migrate.Exec(dbo.DB, "postgres", migrations, migrate.Up)
+	_, err := migrate.Exec(dbo.DB, "postgres", migrations, migrate.Down)
 	if err != nil {
 		return err
 	}
-	if number != 0 {
-		fmt.Printf("Make %d migrations", number)
+	_, err = migrate.Exec(dbo.DB, "postgres", migrations, migrate.Up)
+	if err != nil {
+		return err
 	}
+	//if number != 0 {
+	//	fmt.Printf("Make %d migrations", number)
+	//}
 
 	return nil
 }
