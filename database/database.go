@@ -14,7 +14,7 @@ type Manager struct {
 }
 
 // InitDatabaseManager initialize manager with connection to database
-func InitDatabaseManager(username, password, host, name, migrationsPath string) (*Manager, error) {
+func InitDatabaseManager(username, password, host, name, migrationsPath string, isTest bool) (*Manager, error) {
 	var err error
 	manager := &Manager{}
 	manager.db, err = sqlx.Open("postgres", "postgres://"+username+":"+password+"@"+host+"/"+name+"?sslmode=disable")
@@ -26,7 +26,7 @@ func InitDatabaseManager(username, password, host, name, migrationsPath string) 
 		return nil, err
 	}
 
-	err = manager.migrate(migrationsPath)
+	err = manager.migrate(migrationsPath, isTest)
 	if err != nil {
 		return nil, err
 	}
@@ -34,16 +34,7 @@ func InitDatabaseManager(username, password, host, name, migrationsPath string) 
 	return manager, nil
 }
 
-func InitMockDatabaseManager(db *sql.DB) (*Manager, error) {
-	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	manager := &Manager{
-		db: sqlxDB,
-	}
-
-	return manager, nil
-}
-
-func (manager *Manager) migrate(migrationsPath string) error {
+func (manager *Manager) migrate(migrationsPath string, isTest bool) error {
 	dbo := manager.DB()
 	if dbo == nil {
 		return errors.New("connection doesn't exist")
@@ -53,17 +44,16 @@ func (manager *Manager) migrate(migrationsPath string) error {
 		Dir: migrationsPath,
 	}
 
-	_, err := migrate.Exec(dbo.DB, "postgres", migrations, migrate.Down)
+	if isTest {
+		_, err := migrate.Exec(dbo.DB, "postgres", migrations, migrate.Down)
+		if err != nil {
+			return err
+		}
+	}
+	_, err := migrate.Exec(dbo.DB, "postgres", migrations, migrate.Up)
 	if err != nil {
 		return err
 	}
-	_, err = migrate.Exec(dbo.DB, "postgres", migrations, migrate.Up)
-	if err != nil {
-		return err
-	}
-	//if number != 0 {
-	//	fmt.Printf("Make %d migrations", number)
-	//}
 
 	return nil
 }
@@ -101,7 +91,7 @@ func (manager *Manager) FindAll(result interface{}, query string, args ...interf
 func (manager *Manager) FindWithField(table, field, value string) (bool, error) {
 	var result string
 	dbo := manager.DB()
-	query := `SELECT ` + field + ` FROM ` + table + ` WHERE LOWER(` + field + `)` + ` = LOWER($1)`
+	query := `SELECT ` + field + ` FROM ` + table + ` WHERE ` + field + ` = $1`
 	err := dbo.Get(&result, query, value)
 	if err == sql.ErrNoRows {
 		return false, nil

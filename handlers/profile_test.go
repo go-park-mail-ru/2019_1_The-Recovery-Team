@@ -7,7 +7,6 @@ import (
 	"api/session"
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -48,8 +47,8 @@ type TestCaseGetProfiles struct {
 }
 
 var (
-	dbm, err = database.InitDatabaseManager("recoveryteam", "123456", "localhost:5432", "sadislands", "../migrations/test")
-	sm, _    = session.InitSessionManager("", "", "localhost:6379")
+	dbm, _ = database.InitDatabaseManager("recoveryteam", "123456", "localhost:5432", "test", "../migrations/test", true)
+	sm, _  = session.InitSessionManager("", "", "localhost:6379")
 )
 
 var env = models.Env{
@@ -60,7 +59,6 @@ var env = models.Env{
 const baseUrl = "http://127.0.0.1:8080/api/v1"
 
 func TestGetProfile(t *testing.T) {
-	fmt.Println("[ERROR]", err)
 	profile := &models.Profile{
 		ID: 100,
 		ProfileInfo: models.ProfileInfo{
@@ -201,6 +199,7 @@ func TestPostProfile(t *testing.T) {
 
 	for number, item := range cases {
 		var buf bytes.Buffer
+		var err error
 		writer := multipart.NewWriter(&buf)
 
 		if item.ProfileRegistration.Nickname != "" {

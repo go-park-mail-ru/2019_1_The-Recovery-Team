@@ -60,8 +60,9 @@ func TestGetSession(t *testing.T) {
 		}
 
 		resp := w.Result()
-		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+
 		if err != nil {
 			t.Errorf("Process response error")
 			return
@@ -112,8 +113,9 @@ func TestPostSession(t *testing.T) {
 		}
 
 		resp := w.Result()
-		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+
 		if err != nil {
 			t.Errorf("Process response error")
 			return

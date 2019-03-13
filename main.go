@@ -8,6 +8,7 @@ import (
 	"api/router"
 	"api/session"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/swaggo/http-swagger"
@@ -22,9 +23,14 @@ import (
 
 func main() {
 	// Crutch for docker-compose (((
-	time.Sleep(30 * time.Second)
+	time.Sleep(15 * time.Second)
 
-	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands", "migrations/")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands", "migrations", false)
 	if err != nil {
 		panic(err)
 	}
@@ -46,5 +52,5 @@ func main() {
 
 	mainRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	panic(http.ListenAndServe(":8080", mainRouter))
+	panic(http.ListenAndServe(":"+port, mainRouter))
 }
