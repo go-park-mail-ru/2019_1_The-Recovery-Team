@@ -5,21 +5,21 @@
 ## Состав команды
 
 - [Черков Виталий](github.com/VitalyCherkov)
-- [Пудов Дмитрий](https://github.com/DPudov)
-- [Зорин Арсений](https://github.com/ZorinArsenij)
-- [Биличенко Фёдор](https://github.com/FedorBilichenko)
+- [Пудов Дмитрий](github.com/DPudov)
+- [Зорин Арсений](github.com/ZorinArsenij)
+- [Биличенко Фёдор](github.com/FedorBilichenko)
 
-Ментор - [Голубев Юрий](https://github.com/Ansile)
+Ментор - [Голубев Юрий](github.com/Ansile)
 
 ## Описание
 
 ## Ссылка на игру
 
-http://104.248.28.45/
+http://sadislands.ru/
 
 ## Доукментация API
 
-http://104.248.28.45:8080/swagger/index.html
+http://sadislands.ru/swagger/index.html
 
 ## Docker-compose
 
