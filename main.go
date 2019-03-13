@@ -21,6 +21,7 @@ import (
 // @BasePath /api/v1
 
 func main() {
+	// Crutch for docker-compose (((
 	time.Sleep(30 * time.Second)
 
 	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands")
