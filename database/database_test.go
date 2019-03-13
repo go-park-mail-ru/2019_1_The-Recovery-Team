@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -14,21 +15,21 @@ type profile struct {
 }
 
 func TestCorrectDBInit(t *testing.T) {
-	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
+	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost:5432", "test", "../migrations/test", true)
 	if dbm == nil || err != nil {
 		t.Errorf("test for OK Failed - database manager isn't initialized with correct data")
 	}
 }
 
 func TestIncorrectDBInit(t *testing.T) {
-	dbm, err := InitDatabaseManager("", "", "", "")
+	dbm, err := InitDatabaseManager("", "", "", "", "", true)
 	if dbm != nil || err == nil {
 		t.Errorf("test for ERROR Failed - doesn't return error on database manager initialization with incorrect data")
 	}
 }
 
 func TestCorrectDBManagerGet(t *testing.T) {
-	dbm, _ := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
+	dbm, _ := InitDatabaseManager("recoveryteam", "123456", "localhost:5432", "test", "../migrations/test", true)
 	db := dbm.DB()
 	if db == nil {
 		t.Errorf("test for OK Failed - doesn't return initialized database instance")
@@ -36,7 +37,7 @@ func TestCorrectDBManagerGet(t *testing.T) {
 }
 
 func TestCorrectDBClose(t *testing.T) {
-	dbm, _ := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
+	dbm, _ := InitDatabaseManager("recoveryteam", "123456", "localhost:5432", "test", "../migrations/test", true)
 	err := dbm.Close()
 	if err != nil {
 		t.Errorf("test for OK Failed - doesn't correctly close database connection")
@@ -51,22 +52,20 @@ func TestIncorrectDBClose(t *testing.T) {
 }
 
 func TestCorrectFind(t *testing.T) {
-	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
+	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost:5432", "test", "../migrations/test", true)
 	if err != nil {
 		t.Errorf("test for OK Failed - can't connect to database")
 		return
 	}
 	expected := &profile{
-		ID:       1,
+		ID:       100,
 		Nickname: "test",
-		Record:   0,
-		Win:      0,
-		Loss:     0,
 	}
 
 	query := `SELECT id, nickname, record, win, loss FROM profile WHERE id = $1`
 	result := &profile{}
-	if err := dbm.Find(result, query, 1); err != nil {
+	if err := dbm.Find(result, query, expected.ID); err != nil {
+		fmt.Println(err)
 		t.Errorf("test for OK Failed - get error on correct data")
 		return
 	}
@@ -77,7 +76,7 @@ func TestCorrectFind(t *testing.T) {
 }
 
 func TestCorrectFindAll(t *testing.T) {
-	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost", "sadislands")
+	dbm, err := InitDatabaseManager("recoveryteam", "123456", "localhost:5432", "test", "../migrations/test", true)
 	if err != nil {
 		t.Errorf("test for OK Failed - can't connect to database")
 		return
@@ -85,18 +84,16 @@ func TestCorrectFindAll(t *testing.T) {
 
 	expected := []profile{
 		{
-			ID:       1,
+			ID:       100,
 			Nickname: "test",
-			Record:   0,
-			Win:      0,
-			Loss:     0,
 		},
 		{
-			ID:       2,
-			Nickname: "Ivan",
-			Record:   0,
-			Win:      0,
-			Loss:     0,
+			ID:       101,
+			Nickname: "test3",
+		},
+		{
+			ID:       102,
+			Nickname: "test5",
 		},
 	}
 
