@@ -91,8 +91,8 @@ func (manager *Manager) FindAll(result interface{}, query string, args ...interf
 func (manager *Manager) FindWithField(table, field, value string) (bool, error) {
 	var result string
 	dbo := manager.DB()
-	query := `SELECT ` + field + ` FROM ` + table + ` WHERE ` + field + ` = $1`
-	err := dbo.Get(&result, query, value)
+	query := `SELECT $1 FROM $2 WHERE $3 = $4`
+	err := dbo.Get(&result, query, field, table, field, value)
 	if err == sql.ErrNoRows {
 		return false, nil
 	}

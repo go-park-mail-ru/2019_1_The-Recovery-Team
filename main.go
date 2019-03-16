@@ -7,6 +7,7 @@ import (
 	"api/models"
 	"api/router"
 	"api/session"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -54,5 +55,5 @@ func main() {
 
 	mainRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	panic(http.ListenAndServe(":"+port, mainRouter))
+	log.Print(http.ListenAndServe(":"+port, mainRouter))
 }
