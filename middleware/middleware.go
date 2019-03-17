@@ -1,10 +1,9 @@
 package middleware
 
 import (
-	"api/models"
+	"api/environment"
 	"context"
 	"net/http"
-	"time"
 )
 
 type key int
@@ -27,10 +26,10 @@ var allowedOrigins = map[string]interface{}{
 }
 
 // MiddlewareWithEnv middleleware with env
-type MiddlewareWithEnv func(*models.Env, http.HandlerFunc) http.HandlerFunc
+type MiddlewareWithEnv func(*environment.Env, http.HandlerFunc) http.HandlerFunc
 
 // Authentication middleware to check authentication
-func Authentication(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
+func Authentication(env *environment.Env, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		cookie, err := r.Cookie("session_id")
@@ -41,8 +40,13 @@ func Authentication(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
 
 		id, err := env.Sm.Get(cookie.Value)
 		if err != nil {
-			cookie.Expires = time.Now().AddDate(0, 0, -1)
-			http.SetCookie(w, cookie)
+			cookie := http.Cookie{
+				Name:     "session_id",
+				Path:     "/",
+				MaxAge:   -1,
+				HttpOnly: true,
+			}
+			http.SetCookie(w, &cookie)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -54,7 +58,7 @@ func Authentication(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
 }
 
 // CORSMiddleware CORS middleware
-func CORSMiddleware(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
+func CORSMiddleware(env *environment.Env, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		o := r.Header.Get("Origin")
 		if _, ok := allowedOrigins[o]; ok {
@@ -75,7 +79,7 @@ func CORSMiddleware(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
 }
 
 // RecoverMiddleware catches panic
-func RecoverMiddleware(env *models.Env, next http.HandlerFunc) http.HandlerFunc {
+func RecoverMiddleware(env *environment.Env, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {

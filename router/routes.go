@@ -1,11 +1,11 @@
 package router
 
 import (
+	"api/environment"
 	"api/middleware"
 	"net/http"
 
 	"api/handlers"
-	"api/models"
 )
 
 // Route contains data about route
@@ -14,7 +14,7 @@ type Route struct {
 	Method      string
 	Pattern     string
 	Middlewares []middleware.MiddlewareWithEnv
-	HandlerFunc func(*models.Env) http.HandlerFunc
+	HandlerFunc func(*environment.Env) http.HandlerFunc
 }
 
 // Routes contains all routes
@@ -48,6 +48,13 @@ var routes = Routes{
 		"/profiles/{id:[0-9]+}",
 		[]middleware.MiddlewareWithEnv{middleware.Authentication, middleware.CORSMiddleware, middleware.RecoverMiddleware},
 		handlers.PutProfile,
+	},
+	{
+		"UpdateProfilePassword",
+		"PUT",
+		"/profiles/{id:[0-9]+}/password",
+		[]middleware.MiddlewareWithEnv{middleware.Authentication, middleware.CORSMiddleware, middleware.RecoverMiddleware},
+		handlers.PutProfilePassword,
 	},
 	{
 		"UpdateProfileAvatar",

@@ -3,16 +3,15 @@ package main
 import (
 	"api/database"
 	_ "api/docs"
+	"api/environment"
 	"api/filesystem"
-	"api/models"
 	"api/router"
 	"api/session"
+	"github.com/swaggo/http-swagger"
 	"log"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/swaggo/http-swagger"
 )
 
 // @title Sad Islands API
@@ -31,7 +30,7 @@ func main() {
 		port = "8080"
 	}
 
-	dbm, err := database.InitDatabaseManager("recoveryteam", "123456", "db:5432", "sadislands", "migrations", false)
+	dbm, err := database.InitDatabaseManager("migrations/0_initial.sql")
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +42,7 @@ func main() {
 	}
 	defer sm.Close()
 
-	env := &models.Env{
+	env := &environment.Env{
 		Dbm: dbm,
 		Sm:  sm,
 	}
