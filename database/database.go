@@ -1,32 +1,41 @@
 package database
 
 import (
-	"database/sql"
 	"errors"
-	"github.com/jmoiron/sqlx"
+	"io/ioutil"
+	"os"
+
+	"github.com/jackc/pgx"
 	_ "github.com/lib/pq" // postgres driver
-	"github.com/rubenv/sql-migrate"
 )
+
+var config = pgx.ConnConfig{
+	Host:     "db",
+	Port:     5432,
+	Database: "sadislands",
+	User:     "recoveryteam",
+	Password: "123456",
+}
 
 // Manager is a wrapper around sqlx.DB
 type Manager struct {
-	db *sqlx.DB
+	conn *pgx.Conn
 }
 
 // InitDatabaseManager initialize manager with connection to database
-func InitDatabaseManager(username, password, host, name, migrationsPath string, isTest bool) (*Manager, error) {
+func InitDatabaseManager(migrationsFilePath string) (*Manager, error) {
 	var err error
 	manager := &Manager{}
-	manager.db, err = sqlx.Open("postgres", "postgres://"+username+":"+password+"@"+host+"/"+name+"?sslmode=disable")
+	manager.conn, err = pgx.Connect(config)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := manager.db.Ping(); err != nil {
-		return nil, err
+	if !manager.conn.IsAlive() {
+		return nil, ErrConnRefused
 	}
 
-	err = manager.migrate(migrationsPath, isTest)
+	err = manager.migrate(migrationsFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -34,98 +43,48 @@ func InitDatabaseManager(username, password, host, name, migrationsPath string, 
 	return manager, nil
 }
 
-func (manager *Manager) migrate(migrationsPath string, isTest bool) error {
-	dbo := manager.DB()
-	if dbo == nil {
+func (dbm *Manager) migrate(filePath string) error {
+	if dbm.conn == nil {
 		return errors.New("connection doesn't exist")
 	}
 
-	migrations := &migrate.FileMigrationSource{
-		Dir: migrationsPath,
+	tx, err := dbm.conn.Begin()
+	if err != nil {
+		return err
 	}
+	defer tx.Rollback()
 
-	if isTest {
-		_, err := migrate.Exec(dbo.DB, "postgres", migrations, migrate.Down)
-		if err != nil {
-			return err
-		}
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0666)
+	if err != nil {
+		return err
 	}
-	_, err := migrate.Exec(dbo.DB, "postgres", migrations, migrate.Up)
+	defer file.Close()
+
+	migrations, err := ioutil.ReadAll(file)
 	if err != nil {
 		return err
 	}
 
+	_, err = tx.Exec(string(migrations))
+	if err != nil {
+		return err
+	}
+
+	tx.Commit()
 	return nil
 }
 
 // DB returns connection to database
-func (manager *Manager) DB() *sqlx.DB {
-	return manager.db
+func (dbm *Manager) Conn() *pgx.Conn {
+	return dbm.conn
 }
 
 // Close closes connection to database
-func (manager *Manager) Close() error {
-	if manager.db == nil {
+func (dbm *Manager) Close() error {
+	if dbm.conn == nil {
 		return nil
 	}
-	err := manager.db.Close()
-	manager.db = nil
+	err := dbm.conn.Close()
+	dbm.conn = nil
 	return err
-}
-
-// Find returns first data witch satisfies query with args
-func (manager *Manager) Find(result interface{}, query string, args ...interface{}) error {
-	dbo := manager.DB()
-	err := dbo.Get(result, query, args...)
-	return err
-}
-
-// FindAll returns all data witch satisfies query with args
-func (manager *Manager) FindAll(result interface{}, query string, args ...interface{}) error {
-	dbo := manager.DB()
-	err := dbo.Select(result, query, args...)
-	return err
-}
-
-// FindWithField checks existence of row with field value
-func (manager *Manager) FindWithField(table, field, value string) (bool, error) {
-	var result string
-	dbo := manager.DB()
-	query := `SELECT $1 FROM $2 WHERE $3 = $4`
-	err := dbo.Get(&result, query, field, table, field, value)
-	if err == sql.ErrNoRows {
-		return false, nil
-	}
-
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
-// Create adds a new entry
-func (manager *Manager) Create(result interface{}, query string, args ...interface{}) error {
-	dbo := manager.DB()
-	row := dbo.QueryRowx(query, args...)
-	if row.Err() != nil {
-		return row.Err()
-	}
-
-	err := row.StructScan(result)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Update updates data
-func (manager *Manager) Update(query string, args ...interface{}) error {
-	dbo := manager.DB()
-	_, err := dbo.Exec(query, args...)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -1,39 +1,40 @@
-# github.com/PuerkitoBio/purell v1.1.0
+# github.com/PuerkitoBio/purell v1.1.1
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
 # github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 github.com/alecthomas/template
 github.com/alecthomas/template/parse
-# github.com/go-openapi/jsonpointer v0.17.0
+# github.com/go-openapi/jsonpointer v0.18.0
 github.com/go-openapi/jsonpointer
 # github.com/go-openapi/jsonreference v0.18.0
 github.com/go-openapi/jsonreference
 # github.com/go-openapi/spec v0.18.0
 github.com/go-openapi/spec
-# github.com/go-openapi/swag v0.17.0
+# github.com/go-openapi/swag v0.18.0
 github.com/go-openapi/swag
 # github.com/gomodule/redigo v2.0.0+incompatible
 github.com/gomodule/redigo/redis
 github.com/gomodule/redigo/internal
 # github.com/gorilla/mux v1.7.0
 github.com/gorilla/mux
-# github.com/jmoiron/sqlx v1.2.0
-github.com/jmoiron/sqlx
-github.com/jmoiron/sqlx/reflectx
+# github.com/jackc/pgx v3.3.0+incompatible
+github.com/jackc/pgx
+github.com/jackc/pgx/internal/sanitize
+github.com/jackc/pgx/pgio
+github.com/jackc/pgx/pgproto3
+github.com/jackc/pgx/pgtype
+github.com/jackc/pgx/chunkreader
 # github.com/lib/pq v1.0.0
 github.com/lib/pq
 github.com/lib/pq/oid
-# github.com/mailru/easyjson v0.0.0-20190221075403-6243d8e04c3f
+# github.com/mailru/easyjson v0.0.0-20190312143242-1de009706dbe
 github.com/mailru/easyjson
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 github.com/mailru/easyjson/buffer
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
-# github.com/rubenv/sql-migrate v0.0.0-20190212093014-1007f53448d7
-github.com/rubenv/sql-migrate
-github.com/rubenv/sql-migrate/sqlparse
 # github.com/satori/go.uuid v1.2.0
 github.com/satori/go.uuid
 # github.com/swaggo/files v0.0.0-20190110041405-30649e0721f8
@@ -42,10 +43,10 @@ github.com/swaggo/files
 github.com/swaggo/http-swagger
 # github.com/swaggo/swag v1.4.1
 github.com/swaggo/swag
-# golang.org/x/crypto v0.0.0-20190228161510-8dd112bcdc25
+# golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
-# golang.org/x/net v0.0.0-20190310074541-c10a0554eabf
+# golang.org/x/net v0.0.0-20190313220215-9f648a60d977
 golang.org/x/net/webdav
 golang.org/x/net/context
 golang.org/x/net/webdav/internal/xml
@@ -56,12 +57,10 @@ golang.org/x/text/width
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
 golang.org/x/text/transform
-# golang.org/x/tools v0.0.0-20190308174544-00c44ba9c14f
+# golang.org/x/tools v0.0.0-20190315214010-f0bfdbff1f9c
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
-# gopkg.in/gorp.v1 v1.7.2
-gopkg.in/gorp.v1
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
