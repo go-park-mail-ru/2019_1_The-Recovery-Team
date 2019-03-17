@@ -2,10 +2,22 @@ package models
 
 //easyjson:json
 type Profile struct {
-	ID uint64 `json:"id,omitempty" example:"1"`
-	ProfileAvatar
 	ProfileInfo
+	Email    string `json:"email,omitempty" example:"test@mail.ru"`
+	Password string `json:"-,omitempty" example:"password"`
+}
+
+//easyjson:json
+type ProfileInfo struct {
+	ProfileID
+	Nickname string `json:"nickname,omitempty" example:"test"`
+	ProfileAvatar
 	Score
+}
+
+//easyjson:json
+type ProfileID struct {
+	ID uint64 `json:"id,omitempty" example:"1"`
 }
 
 //easyjson:json
@@ -21,10 +33,9 @@ type Score struct {
 }
 
 //easyjson:json
-type ProfileInfo struct {
-	Email    string `json:"email,omitempty" example:"test@mail.ru"`
-	Nickname string `json:"nickname,omitempty" example:"test"`
-	Password string `json:"password,omitempty" example:"-"`
+type Profiles struct {
+	List  []ProfileInfo
+	Total int64 `json:"total" example:"50"`
 }
 
 //easyjson:json
@@ -34,19 +45,34 @@ type ProfileRegistration struct {
 }
 
 //easyjson:json
-type ProfileUpdate struct {
-	ProfileInfo
-	PasswordOld string `json:"password_old" example:"password_old"`
-}
-
-//easyjson:json
 type ProfileLogin struct {
 	Email    string `json:"email" example:"test@mail.ru"`
 	Password string `json:"password" example:"password"`
 }
 
 //easyjson:json
-type Profiles struct {
-	List  []Profile
-	Total int `json:"total" example:"50"`
+type ProfileCreate struct {
+	Email    string `json:"email,omitempty" example:"test@mail.ru"`
+	Nickname string `json:"nickname,omitempty" example:"test"`
+	Password string `json:"password,omitempty" example:"password"`
+}
+
+//easyjson:json
+type ProfileCreated struct {
+	ProfileID
+	Email    string `json:"email,omitempty" example:"test@mail.ru"`
+	Nickname string `json:"nickname,omitempty" example:"test"`
+	Avatar   string `json:"avatar,omitempty" example:"upload/img/1.png"`
+}
+
+//easyjson:json
+type ProfileUpdate struct {
+	Email    string `json:"email,omitempty" example:"test@mail.ru"`
+	Nickname string `json:"nickname,omitempty" example:"test"`
+}
+
+//easyjson:json
+type ProfileUpdatePassword struct {
+	Password    string `json:"password,omitempty" example:"password"`
+	PasswordOld string `json:"password_old" example:"password_old"`
 }
