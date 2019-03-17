@@ -106,7 +106,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileInfo"
+                            "$ref": "#/definitions/models.ProfileCreate"
                         }
                     },
                     {
@@ -119,15 +119,18 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Profile created successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Profile"
+                            "$ref": "#/definitions/models.ProfileCreated"
                         }
                     },
                     "400": {
                         "description": "Incorrect request data"
+                    },
+                    "409": {
+                        "description": "Email or nickname already exists"
                     },
                     "500": {
                         "description": "Database error"
@@ -187,13 +190,13 @@
                         "required": true
                     },
                     {
-                        "description": "Email, nickname, password",
+                        "description": "Email, nickname",
                         "name": "profile_info",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileInfo"
+                            "$ref": "#/definitions/models.ProfileUpdate"
                         }
                     }
                 ],
@@ -210,8 +213,51 @@
                     "404": {
                         "description": "Not found"
                     },
-                    "422": {
-                        "description": "Incorrrect current password"
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            }
+        },
+        "/profiles/{id}/password": {
+            "put": {
+                "description": "Update profile password",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Put profile password",
+                "operationId": "put-profile_password",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Profile ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Password",
+                        "name": "profile_info",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.ProfileUpdatePassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Profile password is updated successfully"
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "404": {
+                        "description": "Not found"
                     },
                     "500": {
                         "description": "Database error"
@@ -358,10 +404,6 @@
                     "type": "string",
                     "example": "test"
                 },
-                "password": {
-                    "type": "string",
-                    "example": "-"
-                },
                 "record": {
                     "type": "integer",
                     "example": 1500
@@ -381,7 +423,7 @@
                 }
             }
         },
-        "models.ProfileInfo": {
+        "models.ProfileCreate": {
             "type": "object",
             "properties": {
                 "email": {
@@ -394,7 +436,66 @@
                 },
                 "password": {
                     "type": "string",
-                    "example": "-"
+                    "example": "password"
+                }
+            }
+        },
+        "models.ProfileCreated": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                }
+            }
+        },
+        "models.ProfileID": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "models.ProfileInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "loss": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "record": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "win": {
+                    "type": "integer",
+                    "example": 100
                 }
             }
         },
@@ -411,13 +512,39 @@
                 }
             }
         },
+        "models.ProfileUpdate": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                }
+            }
+        },
+        "models.ProfileUpdatePassword": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "password_old": {
+                    "type": "string",
+                    "example": "password_old"
+                }
+            }
+        },
         "models.Profiles": {
             "type": "object",
             "properties": {
                 "list": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Profile"
+                        "$ref": "#/definitions/models.ProfileInfo"
                     }
                 },
                 "total": {

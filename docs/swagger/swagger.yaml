@@ -17,9 +17,6 @@ definitions:
       nickname:
         example: test
         type: string
-      password:
-        example: '-'
-        type: string
       record:
         example: 1500
         type: integer
@@ -33,7 +30,7 @@ definitions:
         example: upload/img/1.png
         type: string
     type: object
-  models.ProfileInfo:
+  models.ProfileCreate:
     properties:
       email:
         example: test@mail.ru
@@ -42,8 +39,50 @@ definitions:
         example: test
         type: string
       password:
-        example: '-'
+        example: password
         type: string
+    type: object
+  models.ProfileCreated:
+    properties:
+      avatar:
+        example: upload/img/1.png
+        type: string
+      email:
+        example: test@mail.ru
+        type: string
+      id:
+        example: 1
+        type: integer
+      nickname:
+        example: test
+        type: string
+    type: object
+  models.ProfileID:
+    properties:
+      id:
+        example: 1
+        type: integer
+    type: object
+  models.ProfileInfo:
+    properties:
+      avatar:
+        example: upload/img/1.png
+        type: string
+      id:
+        example: 1
+        type: integer
+      loss:
+        example: 50
+        type: integer
+      nickname:
+        example: test
+        type: string
+      record:
+        example: 1500
+        type: integer
+      win:
+        example: 100
+        type: integer
     type: object
   models.ProfileLogin:
     properties:
@@ -54,11 +93,29 @@ definitions:
         example: password
         type: string
     type: object
+  models.ProfileUpdate:
+    properties:
+      email:
+        example: test@mail.ru
+        type: string
+      nickname:
+        example: test
+        type: string
+    type: object
+  models.ProfileUpdatePassword:
+    properties:
+      password:
+        example: password
+        type: string
+      password_old:
+        example: password_old
+        type: string
+    type: object
   models.Profiles:
     properties:
       list:
         items:
-          $ref: '#/definitions/models.Profile'
+          $ref: '#/definitions/models.ProfileInfo'
         type: array
       total:
         example: 50
@@ -135,7 +192,7 @@ paths:
         name: profile_info
         required: true
         schema:
-          $ref: '#/definitions/models.ProfileInfo'
+          $ref: '#/definitions/models.ProfileCreate'
           type: object
       - description: Avatar
         in: body
@@ -145,13 +202,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Profile created successfully
           schema:
-            $ref: '#/definitions/models.Profile'
+            $ref: '#/definitions/models.ProfileCreated'
             type: object
         "400":
           description: Incorrect request data
+        "409":
+          description: Email or nickname already exists
         "500":
           description: Database error
       summary: Post profile
@@ -191,12 +250,12 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Email, nickname, password
+      - description: Email, nickname
         in: body
         name: profile_info
         required: true
         schema:
-          $ref: '#/definitions/models.ProfileInfo'
+          $ref: '#/definitions/models.ProfileUpdate'
           type: object
       responses:
         "204":
@@ -207,11 +266,40 @@ paths:
           description: Not authorized
         "404":
           description: Not found
-        "422":
-          description: Incorrrect current password
         "500":
           description: Database error
       summary: Put profile
+  /profiles/{id}/password:
+    put:
+      consumes:
+      - application/json
+      description: Update profile password
+      operationId: put-profile_password
+      parameters:
+      - description: Profile ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Password
+        in: body
+        name: profile_info
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProfileUpdatePassword'
+          type: object
+      responses:
+        "204":
+          description: Profile password is updated successfully
+        "400":
+          description: Incorrect request data
+        "403":
+          description: Not authorized
+        "404":
+          description: Not found
+        "500":
+          description: Database error
+      summary: Put profile password
   /scores:
     get:
       description: Get scoreboard
