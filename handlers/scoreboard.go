@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"api/environment"
 	"api/models"
 	"net/http"
 	"strconv"
@@ -17,62 +18,36 @@ import (
 // @Failure 400 "Incorrect request data"
 // @Failure 500 "Database error"
 // @Router /scores [GET]
-func GetScoreboard(env *models.Env) http.HandlerFunc {
+func GetScoreboard(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		limit, limitErr := strconv.ParseInt(r.FormValue("limit"), 10, 64)
 		offset, offsetErr := strconv.ParseInt(r.FormValue("start"), 10, 64)
 
+		if limitErr != nil && offsetErr != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		if limitErr == nil && limit > 25 {
 			limit = 25
 		}
 
-		result := models.Profiles{
-			List: []models.Profile{},
+		profiles := models.Profiles{
+			List: []models.ProfileInfo{},
 		}
+
 		var err error
-		switch {
-		case limitErr == nil && offsetErr == nil:
-			{
-				err := env.Dbm.FindAll(&result.List, QueryProfilesWithLimitAndOffset, limit, offset)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-			}
-		case limitErr == nil:
-			{
-				err := env.Dbm.FindAll(&result.List, QueryProfilesWithLimit, limit)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-			}
-		case offsetErr == nil:
-			{
-				err := env.Dbm.FindAll(&result.List, QueryProfilesWithOffset, offset)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-			}
-		default:
-			{
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-		}
-
+		profiles.List, err = env.Dbm.GetProfiles(limit, offset)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		err = env.Dbm.Find(&result.Total, QueryCountProfilesNumber)
+		profiles.Total, err = env.Dbm.GetProfilesNumber()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		writeResponseJSON(w, http.StatusOK, result)
+		writeResponseJSON(w, http.StatusOK, profiles)
 	}
 }

@@ -1,9 +1,10 @@
 package handlers
 
 import (
+	"api/environment"
 	"api/middleware"
 	"api/models"
-	"database/sql"
+	"github.com/jackc/pgx"
 	"net/http"
 	"time"
 )
@@ -13,13 +14,13 @@ import (
 // @Description Get profile id of authorized client
 // @ID get-session
 // @Produce json
-// @Success 200 int models.Profile.ID "Profile ID found successfully"
+// @Success 200 {object} models.ProfileID "Profile ID found successfully"
 // @Failure 403 "Not authorized"
 // @Router /sessions [GET]
-func GetSession(env *models.Env) http.HandlerFunc {
+func GetSession(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.Context().Value(middleware.ProfileID)
-		result := &models.Profile{
+		result := &models.ProfileID{
 			ID: id.(uint64),
 		}
 		writeResponseJSON(w, http.StatusOK, result)
@@ -38,28 +39,26 @@ func GetSession(env *models.Env) http.HandlerFunc {
 // @Failure 422 "Unprocessable request data"
 // @Failure 403 "Not authorized"
 // @Router /sessions [POST]
-func PostSession(env *models.Env) http.HandlerFunc {
+func PostSession(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profile := &models.ProfileLogin{}
-		err := unmarshalJSONBodyToStruct(r, profile)
+		login := &models.ProfileLogin{}
+		err := unmarshalJSONBodyToStruct(r, login)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		result := &models.Profile{}
-		err = env.Dbm.Find(result, QueryProfileByEmailWithPassword, profile.Email)
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusUnprocessableEntity)
+		profile, err := env.Dbm.GetProfileByEmailWithPassword(login)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				return
+			}
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		if matches, err := verifyPassword(profile.Password, result.Password); !matches || err != nil {
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			return
-		}
-
-		token, err := env.Sm.Set(result.ID, 24*time.Hour)
+		token, err := env.Sm.Set(profile.ID, 24*time.Hour)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -73,8 +72,7 @@ func PostSession(env *models.Env) http.HandlerFunc {
 			HttpOnly: true,
 		})
 
-		result.Password = ""
-		writeResponseJSON(w, http.StatusOK, result)
+		writeResponseJSON(w, http.StatusOK, profile)
 	}
 }
 
@@ -86,7 +84,7 @@ func PostSession(env *models.Env) http.HandlerFunc {
 // @Failure 404 "Session not found"
 // @Failure 403 "Not authorized"
 // @Router /sessions [DELETE]
-func DeleteSession(env *models.Env) http.HandlerFunc {
+func DeleteSession(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sessionID := r.Context().Value(middleware.SessionID)
 		err := env.Sm.Delete(sessionID.(string))
@@ -95,9 +93,13 @@ func DeleteSession(env *models.Env) http.HandlerFunc {
 			return
 		}
 
-		cookie, _ := r.Cookie("session_id")
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		http.SetCookie(w, cookie)
+		cookie := http.Cookie{
+			Name:     "session_id",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+		}
+		http.SetCookie(w, &cookie)
 		w.WriteHeader(http.StatusOK)
 	}
 }

@@ -1,8 +1,8 @@
-package handlers
+package database
 
 import "golang.org/x/crypto/bcrypt"
 
-func hashAndSalt(pwd string) (string, error) {
+func HashAndSalt(pwd string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -10,7 +10,7 @@ func hashAndSalt(pwd string) (string, error) {
 	return string(hash), nil
 }
 
-func verifyPassword(password, hash string) (bool, error) {
+func VerifyPassword(password, hash string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	switch err {
 	case bcrypt.ErrMismatchedHashAndPassword:

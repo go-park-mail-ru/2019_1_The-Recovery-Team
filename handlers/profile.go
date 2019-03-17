@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"api/database"
+	"api/environment"
 	"api/filesystem"
 	"api/middleware"
-	"database/sql"
-	"errors"
+	"github.com/jackc/pgx"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -15,7 +16,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func saveAvatar(env *models.Env, avatar multipart.File, filename, dir string, id uint64) (string, error) {
+func saveAvatar(env *environment.Env, avatar multipart.File, filename, dir string, id uint64) (string, error) {
 	filename, err := filesystem.HashFileName(filename, id)
 	if err != nil {
 		return "", err
@@ -27,68 +28,11 @@ func saveAvatar(env *models.Env, avatar multipart.File, filename, dir string, id
 	}
 
 	avatarPath := "/" + dir + filename
-	err = env.Dbm.Update(QueryUpdateProfileAvatar, avatarPath, id)
+	err = env.Dbm.UpdateProfileAvatar(id, avatarPath)
 	if err != nil {
 		return "", err
 	}
 	return avatarPath, nil
-}
-
-func updateProfile(env *models.Env, id uint64, newInfo *models.ProfileUpdate) error {
-	var set string
-	if newInfo.Nickname != "" {
-		exists, _ := env.Dbm.FindWithField("profile", "nickname", newInfo.Nickname)
-		if exists {
-			return errors.New("nickname already exists")
-		}
-		set = set + "nickname = :nickname"
-	}
-
-	if newInfo.Email != "" {
-		exists, _ := env.Dbm.FindWithField("profile", "email", newInfo.Email)
-		if exists {
-			return errors.New("email already exists")
-		}
-		if set != "" {
-			set = set + ", "
-		}
-		set = set + "email = :email"
-	}
-
-	if newInfo.Password != "" {
-		passwordHash, err := hashAndSalt(newInfo.Password)
-		if err != nil {
-			return err
-		}
-		newInfo.Password = passwordHash
-		if set != "" {
-			set = set + ", "
-		}
-		set = set + "password = :password"
-	}
-
-	dbo := env.Dbm.DB()
-	if set != "" {
-		query := `UPDATE profile SET ` + set + ` WHERE id = :id`
-		_, err := dbo.NamedExec(query, &struct {
-			ID uint64
-			models.ProfileUpdate
-		}{
-			ID:            id,
-			ProfileUpdate: *newInfo,
-		})
-		return err
-	}
-	return nil
-}
-
-func checkField(env *models.Env, w http.ResponseWriter, table, field, value string) {
-	exists, _ := env.Dbm.FindWithField(table, field, value)
-	if exists {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-	w.WriteHeader(http.StatusNotFound)
 }
 
 // GetProfiles returns handler with environment which processes request for checking email or nickname existens
@@ -103,18 +47,36 @@ func checkField(env *models.Env, w http.ResponseWriter, table, field, value stri
 // @Failure 404 "Not found"
 // @Failure 500 "Database error"
 // @Router /profiles [GET]
-func GetProfiles(env *models.Env) http.HandlerFunc {
+func GetProfiles(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		nickname := r.FormValue("nickname")
 
 		if email != "" {
-			checkField(env, w, "profile", "email", email)
+			_, err := env.Dbm.GetProfileByEmail(email)
+			if err != nil {
+				if err == pgx.ErrNoRows {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
 		if nickname != "" {
-			checkField(env, w, "profile", "nickname", nickname)
+			_, err := env.Dbm.GetProfileByNickname(nickname)
+			if err != nil {
+				if err == pgx.ErrNoRows {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
@@ -133,15 +95,14 @@ func GetProfiles(env *models.Env) http.HandlerFunc {
 // @Failure 404 "Not found"
 // @Failure 500 "Database error"
 // @Router /profiles/{id} [GET]
-func GetProfile(env *models.Env) http.HandlerFunc {
+func GetProfile(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		id, _ := strconv.ParseUint(vars["id"], 10, 64)
+		id := vars["id"]
 
-		profile := &models.Profile{}
-		err := env.Dbm.Find(profile, QueryProfileById, id)
+		profile, err := env.Dbm.GetProfile(id)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				w.WriteHeader(http.StatusNotFound)
 				return
 
@@ -158,21 +119,20 @@ func GetProfile(env *models.Env) http.HandlerFunc {
 	}
 }
 
-// PutProfile returns handler with environment which updates profile
+// PutProfile returns handler with environment which updates profile (email, nickname)
 // @Summary Put profile
 // @Description Update profile info
 // @ID put-profile
 // @Accept json
 // @Param id path int true "Profile ID"
-// @Param profile_info body models.ProfileInfo true "Email, nickname, password"
+// @Param profile_info body models.ProfileUpdate true "Email, nickname"
 // @Success 204 "Profile info is updated successfully"
 // @Failure 400 "Incorrect request data"
 // @Failure 403 "Not authorized"
 // @Failure 404 "Not found"
-// @Failure 422 "Incorrrect current password"
 // @Failure 500 "Database error"
 // @Router /profiles/{id} [PUT]
-func PutProfile(env *models.Env) http.HandlerFunc {
+func PutProfile(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, _ := strconv.ParseUint(vars["id"], 10, 64)
@@ -183,36 +143,68 @@ func PutProfile(env *models.Env) http.HandlerFunc {
 			return
 		}
 
-		newInfo := &models.ProfileUpdate{}
-		err := unmarshalJSONBodyToStruct(r, newInfo)
+		data := &models.ProfileUpdate{}
+		err := unmarshalJSONBodyToStruct(r, data)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if newInfo.Password != "" {
-			if newInfo.PasswordOld != "" {
-				var currentPassword string
-				err := env.Dbm.Find(&currentPassword, QueryProfilePassword, id)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-
-				if matches, err := verifyPassword(newInfo.PasswordOld, currentPassword); !matches || err != nil {
-					w.WriteHeader(http.StatusUnprocessableEntity)
-					return
-				}
-			} else {
-				w.WriteHeader(http.StatusBadRequest)
+		if err = env.Dbm.UpdateProfile(id, data); err != nil {
+			if err.Error() == "EmailAlreadyExists" || err.Error() == "NicknameAlreadyExists" {
+				w.WriteHeader(http.StatusConflict)
 				return
 			}
-
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
-		err = updateProfile(env, id, newInfo)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// PutProfilePassword returns handler with environment which updates profile (email, nickname)
+// @Summary Put profile password
+// @Description Update profile password
+// @ID put-profile_password
+// @Accept json
+// @Param id path int true "Profile ID"
+// @Param profile_info body models.ProfileUpdatePassword true "Password"
+// @Success 204 "Profile password is updated successfully"
+// @Failure 400 "Incorrect request data"
+// @Failure 403 "Not authorized"
+// @Failure 404 "Not found"
+// @Failure 500 "Database error"
+// @Router /profiles/{id}/password [PUT]
+func PutProfilePassword(env *environment.Env) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, _ := strconv.ParseUint(vars["id"], 10, 64)
+
+		profileID := r.Context().Value(middleware.ProfileID)
+		if profileID != id {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		data := &models.ProfileUpdatePassword{}
+		err := unmarshalJSONBodyToStruct(r, data)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		data.Password, err = database.HashAndSalt(data.Password)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if err = env.Dbm.UpdateProfilePassword(id, data); err != nil {
+			if err.Error() == "IncorrectProfilePassword" {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				return
+			}
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
@@ -226,13 +218,14 @@ func PutProfile(env *models.Env) http.HandlerFunc {
 // @ID post-profile
 // @Accept multipart/form-data
 // @Produce json
-// @Param profile_info body models.ProfileInfo true "Email, nickname, password"
+// @Param profile_info body models.ProfileCreate true "Email, nickname, password"
 // @Param avatar body png false "Avatar"
-// @Success 200 {object} models.Profile "Profile created successfully"
+// @Success 201 {object} models.ProfileCreated "Profile created successfully"
 // @Failure 400 "Incorrect request data"
+// @Failure 409 "Email or nickname already exists"
 // @Failure 500 "Database error"
 // @Router /profiles [POST]
-func PostProfile(env *models.Env) http.HandlerFunc {
+func PostProfile(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
 		if err != nil {
@@ -242,60 +235,41 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 
 		nickname := r.FormValue("nickname")
 		email := r.FormValue("email")
+		password := r.FormValue("password")
 
-		if nickname == "" || email == "" || r.FormValue("password") == "" {
+		if nickname == "" || email == "" || password == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if !VerifyEmail(email) {
-			message := models.HandlerError{
-				Description: "email is incorrect",
-			}
-			writeResponseJSON(w, http.StatusBadRequest, message)
+		password, err = database.HashAndSalt(password)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		newProfile := &models.ProfileRegistration{
+		data := &models.ProfileCreate{
+			Email:    email,
 			Nickname: nickname,
-			ProfileLogin: models.ProfileLogin{
-				Email:    email,
-				Password: r.FormValue("password"),
-			},
+			Password: password,
 		}
 
-		if exists, err := env.Dbm.FindWithField("profile", "email", newProfile.Email); err != nil || exists {
-			message := models.HandlerError{
-				Description: "email already exists",
-			}
-			writeResponseJSON(w, http.StatusBadRequest, message)
-			return
-		}
-
-		if exists, err := env.Dbm.FindWithField("profile", "nickname", newProfile.Nickname); err != nil || exists {
-			message := models.HandlerError{
-				Description: "nickname already exists",
-			}
-			writeResponseJSON(w, http.StatusBadRequest, message)
-			return
-		}
-
-		password, err := hashAndSalt(newProfile.Password)
+		created, err := env.Dbm.CreateProfile(data)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		result := &models.Profile{}
-		err = env.Dbm.Create(result, QueryInsertProfile, newProfile.Email, newProfile.Nickname, password)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			if err.Error() == "EmailAlreadyExists" && err.Error() == "NicknameAlreadyExists" {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			message := models.HandlerError{
+				Description: err.Error(),
+			}
+			writeResponseJSON(w, http.StatusConflict, message)
 			return
 		}
 
 		err = r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
 		if err != nil {
-			writeResponseJSON(w, http.StatusOK, result)
+			writeResponseJSON(w, http.StatusCreated, created)
 			return
 		}
 
@@ -305,12 +279,12 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 			filename := header.Filename
 			dir := "upload/img/"
 
-			if avatarPath, err := saveAvatar(env, avatar, filename, dir, result.ID); err == nil {
-				result.Avatar = avatarPath
+			if avatarPath, err := saveAvatar(env, avatar, filename, dir, created.ID); err == nil {
+				created.Avatar = avatarPath
 			}
 		}
 
-		token, err := env.Sm.Set(result.ID, 24*time.Hour)
+		token, err := env.Sm.Set(created.ID, 24*time.Hour)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -324,7 +298,7 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 			HttpOnly: true,
 		})
 
-		writeResponseJSON(w, http.StatusOK, result)
+		writeResponseJSON(w, http.StatusCreated, created)
 	}
 }
 
@@ -340,7 +314,7 @@ func PostProfile(env *models.Env) http.HandlerFunc {
 // @Failure 403 "Not authorized"
 // @Failure 500 "Database error"
 // @Router /avatars [PUT]
-func PutAvatar(env *models.Env) http.HandlerFunc {
+func PutAvatar(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.Context().Value(middleware.ProfileID).(uint64)
 
