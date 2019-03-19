@@ -4,6 +4,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.3.3 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible // indirect
 	github.com/go-openapi/jsonpointer v0.18.0 // indirect

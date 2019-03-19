@@ -1,5 +1,10 @@
 basePath: /api/v1
 definitions:
+  models.HandlerError:
+    properties:
+      description:
+        type: string
+    type: object
   models.Profile:
     properties:
       avatar:
@@ -211,6 +216,11 @@ paths:
           description: Incorrect request data
         "409":
           description: Email or nickname already exists
+        "422":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.HandlerError'
+            type: object
         "500":
           description: Database error
       summary: Post profile
@@ -266,6 +276,11 @@ paths:
           description: Not authorized
         "404":
           description: Not found
+        "422":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.HandlerError'
+            type: object
         "500":
           description: Database error
       summary: Put profile
@@ -297,6 +312,11 @@ paths:
           description: Not authorized
         "404":
           description: Not found
+        "422":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.HandlerError'
+            type: object
         "500":
           description: Database error
       summary: Put profile password
@@ -347,7 +367,8 @@ paths:
         "200":
           description: Profile ID found successfully
           schema:
-            type: int
+            $ref: '#/definitions/models.ProfileID'
+            type: object
         "403":
           description: Not authorized
       summary: Get session
@@ -375,6 +396,9 @@ paths:
         "403":
           description: Not authorized
         "422":
-          description: Unprocessable request data
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.HandlerError'
+            type: object
       summary: Post session
 swagger: "2.0"

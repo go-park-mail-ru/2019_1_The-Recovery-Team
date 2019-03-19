@@ -5,6 +5,7 @@ import (
 	"api/environment"
 	"api/filesystem"
 	"api/middleware"
+	"github.com/asaskevich/govalidator"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -56,7 +57,7 @@ func GetProfiles(env *environment.Env) http.HandlerFunc {
 		email := r.FormValue("email")
 		nickname := r.FormValue("nickname")
 
-		if email != "" {
+		if email != "" && govalidator.IsEmail(email) {
 			_, err := env.Dbm.GetProfileByEmail(email)
 			if err != nil {
 				if err == pgx.ErrNoRows {
@@ -73,7 +74,7 @@ func GetProfiles(env *environment.Env) http.HandlerFunc {
 			return
 		}
 
-		if nickname != "" {
+		if nickname != "" && govalidator.StringLength(nickname, "4", "20") {
 			_, err := env.Dbm.GetProfileByNickname(nickname)
 			if err != nil {
 				if err == pgx.ErrNoRows {
@@ -143,6 +144,7 @@ func GetProfile(env *environment.Env) http.HandlerFunc {
 // @Failure 400 "Incorrect request data"
 // @Failure 403 "Not authorized"
 // @Failure 404 "Not found"
+// @Failure 422 {object} models.HandlerError "Invalid request data"
 // @Failure 500 "Database error"
 // @Router /profiles/{id} [PUT]
 func PutProfile(env *environment.Env) http.HandlerFunc {
@@ -162,6 +164,14 @@ func PutProfile(env *environment.Env) http.HandlerFunc {
 		err := unmarshalJSONBodyToStruct(r, data)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
+			message := models.HandlerError{
+				Description: err.Error(),
+			}
+			writeResponseJSON(w, http.StatusUnprocessableEntity, message)
 			return
 		}
 
@@ -193,6 +203,7 @@ func PutProfile(env *environment.Env) http.HandlerFunc {
 // @Failure 400 "Incorrect request data"
 // @Failure 403 "Not authorized"
 // @Failure 404 "Not found"
+// @Failure 422 {object} models.HandlerError "Invalid request data"
 // @Failure 500 "Database error"
 // @Router /profiles/{id}/password [PUT]
 func PutProfilePassword(env *environment.Env) http.HandlerFunc {
@@ -214,6 +225,15 @@ func PutProfilePassword(env *environment.Env) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
+		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
+			message := models.HandlerError{
+				Description: err.Error(),
+			}
+			writeResponseJSON(w, http.StatusUnprocessableEntity, message)
+			return
+		}
+
 		data.Password, err = database.HashAndSalt(data.Password)
 		if err != nil {
 			log.Error(err.Error())
@@ -223,7 +243,10 @@ func PutProfilePassword(env *environment.Env) http.HandlerFunc {
 
 		if err = env.Dbm.UpdateProfilePassword(id, data); err != nil {
 			if err.Error() == "IncorrectProfilePassword" {
-				w.WriteHeader(http.StatusUnprocessableEntity)
+				message := models.HandlerError{
+					Description: "Incorrect password",
+				}
+				writeResponseJSON(w, http.StatusUnprocessableEntity, message)
 				return
 			}
 			log.Error(err.Error())
@@ -246,6 +269,7 @@ func PutProfilePassword(env *environment.Env) http.HandlerFunc {
 // @Success 201 {object} models.ProfileCreated "Profile created successfully"
 // @Failure 400 "Incorrect request data"
 // @Failure 409 "Email or nickname already exists"
+// @Failure 422 {object} models.HandlerError "Invalid request data"
 // @Failure 500 "Database error"
 // @Router /profiles [POST]
 func PostProfile(env *environment.Env) http.HandlerFunc {
@@ -267,17 +291,25 @@ func PostProfile(env *environment.Env) http.HandlerFunc {
 			return
 		}
 
-		password, err = database.HashAndSalt(password)
-		if err != nil {
-			log.Error(err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
 		data := &models.ProfileCreate{
 			Email:    email,
 			Nickname: nickname,
 			Password: password,
+		}
+
+		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
+			message := models.HandlerError{
+				Description: err.Error(),
+			}
+			writeResponseJSON(w, http.StatusUnprocessableEntity, message)
+			return
+		}
+
+		data.Password, err = database.HashAndSalt(data.Password)
+		if err != nil {
+			log.Error(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		created, err := env.Dbm.CreateProfile(data)

@@ -4,6 +4,7 @@ import (
 	"api/environment"
 	"api/middleware"
 	"api/models"
+	"github.com/asaskevich/govalidator"
 	"github.com/jackc/pgx"
 	"go.uber.org/zap"
 	"net/http"
@@ -37,7 +38,7 @@ func GetSession(env *environment.Env) http.HandlerFunc {
 // @Param profile_login body models.ProfileLogin true "Email, password"
 // @Success 200 {object} models.Profile "Session is created successfully"
 // @Failure 400 "Incorrect request data"
-// @Failure 422 "Unprocessable request data"
+// @Failure 422 {object} models.HandlerError "Invalid request data"
 // @Failure 403 "Not authorized"
 // @Router /sessions [POST]
 func PostSession(env *environment.Env) http.HandlerFunc {
@@ -51,10 +52,21 @@ func PostSession(env *environment.Env) http.HandlerFunc {
 			return
 		}
 
+		if isValid, err := govalidator.ValidateStruct(login); !isValid && err != nil {
+			message := models.HandlerError{
+				Description: err.Error(),
+			}
+			writeResponseJSON(w, http.StatusUnprocessableEntity, message)
+			return
+		}
+
 		profile, err := env.Dbm.GetProfileByEmailWithPassword(login)
 		if err != nil {
 			if err == pgx.ErrNoRows {
-				w.WriteHeader(http.StatusUnprocessableEntity)
+				message := models.HandlerError{
+					Description: "Invalid email or password",
+				}
+				writeResponseJSON(w, http.StatusUnprocessableEntity, message)
 				return
 			}
 			log.Error(err.Error(),

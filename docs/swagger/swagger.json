@@ -132,6 +132,13 @@
                     "409": {
                         "description": "Email or nickname already exists"
                     },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.HandlerError"
+                        }
+                    },
                     "500": {
                         "description": "Database error"
                     }
@@ -213,6 +220,13 @@
                     "404": {
                         "description": "Not found"
                     },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.HandlerError"
+                        }
+                    },
                     "500": {
                         "description": "Database error"
                     }
@@ -258,6 +272,13 @@
                     },
                     "404": {
                         "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.HandlerError"
+                        }
                     },
                     "500": {
                         "description": "Database error"
@@ -316,7 +337,8 @@
                     "200": {
                         "description": "Profile ID found successfully",
                         "schema": {
-                            "type": "int"
+                            "type": "object",
+                            "$ref": "#/definitions/models.ProfileID"
                         }
                     },
                     "403": {
@@ -358,7 +380,11 @@
                         "description": "Not authorized"
                     },
                     "422": {
-                        "description": "Unprocessable request data"
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.HandlerError"
+                        }
                     }
                 }
             },
@@ -381,6 +407,14 @@
         }
     },
     "definitions": {
+        "models.HandlerError": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Profile": {
             "type": "object",
             "properties": {
