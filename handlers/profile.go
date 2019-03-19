@@ -5,11 +5,13 @@ import (
 	"api/environment"
 	"api/filesystem"
 	"api/middleware"
-	"github.com/jackc/pgx"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/jackc/pgx"
+	"go.uber.org/zap"
 
 	"api/models"
 
@@ -49,6 +51,8 @@ func saveAvatar(env *environment.Env, avatar multipart.File, filename, dir strin
 // @Router /profiles [GET]
 func GetProfiles(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value("logger").(*zap.Logger)
+
 		email := r.FormValue("email")
 		nickname := r.FormValue("nickname")
 
@@ -59,6 +63,9 @@ func GetProfiles(env *environment.Env) http.HandlerFunc {
 					w.WriteHeader(http.StatusNotFound)
 					return
 				}
+				log.Error(err.Error(),
+					zap.String("email", email),
+				)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -73,6 +80,9 @@ func GetProfiles(env *environment.Env) http.HandlerFunc {
 					w.WriteHeader(http.StatusNotFound)
 					return
 				}
+				log.Error(err.Error(),
+					zap.String("nickname", nickname),
+				)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -97,6 +107,8 @@ func GetProfiles(env *environment.Env) http.HandlerFunc {
 // @Router /profiles/{id} [GET]
 func GetProfile(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value("logger").(*zap.Logger)
+
 		vars := mux.Vars(r)
 		id := vars["id"]
 
@@ -105,8 +117,9 @@ func GetProfile(env *environment.Env) http.HandlerFunc {
 			if err == pgx.ErrNoRows {
 				w.WriteHeader(http.StatusNotFound)
 				return
-
 			}
+			log.Error(err.Error(),
+				zap.String("profile_id", id))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -134,6 +147,8 @@ func GetProfile(env *environment.Env) http.HandlerFunc {
 // @Router /profiles/{id} [PUT]
 func PutProfile(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value("logger").(*zap.Logger)
+
 		vars := mux.Vars(r)
 		id, _ := strconv.ParseUint(vars["id"], 10, 64)
 
@@ -155,6 +170,10 @@ func PutProfile(env *environment.Env) http.HandlerFunc {
 				w.WriteHeader(http.StatusConflict)
 				return
 			}
+			log.Error(err.Error(),
+				zap.Uint64("profile_id", id),
+				zap.String("email", data.Email),
+				zap.String("nickname", data.Nickname))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -178,6 +197,8 @@ func PutProfile(env *environment.Env) http.HandlerFunc {
 // @Router /profiles/{id}/password [PUT]
 func PutProfilePassword(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value("logger").(*zap.Logger)
+
 		vars := mux.Vars(r)
 		id, _ := strconv.ParseUint(vars["id"], 10, 64)
 
@@ -195,6 +216,7 @@ func PutProfilePassword(env *environment.Env) http.HandlerFunc {
 		}
 		data.Password, err = database.HashAndSalt(data.Password)
 		if err != nil {
+			log.Error(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -204,6 +226,7 @@ func PutProfilePassword(env *environment.Env) http.HandlerFunc {
 				w.WriteHeader(http.StatusUnprocessableEntity)
 				return
 			}
+			log.Error(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -227,6 +250,8 @@ func PutProfilePassword(env *environment.Env) http.HandlerFunc {
 // @Router /profiles [POST]
 func PostProfile(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value("logger").(*zap.Logger)
+
 		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -244,6 +269,7 @@ func PostProfile(env *environment.Env) http.HandlerFunc {
 
 		password, err = database.HashAndSalt(password)
 		if err != nil {
+			log.Error(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -257,6 +283,9 @@ func PostProfile(env *environment.Env) http.HandlerFunc {
 		created, err := env.Dbm.CreateProfile(data)
 		if err != nil {
 			if err.Error() == "EmailAlreadyExists" && err.Error() == "NicknameAlreadyExists" {
+				log.Error(err.Error(),
+					zap.String("email", data.Email),
+					zap.String("nickname", data.Nickname))
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -286,6 +315,8 @@ func PostProfile(env *environment.Env) http.HandlerFunc {
 
 		token, err := env.Sm.Set(created.ID, 24*time.Hour)
 		if err != nil {
+			log.Error(err.Error(),
+				zap.Uint64("created_id", created.ID))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -316,6 +347,7 @@ func PostProfile(env *environment.Env) http.HandlerFunc {
 // @Router /avatars [PUT]
 func PutAvatar(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value("logger").(*zap.Logger)
 		id := r.Context().Value(middleware.ProfileID).(uint64)
 
 		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
@@ -335,6 +367,8 @@ func PutAvatar(env *environment.Env) http.HandlerFunc {
 
 		avatarPath, err := saveAvatar(env, avatar, filename, dir, id)
 		if err != nil {
+			log.Error(err.Error(),
+				zap.Uint64("profile_id", id))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

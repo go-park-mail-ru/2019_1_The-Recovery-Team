@@ -3,6 +3,7 @@ package handlers
 import (
 	"api/environment"
 	"api/models"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
@@ -20,6 +21,8 @@ import (
 // @Router /scores [GET]
 func GetScoreboard(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value("logger").(*zap.Logger)
+
 		limit, limitErr := strconv.ParseInt(r.FormValue("limit"), 10, 64)
 		offset, offsetErr := strconv.ParseInt(r.FormValue("start"), 10, 64)
 
@@ -38,12 +41,16 @@ func GetScoreboard(env *environment.Env) http.HandlerFunc {
 		var err error
 		profiles.List, err = env.Dbm.GetProfiles(limit, offset)
 		if err != nil {
+			log.Error(err.Error(),
+				zap.Int64("limit", limit),
+				zap.Int64("offset", offset))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		profiles.Total, err = env.Dbm.GetProfilesNumber()
 		if err != nil {
+			log.Error(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

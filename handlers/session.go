@@ -5,6 +5,7 @@ import (
 	"api/middleware"
 	"api/models"
 	"github.com/jackc/pgx"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -41,6 +42,8 @@ func GetSession(env *environment.Env) http.HandlerFunc {
 // @Router /sessions [POST]
 func PostSession(env *environment.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value("logger").(*zap.Logger)
+
 		login := &models.ProfileLogin{}
 		err := unmarshalJSONBodyToStruct(r, login)
 		if err != nil {
@@ -54,12 +57,16 @@ func PostSession(env *environment.Env) http.HandlerFunc {
 				w.WriteHeader(http.StatusUnprocessableEntity)
 				return
 			}
+			log.Error(err.Error(),
+				zap.String("email", login.Email))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		token, err := env.Sm.Set(profile.ID, 24*time.Hour)
 		if err != nil {
+			log.Error(err.Error(),
+				zap.Uint64("profile_id", profile.ID))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

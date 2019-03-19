@@ -5,13 +5,13 @@ import (
 	_ "api/docs"
 	"api/environment"
 	"api/filesystem"
+	"api/logger"
 	"api/router"
 	"api/session"
 	"github.com/swaggo/http-swagger"
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 // @title Sad Islands API
@@ -23,7 +23,7 @@ import (
 
 func main() {
 	// Crutch for docker-compose (((
-	time.Sleep(15 * time.Second)
+	//time.Sleep(15 * time.Second)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -42,9 +42,16 @@ func main() {
 	}
 	defer sm.Close()
 
+	lm, err := logger.InitLogger()
+	if err != nil {
+		panic(err)
+	}
+	defer lm.Sync()
+
 	env := &environment.Env{
 		Dbm: dbm,
 		Sm:  sm,
+		Lm:  lm,
 	}
 
 	mainRouter := router.InitRouter(env)
