@@ -3,7 +3,9 @@ package middleware
 import (
 	"api/environment"
 	"context"
+	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 type key int
@@ -87,5 +89,19 @@ func RecoverMiddleware(env *environment.Env, next http.HandlerFunc) http.Handler
 			}
 		}()
 		next.ServeHTTP(w, r)
+	})
+}
+
+//LoggerMiddleware write logs
+func LoggerMiddleware(env *environment.Env, next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		log := env.Lm.With(zap.String("method", r.Method),
+			zap.String("remote_address", r.RemoteAddr),
+			zap.String("url", r.URL.Path))
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "logger", log)
+		next.ServeHTTP(w, r.WithContext(ctx))
+		log.Info("Finish", zap.Duration("work_time", time.Since(start)))
 	})
 }
