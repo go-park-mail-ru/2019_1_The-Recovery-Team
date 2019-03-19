@@ -2,6 +2,7 @@ package database
 
 import (
 	"api/models"
+
 	"github.com/jackc/pgx"
 )
 
@@ -175,8 +176,7 @@ func (dbm *Manager) GetProfiles(limit, offset int64) ([]models.ProfileInfo, erro
 
 	for rows.Next() {
 		profile := models.ProfileInfo{}
-		err = rows.Scan(&profile.ID, &profile.Nickname, &profile.Avatar, &profile.Record, &profile.Win, &profile.Loss)
-		if err != nil {
+		if err = rows.Scan(&profile.ID, &profile.Nickname, &profile.Avatar, &profile.Record, &profile.Win, &profile.Loss); err != nil {
 			return nil, err
 		}
 		profiles = append(profiles, profile)
