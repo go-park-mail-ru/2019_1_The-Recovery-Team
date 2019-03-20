@@ -41,6 +41,7 @@ func Authentication(env *environment.Env, next http.HandlerFunc) http.HandlerFun
 		}
 
 		id, err := env.Sm.Get(cookie.Value)
+
 		if err != nil {
 			cookie := http.Cookie{
 				Name:     "session_id",
@@ -85,6 +86,7 @@ func RecoverMiddleware(env *environment.Env, next http.HandlerFunc) http.Handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
+				env.Lm.Error(err.(error).Error())
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 		}()
