@@ -3,10 +3,8 @@ services:
 
   api-service:
     build: .
+    command: /bin/sh -c "/app/wait-for-it.sh db:5432 && /app/wait-for-it.sh redis:6379 && /app/api"
     container_name: sadislands-api
-    depends_on: 
-      - db
-      - redis
     links:
       - db
       - redis
@@ -16,7 +14,6 @@ services:
   db:
     image: postgres
     container_name: db
-    restart: always
     environment:
       POSTGRES_USER: recoveryteam
       POSTGRES_PASSWORD: 123456

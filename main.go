@@ -8,10 +8,11 @@ import (
 	"api/logger"
 	"api/router"
 	"api/session"
-	"github.com/swaggo/http-swagger"
 	"log"
 	"net/http"
 	"os"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title Sad Islands API
@@ -22,9 +23,6 @@ import (
 // @BasePath /api/v1
 
 func main() {
-	// Crutch for docker-compose (((
-	//time.Sleep(15 * time.Second)
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

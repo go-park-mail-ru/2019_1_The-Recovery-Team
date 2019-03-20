@@ -9,4 +9,5 @@ FROM alpine
 WORKDIR /app
 COPY --from=builder /src/api .
 COPY migrations migrations
-CMD ["./api"]
+COPY wait-for-it.sh .
+RUN ["chmod", "+x", "./wait-for-it.sh"]
