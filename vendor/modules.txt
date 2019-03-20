@@ -5,6 +5,8 @@ github.com/PuerkitoBio/urlesc
 # github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 github.com/alecthomas/template
 github.com/alecthomas/template/parse
+# github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
+github.com/asaskevich/govalidator
 # github.com/go-openapi/jsonpointer v0.18.0
 github.com/go-openapi/jsonpointer
 # github.com/go-openapi/jsonreference v0.18.0
@@ -43,6 +45,17 @@ github.com/swaggo/files
 github.com/swaggo/http-swagger
 # github.com/swaggo/swag v1.4.1
 github.com/swaggo/swag
+# go.uber.org/atomic v1.3.2
+go.uber.org/atomic
+# go.uber.org/multierr v1.1.0
+go.uber.org/multierr
+# go.uber.org/zap v1.9.1
+go.uber.org/zap
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/zapcore
+go.uber.org/zap/buffer
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
 # golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
