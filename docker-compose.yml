@@ -5,6 +5,8 @@ services:
     build: .
     command: /bin/sh -c "/app/wait-for-it.sh db:5432 && /app/wait-for-it.sh redis:6379 && /app/api"
     container_name: sadislands-api
+    volumes:
+      - ./upload/img:/app/upload/img
     links:
       - db
       - redis

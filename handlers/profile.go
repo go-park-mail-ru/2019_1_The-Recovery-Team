@@ -111,7 +111,7 @@ func GetProfile(env *environment.Env) http.HandlerFunc {
 		log := r.Context().Value("logger").(*zap.Logger)
 
 		vars := mux.Vars(r)
-		id := vars["id"]
+		id, _ := strconv.ParseUint(vars["id"], 10, 64)
 
 		profile, err := env.Dbm.GetProfile(id)
 		if err != nil {
@@ -120,7 +120,7 @@ func GetProfile(env *environment.Env) http.HandlerFunc {
 				return
 			}
 			log.Error(err.Error(),
-				zap.String("profile_id", id))
+				zap.Uint64("profile_id", id))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -342,6 +342,8 @@ func PostProfile(env *environment.Env) http.HandlerFunc {
 
 			if avatarPath, err := saveAvatar(env, avatar, filename, dir, created.ID); err == nil {
 				created.Avatar = avatarPath
+			} else {
+				log.Warn(err.Error())
 			}
 		}
 

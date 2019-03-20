@@ -11,12 +11,6 @@ import (
 
 // SaveFile saves file to dir, if dir doesn't exist, creates it
 func SaveFile(file io.Reader, dir, filename string) error {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err := os.MkdirAll(dir, 0755)
-		if err != nil {
-			return err
-		}
-	}
 	fileCopy, err := os.OpenFile(dir+filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err
