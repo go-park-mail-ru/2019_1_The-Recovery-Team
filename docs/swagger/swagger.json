@@ -1,14 +1,8 @@
 {
-    "swagger": "2.0",
     "info": {
-        "description": "This is a super game.",
-        "title": "Sad Islands API",
         "contact": {},
-        "license": {},
-        "version": "1.0"
+        "license": {}
     },
-    "host": "104.248.28.45",
-    "basePath": "/api/v1",
     "paths": {
         "/avatars": {
             "put": {
@@ -36,7 +30,7 @@
                         "description": "Profile avatar is updated successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileAvatar"
+                            "$ref": "#/definitions/profile.Avatar"
                         }
                     },
                     "400": {
@@ -106,7 +100,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileCreate"
+                            "$ref": "#/definitions/profile.Create"
                         }
                     },
                     {
@@ -123,7 +117,7 @@
                         "description": "Profile created successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileCreated"
+                            "$ref": "#/definitions/profile.Created"
                         }
                     },
                     "400": {
@@ -136,7 +130,7 @@
                         "description": "Invalid request data",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HandlerError"
+                            "$ref": "#/definitions/handler.Error"
                         }
                     },
                     "500": {
@@ -167,7 +161,7 @@
                         "description": "Profile found successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Profile"
+                            "$ref": "#/definitions/profile.Profile"
                         }
                     },
                     "403": {
@@ -203,7 +197,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileUpdate"
+                            "$ref": "#/definitions/profile.UpdateInfo"
                         }
                     }
                 ],
@@ -224,7 +218,7 @@
                         "description": "Invalid request data",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HandlerError"
+                            "$ref": "#/definitions/handler.Error"
                         }
                     },
                     "500": {
@@ -256,7 +250,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileUpdatePassword"
+                            "$ref": "#/definitions/profile.UpdatePassword"
                         }
                     }
                 ],
@@ -277,7 +271,7 @@
                         "description": "Invalid request data",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HandlerError"
+                            "$ref": "#/definitions/handler.Error"
                         }
                     },
                     "500": {
@@ -288,12 +282,12 @@
         },
         "/scores": {
             "get": {
-                "description": "Get scoreboard",
+                "description": "Get score",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get scoreboard",
-                "operationId": "get-scoreboard",
+                "summary": "Get score",
+                "operationId": "get-score",
                 "parameters": [
                     {
                         "type": "integer",
@@ -313,7 +307,7 @@
                         "description": "Scoreboard found successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Profiles"
+                            "$ref": "#/definitions/profile.Profiles"
                         }
                     },
                     "400": {
@@ -338,7 +332,7 @@
                         "description": "Profile ID found successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileID"
+                            "$ref": "#/definitions/profile.ID"
                         }
                     },
                     "403": {
@@ -361,7 +355,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileLogin"
+                            "$ref": "#/definitions/profile.Login"
                         }
                     }
                 ],
@@ -370,7 +364,7 @@
                         "description": "Session is created successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Profile"
+                            "$ref": "#/definitions/profile.Profile"
                         }
                     },
                     "400": {
@@ -383,7 +377,7 @@
                         "description": "Invalid request data",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HandlerError"
+                            "$ref": "#/definitions/handler.Error"
                         }
                     }
                 }
@@ -407,7 +401,7 @@
         }
     },
     "definitions": {
-        "models.HandlerError": {
+        "handler.Error": {
             "type": "object",
             "properties": {
                 "description": {
@@ -415,7 +409,105 @@
                 }
             }
         },
-        "models.Profile": {
+        "profile.Avatar": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                }
+            }
+        },
+        "profile.Create": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "profile.Created": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                }
+            }
+        },
+        "profile.ID": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "profile.Info": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "loss": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "record": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "win": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "profile.Login": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "profile.Profile": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -448,105 +540,22 @@
                 }
             }
         },
-        "models.ProfileAvatar": {
+        "profile.Profiles": {
             "type": "object",
             "properties": {
-                "avatar": {
-                    "type": "string",
-                    "example": "upload/img/1.png"
-                }
-            }
-        },
-        "models.ProfileCreate": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "test@mail.ru"
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/profile.Info"
+                    }
                 },
-                "nickname": {
-                    "type": "string",
-                    "example": "test"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "password"
-                }
-            }
-        },
-        "models.ProfileCreated": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string",
-                    "example": "upload/img/1.png"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "test@mail.ru"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "nickname": {
-                    "type": "string",
-                    "example": "test"
-                }
-            }
-        },
-        "models.ProfileID": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "models.ProfileInfo": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string",
-                    "example": "upload/img/1.png"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "loss": {
+                "total": {
                     "type": "integer",
                     "example": 50
-                },
-                "nickname": {
-                    "type": "string",
-                    "example": "test"
-                },
-                "record": {
-                    "type": "integer",
-                    "example": 1500
-                },
-                "win": {
-                    "type": "integer",
-                    "example": 100
                 }
             }
         },
-        "models.ProfileLogin": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "test@mail.ru"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "password"
-                }
-            }
-        },
-        "models.ProfileUpdate": {
+        "profile.UpdateInfo": {
             "type": "object",
             "properties": {
                 "email": {
@@ -559,7 +568,7 @@
                 }
             }
         },
-        "models.ProfileUpdatePassword": {
+        "profile.UpdatePassword": {
             "type": "object",
             "properties": {
                 "password": {
@@ -569,21 +578,6 @@
                 "password_old": {
                     "type": "string",
                     "example": "password_old"
-                }
-            }
-        },
-        "models.Profiles": {
-            "type": "object",
-            "properties": {
-                "list": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ProfileInfo"
-                    }
-                },
-                "total": {
-                    "type": "integer",
-                    "example": 50
                 }
             }
         }

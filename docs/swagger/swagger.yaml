@@ -1,11 +1,79 @@
-basePath: /api/v1
 definitions:
-  models.HandlerError:
+  handler.Error:
     properties:
       description:
         type: string
     type: object
-  models.Profile:
+  profile.Avatar:
+    properties:
+      avatar:
+        example: upload/img/1.png
+        type: string
+    type: object
+  profile.Create:
+    properties:
+      email:
+        example: test@mail.ru
+        type: string
+      nickname:
+        example: test
+        type: string
+      password:
+        example: password
+        type: string
+    type: object
+  profile.Created:
+    properties:
+      avatar:
+        example: upload/img/1.png
+        type: string
+      email:
+        example: test@mail.ru
+        type: string
+      id:
+        example: 1
+        type: integer
+      nickname:
+        example: test
+        type: string
+    type: object
+  profile.ID:
+    properties:
+      id:
+        example: 1
+        type: integer
+    type: object
+  profile.Info:
+    properties:
+      avatar:
+        example: upload/img/1.png
+        type: string
+      id:
+        example: 1
+        type: integer
+      loss:
+        example: 50
+        type: integer
+      nickname:
+        example: test
+        type: string
+      record:
+        example: 1500
+        type: integer
+      win:
+        example: 100
+        type: integer
+    type: object
+  profile.Login:
+    properties:
+      email:
+        example: test@mail.ru
+        type: string
+      password:
+        example: password
+        type: string
+    type: object
+  profile.Profile:
     properties:
       avatar:
         example: upload/img/1.png
@@ -29,76 +97,17 @@ definitions:
         example: 100
         type: integer
     type: object
-  models.ProfileAvatar:
+  profile.Profiles:
     properties:
-      avatar:
-        example: upload/img/1.png
-        type: string
-    type: object
-  models.ProfileCreate:
-    properties:
-      email:
-        example: test@mail.ru
-        type: string
-      nickname:
-        example: test
-        type: string
-      password:
-        example: password
-        type: string
-    type: object
-  models.ProfileCreated:
-    properties:
-      avatar:
-        example: upload/img/1.png
-        type: string
-      email:
-        example: test@mail.ru
-        type: string
-      id:
-        example: 1
-        type: integer
-      nickname:
-        example: test
-        type: string
-    type: object
-  models.ProfileID:
-    properties:
-      id:
-        example: 1
-        type: integer
-    type: object
-  models.ProfileInfo:
-    properties:
-      avatar:
-        example: upload/img/1.png
-        type: string
-      id:
-        example: 1
-        type: integer
-      loss:
+      list:
+        items:
+          $ref: '#/definitions/profile.Info'
+        type: array
+      total:
         example: 50
         type: integer
-      nickname:
-        example: test
-        type: string
-      record:
-        example: 1500
-        type: integer
-      win:
-        example: 100
-        type: integer
     type: object
-  models.ProfileLogin:
-    properties:
-      email:
-        example: test@mail.ru
-        type: string
-      password:
-        example: password
-        type: string
-    type: object
-  models.ProfileUpdate:
+  profile.UpdateInfo:
     properties:
       email:
         example: test@mail.ru
@@ -107,7 +116,7 @@ definitions:
         example: test
         type: string
     type: object
-  models.ProfileUpdatePassword:
+  profile.UpdatePassword:
     properties:
       password:
         example: password
@@ -116,23 +125,9 @@ definitions:
         example: password_old
         type: string
     type: object
-  models.Profiles:
-    properties:
-      list:
-        items:
-          $ref: '#/definitions/models.ProfileInfo'
-        type: array
-      total:
-        example: 50
-        type: integer
-    type: object
-host: 104.248.28.45
 info:
   contact: {}
-  description: This is a super game.
   license: {}
-  title: Sad Islands API
-  version: "1.0"
 paths:
   /avatars:
     put:
@@ -152,7 +147,7 @@ paths:
         "200":
           description: Profile avatar is updated successfully
           schema:
-            $ref: '#/definitions/models.ProfileAvatar'
+            $ref: '#/definitions/profile.Avatar'
             type: object
         "400":
           description: Incorrect request data
@@ -197,7 +192,7 @@ paths:
         name: profile_info
         required: true
         schema:
-          $ref: '#/definitions/models.ProfileCreate'
+          $ref: '#/definitions/profile.Create'
           type: object
       - description: Avatar
         in: body
@@ -210,7 +205,7 @@ paths:
         "201":
           description: Profile created successfully
           schema:
-            $ref: '#/definitions/models.ProfileCreated'
+            $ref: '#/definitions/profile.Created'
             type: object
         "400":
           description: Incorrect request data
@@ -219,7 +214,7 @@ paths:
         "422":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/models.HandlerError'
+            $ref: '#/definitions/handler.Error'
             type: object
         "500":
           description: Database error
@@ -240,7 +235,7 @@ paths:
         "200":
           description: Profile found successfully
           schema:
-            $ref: '#/definitions/models.Profile'
+            $ref: '#/definitions/profile.Profile'
             type: object
         "403":
           description: Not authorized
@@ -265,7 +260,7 @@ paths:
         name: profile_info
         required: true
         schema:
-          $ref: '#/definitions/models.ProfileUpdate'
+          $ref: '#/definitions/profile.UpdateInfo'
           type: object
       responses:
         "204":
@@ -279,7 +274,7 @@ paths:
         "422":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/models.HandlerError'
+            $ref: '#/definitions/handler.Error'
             type: object
         "500":
           description: Database error
@@ -301,7 +296,7 @@ paths:
         name: profile_info
         required: true
         schema:
-          $ref: '#/definitions/models.ProfileUpdatePassword'
+          $ref: '#/definitions/profile.UpdatePassword'
           type: object
       responses:
         "204":
@@ -315,15 +310,15 @@ paths:
         "422":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/models.HandlerError'
+            $ref: '#/definitions/handler.Error'
             type: object
         "500":
           description: Database error
       summary: Put profile password
   /scores:
     get:
-      description: Get scoreboard
-      operationId: get-scoreboard
+      description: Get score
+      operationId: get-score
       parameters:
       - description: limit number
         in: query
@@ -339,13 +334,13 @@ paths:
         "200":
           description: Scoreboard found successfully
           schema:
-            $ref: '#/definitions/models.Profiles'
+            $ref: '#/definitions/profile.Profiles'
             type: object
         "400":
           description: Incorrect request data
         "500":
           description: Database error
-      summary: Get scoreboard
+      summary: Get score
   /sessions:
     delete:
       description: Deletes client session
@@ -367,7 +362,7 @@ paths:
         "200":
           description: Profile ID found successfully
           schema:
-            $ref: '#/definitions/models.ProfileID'
+            $ref: '#/definitions/profile.ID'
             type: object
         "403":
           description: Not authorized
@@ -383,13 +378,13 @@ paths:
         name: profile_login
         required: true
         schema:
-          $ref: '#/definitions/models.ProfileLogin'
+          $ref: '#/definitions/profile.Login'
           type: object
       responses:
         "200":
           description: Session is created successfully
           schema:
-            $ref: '#/definitions/models.Profile'
+            $ref: '#/definitions/profile.Profile'
             type: object
         "400":
           description: Incorrect request data
@@ -398,7 +393,6 @@ paths:
         "422":
           description: Invalid request data
           schema:
-            $ref: '#/definitions/models.HandlerError'
+            $ref: '#/definitions/handler.Error'
             type: object
       summary: Post session
-swagger: "2.0"
