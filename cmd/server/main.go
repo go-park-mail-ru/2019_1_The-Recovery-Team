@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	_ "sadislands/docs"
 	"sadislands/internal/delivery/http/rest"
 	"sadislands/internal/infrastructure/repository/postgresql"
 	"sadislands/internal/infrastructure/repository/postgresql/profile"
@@ -43,7 +44,7 @@ func main() {
 	}
 	defer psqlConn.Close()
 
-	if err := postgresql.MakeMigrations(psqlConn, "../../build/schema/0_initial.sql"); err != nil {
+	if err := postgresql.MakeMigrations(psqlConn, "build/schema/0_initial.sql"); err != nil {
 		log.Fatal("Database migrations failed", err)
 	}
 

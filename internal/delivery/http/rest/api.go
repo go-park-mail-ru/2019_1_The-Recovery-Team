@@ -24,7 +24,7 @@ func NewRestApi(
 	router.GET("/api/v1/profiles",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.CORSMiddleware(handler.GetProfile(profileInteractor)))),
+				logger, middleware.CORSMiddleware(handler.GetProfiles(profileInteractor)))),
 	)
 	router.POST("/api/v1/profiles",
 		middleware.LoggerMiddleware(
