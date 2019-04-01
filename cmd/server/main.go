@@ -5,10 +5,13 @@ import (
 	"net/http"
 	"os"
 	"sadislands/internal/delivery/http/rest"
+	"sadislands/internal/infrastructure/repository/memory/game"
 	"sadislands/internal/infrastructure/repository/postgresql"
 	"sadislands/internal/infrastructure/repository/postgresql/profile"
 	"sadislands/internal/infrastructure/repository/redis/session"
 	"sadislands/internal/usecase"
+
+	_ "sadislands/docs"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx"
@@ -30,7 +33,7 @@ func main() {
 	}
 
 	psqlConfig := pgx.ConnConfig{
-		Host:     "db",
+		Host:     "localhost",
 		Port:     5432,
 		Database: "sadislands",
 		User:     "recoveryteam",
@@ -43,11 +46,11 @@ func main() {
 	}
 	defer psqlConn.Close()
 
-	if err := postgresql.MakeMigrations(psqlConn, "../../build/schema/0_initial.sql"); err != nil {
+	if err := postgresql.MakeMigrations(psqlConn, "build/schema/0_initial.sql"); err != nil {
 		log.Fatal("Database migrations failed", err)
 	}
 
-	redisConn, err := redis.DialURL("redis://:@redis:6379")
+	redisConn, err := redis.DialURL("redis://:@localhost:6379")
 	if err != nil {
 		log.Fatal("Redis connection refused")
 	}
@@ -61,8 +64,10 @@ func main() {
 
 	profileInteractor := usecase.NewProfileInteractor(profile.NewProfileRepo(psqlConn))
 	sessionInterctor := usecase.NewSessionInteractor(session.NewSessionRepo(&redisConn))
+	gameInteractor := usecase.NewGameInteractor(game.NewGameRepo(logger))
+	go gameInteractor.Run()
 
-	api := rest.NewRestApi(profileInteractor, sessionInterctor, logger)
+	api := rest.NewRestApi(profileInteractor, sessionInterctor, gameInteractor, logger)
 
 	api.Router.Handler("GET", "/swagger/:file", httpSwagger.WrapHandler)
 

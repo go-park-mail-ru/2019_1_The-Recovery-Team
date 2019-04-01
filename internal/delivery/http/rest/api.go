@@ -16,6 +16,7 @@ type Api struct {
 func NewRestApi(
 	profileInteractor *usecase.ProfileInteractor,
 	sessionInteractor *usecase.SessionInteractor,
+	gameInteractor *usecase.GameInteractor,
 	logger *zap.Logger,
 ) *Api {
 	router := httprouter.New()
@@ -24,7 +25,7 @@ func NewRestApi(
 	router.GET("/api/v1/profiles",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.CORSMiddleware(handler.GetProfile(profileInteractor)))),
+				logger, middleware.CORSMiddleware(handler.GetProfiles(profileInteractor)))),
 	)
 	router.POST("/api/v1/profiles",
 		middleware.LoggerMiddleware(
@@ -81,6 +82,9 @@ func NewRestApi(
 			logger, middleware.RecoverMiddleware(
 				logger, middleware.CORSMiddleware(handler.GetScoreboard(profileInteractor)))),
 	)
+
+	//Game routes
+	router.GET("/api/v1/search", handler.Search(gameInteractor))
 
 	return &Api{
 		Router: router,
