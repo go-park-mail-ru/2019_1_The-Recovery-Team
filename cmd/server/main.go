@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	_ "sadislands/docs"
 	"sadislands/internal/delivery/http/rest"
 	"sadislands/internal/infrastructure/repository/memory/game"
 	"sadislands/internal/infrastructure/repository/postgresql"
