@@ -15,42 +15,42 @@ type ProfileInteractor struct {
 	repo repository.ProfileRepo
 }
 
-func (s *ProfileInteractor) GetProfile(id interface{}) (*profile.Profile, error) {
-	return s.repo.GetProfile(id)
+func (i *ProfileInteractor) GetProfile(id interface{}) (*profile.Profile, error) {
+	return i.repo.GetProfile(id)
 }
 
-func (s *ProfileInteractor) CreateProfile(data *profile.Create) (*profile.Created, error) {
-	return s.repo.CreateProfile(data)
+func (i *ProfileInteractor) CreateProfile(data *profile.Create) (*profile.Created, error) {
+	return i.repo.CreateProfile(data)
 }
 
-func (s *ProfileInteractor) UpdateProfile(id interface{}, data *profile.UpdateInfo) error {
-	return s.repo.UpdateProfile(id, data)
+func (i *ProfileInteractor) UpdateProfile(id interface{}, data *profile.UpdateInfo) error {
+	return i.repo.UpdateProfile(id, data)
 }
 
-func (s *ProfileInteractor) UpdateProfileAvatar(id, avatarPath interface{}) error {
-	return s.repo.UpdateProfileAvatar(id, avatarPath)
+func (i *ProfileInteractor) UpdateProfileAvatar(id, avatarPath interface{}) error {
+	return i.repo.UpdateProfileAvatar(id, avatarPath)
 }
 
-func (s *ProfileInteractor) UpdateProfilePassword(id interface{}, data *profile.UpdatePassword) error {
-	return s.repo.UpdateProfilePassword(id, data)
+func (i *ProfileInteractor) UpdateProfilePassword(id interface{}, data *profile.UpdatePassword) error {
+	return i.repo.UpdateProfilePassword(id, data)
 }
 
-func (s *ProfileInteractor) GetProfileByEmail(email interface{}) (*profile.Profile, error) {
-	return s.repo.GetProfileByEmail(email)
+func (i *ProfileInteractor) GetProfileByEmail(email interface{}) (*profile.Profile, error) {
+	return i.repo.GetProfileByEmail(email)
 }
 
-func (s *ProfileInteractor) GetProfileByNickname(nickname interface{}) (*profile.Profile, error) {
-	return s.repo.GetProfileByNickname(nickname)
+func (i *ProfileInteractor) GetProfileByNickname(nickname interface{}) (*profile.Profile, error) {
+	return i.repo.GetProfileByNickname(nickname)
 }
 
-func (s *ProfileInteractor) GetProfileByEmailWithPassword(data *profile.Login) (*profile.Profile, error) {
-	return s.repo.GetProfileByEmailWithPassword(data)
+func (i *ProfileInteractor) GetProfileByEmailWithPassword(data *profile.Login) (*profile.Profile, error) {
+	return i.repo.GetProfileByEmailWithPassword(data)
 }
 
-func (s *ProfileInteractor) GetProfiles(limit, offset int64) ([]profile.Info, error) {
-	return s.repo.GetProfiles(limit, offset)
+func (i *ProfileInteractor) GetProfiles(limit, offset int64) ([]profile.Info, error) {
+	return i.repo.GetProfiles(limit, offset)
 }
 
-func (s *ProfileInteractor) GetProfileCount() (count int64, err error) {
-	return s.repo.GetProfileCount()
+func (i *ProfileInteractor) GetProfileCount() (count int64, err error) {
+	return i.repo.GetProfileCount()
 }

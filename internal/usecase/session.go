@@ -15,14 +15,14 @@ type SessionInteractor struct {
 	repo repository.SessionRepo
 }
 
-func (s *SessionInteractor) Get(token string) (uint64, error) {
-	return s.repo.Get(token)
+func (i *SessionInteractor) Get(token string) (uint64, error) {
+	return i.repo.Get(token)
 }
 
-func (s *SessionInteractor) Set(profileID uint64, expires time.Duration) (string, error) {
-	return s.repo.Set(profileID, expires)
+func (i *SessionInteractor) Set(profileID uint64, expires time.Duration) (string, error) {
+	return i.repo.Set(profileID, expires)
 }
 
-func (s *SessionInteractor) Delete(token string) error {
-	return s.repo.Delete(token)
+func (i *SessionInteractor) Delete(token string) error {
+	return i.repo.Delete(token)
 }
