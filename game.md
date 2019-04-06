@@ -5,11 +5,14 @@
 ```typescript
 interface State {
     Field: Field;
-    Players: Array<Player>;
+    Players: { 
+        [id: string]: Player;
+    };
     ActiveItems: {
         [id]: ActiveItem;
     };
     RoundNumber: number;
+    RoundTimer: number;
 }
 ```
 
@@ -18,7 +21,7 @@ interface State {
 ```typescript
 interface ActiveItem {
     Type: Itemtype;
-    UserId: number;
+    PlayerId: number;
     Duration: number;
 }
 ```
@@ -64,16 +67,6 @@ interface Player {
     Items: {
         [Type: ItemType]: number;
     }
-    // Если пустое, то не обновлять
-    Info: PlayerInfo | null;
-}
-```
-
-```typescript
-interface PlayerInfo {
-    Nickname: string;
-    Rating: number;
-    Avatar: string;
     LoseRound: number | null;
 }
 ```
@@ -186,7 +179,15 @@ interface Payload {
 
 ```typescript
 interface Payload {
-    Angle: number;
+    PlayerId: number;
+    Move: string;
+}
+```
+
+###### INIT_PLAYERS
+```typescript
+interface Payload {
+    PlayersId: Array<string>;
 }
 ```
 
@@ -232,6 +233,3 @@ interface Payload {
     ItemType: ItemType;
 }
 ```
-
-
-
