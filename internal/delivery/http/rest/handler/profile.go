@@ -26,7 +26,7 @@ func saveAvatar(profileInteractor *usecase.ProfileInteractor, avatar multipart.F
 		return "", err
 	}
 
-	err = saver.SaveFile(avatar, "../../"+dir, filename)
+	err = saver.SaveFile(avatar, dir, filename)
 	if err != nil {
 		return "", err
 	}
