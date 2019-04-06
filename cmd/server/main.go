@@ -45,11 +45,18 @@ func main() {
 	if err != nil {
 		log.Fatal("Postgresql connection refused")
 	}
-	defer psqlConn.Close()
 
 	if err := postgresql.MakeMigrations(psqlConn, "build/schema/0_initial.sql"); err != nil {
 		log.Fatal("Database migrations failed", err)
 	}
+	psqlConn.Close()
+
+
+	psqlConn, err = pgx.Connect(psqlConfig)
+	if err != nil {
+		log.Fatal("Postgresql connection refused")
+	}
+	defer psqlConn.Close()
 
 	redisConn, err := redis.DialURL("redis://:@redis:6379")
 	if err != nil {
