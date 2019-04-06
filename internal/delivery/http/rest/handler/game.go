@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"math/rand"
 	"net/http"
+	"sadislands/internal/delivery/http/rest/middleware"
 	"sadislands/internal/domain/game"
 	"sadislands/internal/usecase"
-
-	uuid "github.com/satori/go.uuid"
 
 	"github.com/gorilla/websocket"
 
@@ -18,36 +16,35 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-//func searchGame(conn *websocket.Conn) {
-//	t := time.NewTicker(3 * time.Second)
-//	for {
-//		if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-//			fmt.Println("Client disconnected")
-//			t.Stop()
-//			return
-//		}
-//
-//		iter++
-//		<-t.C
-//	}
-//}
-
-func Search(gameInteractor *usecase.GameInteractor) httprouter.Handle {
+func Search(profileInteractor *usecase.ProfileInteractor, gameInteractor *usecase.GameInteractor) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		sessionID := r.Context().Value(middleware.SessionID).(string)
+		profileID := r.Context().Value(middleware.ProfileID).(uint64)
+
+		profile, err := profileInteractor.GetProfile(profileID)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
 
-		player := &game.Player{
-			//ID:        rand.Uint64(),
-			ID:        rand.Uint64(),
-			SessionID: uuid.NewV4().String(),
+		user := &game.User{
+			SessionID: sessionID,
 			Conn:      conn,
-			Messages:  make(chan *game.Message, 10),
+			Messages:  make(chan interface{}, 10),
+			Info: game.Info{
+				ID:       profile.ID,
+				Nickname: profile.Nickname,
+				Rating:   profile.Record,
+				Avatar:   profile.Avatar,
+			},
 		}
-		go player.Send()
+		go user.Send()
 
-		gameInteractor.Players() <- player
+		gameInteractor.Players() <- user
 	}
 }

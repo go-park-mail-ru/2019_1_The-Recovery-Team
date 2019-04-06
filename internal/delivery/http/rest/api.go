@@ -84,7 +84,10 @@ func NewRestApi(
 	)
 
 	//Game routes
-	router.GET("/api/v1/search", handler.Search(gameInteractor))
+	router.GET("/api/v1/search",
+		middleware.Authentication(
+			sessionInteractor, handler.Search(profileInteractor, gameInteractor)),
+	)
 
 	return &Api{
 		Router: router,

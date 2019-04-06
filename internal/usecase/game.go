@@ -19,6 +19,6 @@ func (i *GameInteractor) Run() {
 	i.repo.Run()
 }
 
-func (i *GameInteractor) Players() chan *game.Player {
+func (i *GameInteractor) Players() chan *game.User {
 	return i.repo.PlayersChan()
 }
