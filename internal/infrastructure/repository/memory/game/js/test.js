@@ -18,17 +18,19 @@ let Move = (id, direction) => {
         })
     }};
 
-const sendInside = InitEngine((actionType, action) => {
-    console.log('RECEIVED: ', actionType, 'PAYLOAD: ', JSON.parse(action).payload);
+const sendInside = InitEngine((type, payload) => {
+    if (payload) {
+        console.log('RECEIVED: ', type, 'PAYLOAD: ', JSON.parse(payload));
+    } else {
+        console.log('RECEIVED: ', type);
+    }
 });
 
-console.log(JSON.stringify(Move(20, "DOWN")));
-
 sendInside(JSON.stringify(initPalyersAction));
-sendInside(JSON.stringify(Move(1, "DOWN")));
-setTimeout(sendInside, 2000, JSON.stringify(Move(1, "RIGHT")));
-setTimeout(sendInside, 2000, JSON.stringify(Move(2, "DOWN")));
-setTimeout(sendInside, 4000, JSON.stringify(Move(2, "UP")));
+// sendInside(JSON.stringify(Move(1, "DOWN")));
+// setTimeout(sendInside, 2000, JSON.stringify(Move(1, "RIGHT")));
+// setTimeout(sendInside, 2000, JSON.stringify(Move(2, "DOWN")));
+// setTimeout(sendInside, 4000, JSON.stringify(Move(2, "UP")));
 
 
 
