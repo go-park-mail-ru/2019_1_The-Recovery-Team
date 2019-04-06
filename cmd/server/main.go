@@ -34,7 +34,7 @@ func main() {
 	}
 
 	psqlConfig := pgx.ConnConfig{
-		Host:     "localhost",
+		Host:     "db",
 		Port:     5432,
 		Database: "sadislands",
 		User:     "recoveryteam",
@@ -51,7 +51,7 @@ func main() {
 		log.Fatal("Database migrations failed", err)
 	}
 
-	redisConn, err := redis.DialURL("redis://:@localhost:6379")
+	redisConn, err := redis.DialURL("redis://:@redis:6379")
 	if err != nil {
 		log.Fatal("Redis connection refused")
 	}
