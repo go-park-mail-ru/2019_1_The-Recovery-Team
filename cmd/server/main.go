@@ -72,7 +72,7 @@ func main() {
 
 	api.Router.Handler("GET", "/swagger/:file", httpSwagger.WrapHandler)
 
-	api.Router.ServeFiles("/upload/*filepath", http.Dir("../../upload"))
+	api.Router.ServeFiles("/upload/*filepath", http.Dir("upload"))
 
 	log.Print(http.ListenAndServe(":"+port, api.Router))
 }
