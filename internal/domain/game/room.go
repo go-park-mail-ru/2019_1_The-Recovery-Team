@@ -2,8 +2,6 @@ package game
 
 import (
 	"context"
-	"encoding/json"
-	"github.com/mailru/easyjson"
 	"github.com/satori/go.uuid"
 	"sync"
 
@@ -23,7 +21,7 @@ type Room struct {
 	Exclude chan *User
 	Ctx     context.Context
 	Cancel  context.CancelFunc
-	Actions chan string
+	Actions chan *Action
 
 	Log *zap.Logger
 }
@@ -38,14 +36,14 @@ func NewRoom(log *zap.Logger, closed chan *Room) *Room {
 		Exclude: make(chan *User, 1),
 		Ctx:     ctx,
 		Cancel:  cancel,
-		Actions: make(chan string, 10),
+		Actions: make(chan *Action, 10),
 		Log: log.With(
 			zap.String("room_id", id),
 		),
 	}
 }
 
-func (r *Room) Run(sendInto func(action string)) {
+func (r *Room) Run(sendInto func(action interface{})) {
 	users := make([]*User, 0, 2)
 
 	r.Users.Range(func(key, value interface{}) bool {
@@ -55,16 +53,16 @@ func (r *Room) Run(sendInto func(action string)) {
 		return true
 	})
 
-	info, _ := easyjson.Marshal(users[1].Info)
+	info := users[1].Info
 	users[0].Messages <- &Action{
 		Type:    "SET_OPPONENT",
-		Payload: string(info),
+		Payload: info,
 	}
 
-	info, _ = easyjson.Marshal(users[0].Info)
+	info = users[0].Info
 	users[1].Messages <- &Action{
 		Type:    "SET_OPPONENT",
-		Payload: string(info),
+		Payload: info,
 	}
 
 	playersId := make([]uint64, 0, len(users))
@@ -77,15 +75,11 @@ func (r *Room) Run(sendInto func(action string)) {
 		PlayersId: playersId,
 	}
 
-	payloadRaw, _ := easyjson.Marshal(payload)
-
-	action := Action{
+	action := &Action{
 		Type:    InitPlayers,
-		Payload: string(payloadRaw),
+		Payload: payload,
 	}
-
-	actionRaw, _ := json.Marshal(action)
-	sendInto(string(actionRaw))
+	sendInto(action)
 
 	for {
 		select {
@@ -97,18 +91,11 @@ func (r *Room) Run(sendInto func(action string)) {
 	}
 }
 
-func (r *Room) Broadcast(action string) error {
-	var err error
-
-	act := &Action{}
-	json.Unmarshal([]byte(action), act)
-
+func (r *Room) Broadcast(action *Action) {
 	r.Users.Range(func(key, value interface{}) bool {
-		value.(*User).Messages <- act
+		value.(*User).Messages <- action
 		return true
 	})
-
-	return err
 }
 
 //func (r *Room) Close(action *Action) {
@@ -154,6 +141,6 @@ func (r *Room) Broadcast(action string) error {
 //	r.Log.Info("Room closed")
 //}
 
-func (r *Room) ActionCallback(actionType, action string) {
+func (r *Room) ActionCallback(action *Action) {
 	r.Broadcast(action)
 }

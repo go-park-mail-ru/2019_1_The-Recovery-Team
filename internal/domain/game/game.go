@@ -5,9 +5,16 @@ import (
 	"time"
 )
 
+//easyjson:json
 type Action struct {
 	Type    string `json:"type"`
-	Payload string `json:"payload"`
+	Payload interface{} `json:"payload,omitempty"`
+}
+
+//easyjson:json
+type ActionRaw struct {
+	Type    string `json:"type"`
+	Payload string `json:"payload,omitempty"`
 }
 
 type State struct {
@@ -15,7 +22,7 @@ type State struct {
 	Players     map[string]Player `json:"players,omitempty"`
 	ActiveItems *sync.Map         `json:"active_items,omitempty"`
 	RoundNumber int               `json:"round_number,omitempty"`
-	RoundTimer  uint64            `json:"round_timer,omitempty"`
+	RoundTimer  *uint64            `json:"round_timer,omitempty"`
 }
 
 type Item struct {
@@ -60,6 +67,7 @@ type InitPlayersPayload struct {
 	PlayersId []uint64 `json:"players"`
 }
 
+//easyjson:json
 type InitPlayerMovePayload struct {
 	PlayerId uint64 `json:"player_id"`
 	Move     string `json:"move"`

@@ -93,8 +93,7 @@ func (r *Repo) addUser(player *game.User) {
 			zap.String("room_id", player.Room.ID),
 		)
 
-		engine := &Engine{}
-		sendInto := engine.InitEngine(player.Room.ActionCallback)
+		sendInto := InitEngine(player.Room.ActionCallback)
 
 		go player.Room.Run(sendInto)
 	}

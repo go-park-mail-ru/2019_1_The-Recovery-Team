@@ -347,7 +347,90 @@ func (v *InitPlayersPayload) UnmarshalJSON(data []byte) error {
 func (v *InitPlayersPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson85f0d656DecodeSadislandsInternalDomainGame2(l, v)
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame3(in *jlexer.Lexer, out *GameStartPayload) {
+func easyjson85f0d656DecodeSadislandsInternalDomainGame3(in *jlexer.Lexer, out *InitPlayerMovePayload) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "player_id":
+			out.PlayerId = uint64(in.Uint64())
+		case "move":
+			out.Move = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson85f0d656EncodeSadislandsInternalDomainGame3(out *jwriter.Writer, in InitPlayerMovePayload) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"player_id\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint64(uint64(in.PlayerId))
+	}
+	{
+		const prefix string = ",\"move\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Move))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v InitPlayerMovePayload) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson85f0d656EncodeSadislandsInternalDomainGame3(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v InitPlayerMovePayload) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson85f0d656EncodeSadislandsInternalDomainGame3(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *InitPlayerMovePayload) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson85f0d656DecodeSadislandsInternalDomainGame3(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *InitPlayerMovePayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson85f0d656DecodeSadislandsInternalDomainGame3(l, v)
+}
+func easyjson85f0d656DecodeSadislandsInternalDomainGame4(in *jlexer.Lexer, out *GameStartPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -374,7 +457,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame3(in *jlexer.Lexer, out *
 				if out.Field == nil {
 					out.Field = new(Field)
 				}
-				easyjson85f0d656DecodeSadislandsInternalDomainGame4(in, out.Field)
+				easyjson85f0d656DecodeSadislandsInternalDomainGame5(in, out.Field)
 			}
 		case "Players":
 			if in.IsNull() {
@@ -409,7 +492,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame3(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame3(out *jwriter.Writer, in GameStartPayload) {
+func easyjson85f0d656EncodeSadislandsInternalDomainGame4(out *jwriter.Writer, in GameStartPayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -424,7 +507,7 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame3(out *jwriter.Writer, in
 		if in.Field == nil {
 			out.RawString("null")
 		} else {
-			easyjson85f0d656EncodeSadislandsInternalDomainGame4(out, *in.Field)
+			easyjson85f0d656EncodeSadislandsInternalDomainGame5(out, *in.Field)
 		}
 	}
 	{
@@ -454,27 +537,27 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame3(out *jwriter.Writer, in
 // MarshalJSON supports json.Marshaler interface
 func (v GameStartPayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson85f0d656EncodeSadislandsInternalDomainGame3(&w, v)
+	easyjson85f0d656EncodeSadislandsInternalDomainGame4(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v GameStartPayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson85f0d656EncodeSadislandsInternalDomainGame3(w, v)
+	easyjson85f0d656EncodeSadislandsInternalDomainGame4(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *GameStartPayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson85f0d656DecodeSadislandsInternalDomainGame3(&r, v)
+	easyjson85f0d656DecodeSadislandsInternalDomainGame4(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *GameStartPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson85f0d656DecodeSadislandsInternalDomainGame3(l, v)
+	easyjson85f0d656DecodeSadislandsInternalDomainGame4(l, v)
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame4(in *jlexer.Lexer, out *Field) {
+func easyjson85f0d656DecodeSadislandsInternalDomainGame5(in *jlexer.Lexer, out *Field) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -510,7 +593,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame4(in *jlexer.Lexer, out *
 				}
 				for !in.IsDelim(']') {
 					var v12 Cell
-					easyjson85f0d656DecodeSadislandsInternalDomainGame5(in, &v12)
+					easyjson85f0d656DecodeSadislandsInternalDomainGame6(in, &v12)
 					out.Cells = append(out.Cells, v12)
 					in.WantComma()
 				}
@@ -530,7 +613,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame4(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame4(out *jwriter.Writer, in Field) {
+func easyjson85f0d656EncodeSadislandsInternalDomainGame5(out *jwriter.Writer, in Field) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -550,7 +633,7 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame4(out *jwriter.Writer, in
 				if v13 > 0 {
 					out.RawByte(',')
 				}
-				easyjson85f0d656EncodeSadislandsInternalDomainGame5(out, v14)
+				easyjson85f0d656EncodeSadislandsInternalDomainGame6(out, v14)
 			}
 			out.RawByte(']')
 		}
@@ -577,7 +660,7 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame4(out *jwriter.Writer, in
 	}
 	out.RawByte('}')
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame5(in *jlexer.Lexer, out *Cell) {
+func easyjson85f0d656DecodeSadislandsInternalDomainGame6(in *jlexer.Lexer, out *Cell) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -614,7 +697,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame5(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame5(out *jwriter.Writer, in Cell) {
+func easyjson85f0d656EncodeSadislandsInternalDomainGame6(out *jwriter.Writer, in Cell) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -659,4 +742,182 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame5(out *jwriter.Writer, in
 		out.Bool(bool(in.HasBox))
 	}
 	out.RawByte('}')
+}
+func easyjson85f0d656DecodeSadislandsInternalDomainGame7(in *jlexer.Lexer, out *ActionRaw) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "type":
+			out.Type = string(in.String())
+		case "payload":
+			out.Payload = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson85f0d656EncodeSadislandsInternalDomainGame7(out *jwriter.Writer, in ActionRaw) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"type\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Type))
+	}
+	if in.Payload != "" {
+		const prefix string = ",\"payload\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Payload))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v ActionRaw) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson85f0d656EncodeSadislandsInternalDomainGame7(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v ActionRaw) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson85f0d656EncodeSadislandsInternalDomainGame7(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *ActionRaw) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson85f0d656DecodeSadislandsInternalDomainGame7(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *ActionRaw) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson85f0d656DecodeSadislandsInternalDomainGame7(l, v)
+}
+func easyjson85f0d656DecodeSadislandsInternalDomainGame8(in *jlexer.Lexer, out *Action) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "type":
+			out.Type = string(in.String())
+		case "payload":
+			if m, ok := out.Payload.(easyjson.Unmarshaler); ok {
+				m.UnmarshalEasyJSON(in)
+			} else if m, ok := out.Payload.(json.Unmarshaler); ok {
+				_ = m.UnmarshalJSON(in.Raw())
+			} else {
+				out.Payload = in.Interface()
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson85f0d656EncodeSadislandsInternalDomainGame8(out *jwriter.Writer, in Action) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"type\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Type))
+	}
+	if in.Payload != nil {
+		const prefix string = ",\"payload\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if m, ok := in.Payload.(easyjson.Marshaler); ok {
+			m.MarshalEasyJSON(out)
+		} else if m, ok := in.Payload.(json.Marshaler); ok {
+			out.Raw(m.MarshalJSON())
+		} else {
+			out.Raw(json.Marshal(in.Payload))
+		}
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v Action) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson85f0d656EncodeSadislandsInternalDomainGame8(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v Action) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson85f0d656EncodeSadislandsInternalDomainGame8(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *Action) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson85f0d656DecodeSadislandsInternalDomainGame8(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *Action) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson85f0d656DecodeSadislandsInternalDomainGame8(l, v)
 }

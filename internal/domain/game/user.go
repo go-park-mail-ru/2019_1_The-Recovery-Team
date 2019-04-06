@@ -1,6 +1,9 @@
 package game
 
-import "github.com/gorilla/websocket"
+import (
+	"github.com/gorilla/websocket"
+	"github.com/mailru/easyjson"
+)
 
 type User struct {
 	SessionID     string
@@ -35,9 +38,37 @@ func (u *User) Send() {
 
 func (u *User) Listen() {
 	for {
-		_, raw, err := u.Conn.ReadMessage()
+		_, rawMessage, err := u.Conn.ReadMessage()
 		if err == nil {
-			u.Room.Actions <- string(raw)
+			raw := &ActionRaw{}
+			if err := easyjson.Unmarshal(rawMessage, raw); err != nil {
+				continue
+			}
+
+			action := &Action{
+				Type: raw.Type,
+			}
+
+			switch action.Type {
+			case InitPlayers:
+				{
+					payload := &InitPlayersPayload{}
+					if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+						continue
+					}
+					action.Payload = payload
+				}
+			case InitPlayerMove:
+				{
+					payload := &InitPlayerMovePayload{}
+					if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+						continue
+					}
+					action.Payload = payload
+				}
+			}
+
+			u.Room.Actions <- action
 		}
 	}
 }

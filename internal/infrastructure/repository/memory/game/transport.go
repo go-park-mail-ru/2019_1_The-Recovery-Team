@@ -1,17 +1,19 @@
 package game
 
+import "sadislands/internal/domain/game"
+
 type Transport struct {
-	InnerReceiver func(action string)
-	OuterReceiver func(actionType, action string)
+	InnerReceiver func(action interface{})
+	OuterReceiver func(action *game.Action)
 }
 
-func (t *Transport) SendOut(actionType string, action string) {
+func (t *Transport) SendOut(action *game.Action) {
 	if t.OuterReceiver != nil {
-		t.OuterReceiver(actionType, action)
+		t.OuterReceiver(action)
 	}
 }
 
-func (t *Transport) SendInside(action string) {
+func (t *Transport) SendInside(action interface{}) {
 	if t.OuterReceiver != nil {
 		t.InnerReceiver(action)
 	}

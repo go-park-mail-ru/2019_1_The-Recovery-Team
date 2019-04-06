@@ -19,15 +19,16 @@ const (
 	Down        = "DOWN"
 	Left        = "LEFT"
 	Right       = "RIGHT"
+	RoundDuration uint64 = 5
 )
 
 type Engine struct {
 	Transport       *Transport
 	State           *game.State
 	StateDiff       *game.State
-	ProcessActions  []game.Action
+	ProcessActions  []*game.Action
 	ProcessM        *sync.Mutex
-	ReceivedActions chan game.Action
+	ReceivedActions chan *game.Action
 	Ticker          *time.Ticker
 	Timer           *time.Timer
 }
@@ -64,15 +65,20 @@ func initField() *game.Field {
 	return field
 }
 
+// Game action handlers
 func (e *Engine) setGameStart() {
 	e.State = initState()
 	e.StateDiff = e.State
 }
 
-func (e *Engine) setStartRound() {
+// Round action handlers
+func (e *Engine) setRoundStart() {
 	e.State.RoundNumber += 1
 	time.AfterFunc(5*time.Second, e.stopRound)
-	e.State.RoundTimer = 5
+
+	e.State.RoundTimer = new(uint64)
+	*e.State.RoundTimer = RoundDuration
+
 	go e.controlRemainingRoundTime()
 
 	e.StateDiff.RoundNumber = e.State.RoundNumber
@@ -80,38 +86,19 @@ func (e *Engine) setStartRound() {
 }
 
 func (e *Engine) setRoundTime() {
-	e.State.RoundTimer -= 1
+	*e.State.RoundTimer -= 1
 	e.StateDiff.RoundTimer = e.State.RoundTimer
 }
 
-func (e *Engine) controlRemainingRoundTime() {
-	action := game.Action{
-		Type: game.SetRoundTime,
-	}
-
-	t := time.NewTicker(1 * time.Second)
-	for {
-		<-t.C
-
-		if e.State.RoundTimer == 2 {
-			e.ReceivedActions <- action
-			t.Stop()
-			return
-		}
-
-		e.ReceivedActions <- action
-	}
+func (e *Engine) setRoundStop() {
+	*e.State.RoundTimer = 0
+	e.StateDiff.RoundTimer = e.State.RoundTimer
 }
 
-func (e *Engine) stopRound() {
-	e.ReceivedActions <- game.Action{
-		Type: game.SetRoundStop,
-	}
-}
-
+// Players action handlers
 func (e *Engine) initPlayers(action *game.Action) {
-	payload := &game.InitPlayersPayload{}
-	json.Unmarshal([]byte(action.Payload), payload)
+	payload := action.Payload.(*game.InitPlayersPayload)
+
 	for _, id := range payload.PlayersId {
 		idStr := strconv.FormatUint(id, 10)
 
@@ -124,8 +111,7 @@ func (e *Engine) initPlayers(action *game.Action) {
 }
 
 func (e *Engine) movePlayer(action *game.Action) {
-	payload := &game.InitPlayerMovePayload{}
-	json.Unmarshal([]byte(action.Payload), payload)
+	payload := action.Payload.(*game.InitPlayerMovePayload)
 
 	idStr := strconv.FormatUint(payload.PlayerId, 10)
 	player, exists := e.State.Players[idStr]
@@ -165,27 +151,31 @@ func (e *Engine) movePlayer(action *game.Action) {
 	e.StateDiff.Players[idStr] = player
 }
 
-func (e *Engine) sendStateDiff() {
-	payload, _ := json.Marshal(e.StateDiff)
-	action, _ := json.Marshal(&game.Action{
-		Type:    game.SetState,
-		Payload: string(payload),
-	})
-	go e.Transport.SendOut(game.SetState, string(action))
+
+
+func (e *Engine) controlRemainingRoundTime() {
+	action := &game.Action{
+		Type: game.SetRoundTime,
+	}
+
+	t := time.NewTicker(1 * time.Second)
+	for {
+		<-t.C
+
+		if *e.State.RoundTimer == 2 {
+			e.ReceivedActions <- action
+			t.Stop()
+			return
+		}
+
+		e.ReceivedActions <- action
+	}
 }
 
-func (e *Engine) setRoundStop() {
-	e.State.RoundTimer = 0
-	e.StateDiff.RoundTimer = e.State.RoundTimer
-}
-
-func actionJSON(actionType string, payload interface{}) string {
-	payloadRaw, _ := json.Marshal(payload)
-	actionRaw, _ := json.Marshal(&game.Action{
-		Type:    actionType,
-		Payload: string(payloadRaw),
-	})
-	return string(actionRaw)
+func (e *Engine) stopRound() {
+	e.ReceivedActions <- &game.Action{
+		Type: game.SetRoundStop,
+	}
 }
 
 func initStateDiff() *game.State {
@@ -194,7 +184,7 @@ func initStateDiff() *game.State {
 	}
 }
 
-func (e *Engine) updateState(actions *[]game.Action) {
+func (e *Engine) updateState(actions *[]*game.Action) {
 	e.StateDiff = initStateDiff()
 
 	for _, action := range *actions {
@@ -202,12 +192,12 @@ func (e *Engine) updateState(actions *[]game.Action) {
 		case game.InitPlayers:
 			{
 				e.setGameStart()
-				e.initPlayers(&action)
-				e.setStartRound()
+				e.initPlayers(action)
+				e.setRoundStart()
 			}
 		case game.InitPlayerMove:
 			{
-				e.movePlayer(&action)
+				e.movePlayer(action)
 			}
 		case game.SetRoundTime:
 			{
@@ -216,15 +206,22 @@ func (e *Engine) updateState(actions *[]game.Action) {
 		case game.SetRoundStop:
 			{
 				e.setRoundStop()
-				e.sendStateDiff()
-				fmt.Println(e.StateDiff)
-				go e.Transport.SendOut(game.SetRoundStop, actionJSON(game.SetRoundStop, nil))
+				go func() {
+					e.Transport.SendOut(&game.Action{
+						Type:    game.SetState,
+						Payload: e.StateDiff,
+					})
+					e.Transport.SendOut(&game.Action{Type: game.SetRoundStop})
+				}()
 				return
 			}
 		}
 	}
 
-	e.sendStateDiff()
+	go e.Transport.SendOut(&game.Action{
+		Type:    game.SetState,
+		Payload: e.StateDiff,
+	})
 }
 
 func (e *Engine) run() {
@@ -240,12 +237,13 @@ func (e *Engine) run() {
 					continue
 				}
 
-				fmt.Println("Process", e.ProcessActions)
+				debug, _ := json.Marshal(e.ProcessActions)
+				fmt.Println("Process", string(debug))
 				e.ProcessM.Lock()
-				actions := make([]game.Action, len(e.ProcessActions))
+				actions := make([]*game.Action, len(e.ProcessActions))
 				copy(actions, e.ProcessActions)
 				go e.updateState(&actions)
-				e.ProcessActions = make([]game.Action, 0, 100)
+				e.ProcessActions = make([]*game.Action, 0, 100)
 				e.ProcessM.Unlock()
 			}
 		}
@@ -265,21 +263,73 @@ func (e *Engine) collectActions() {
 	}
 }
 
-func (e *Engine) InitEngine(callback func(actionType, payload string)) func(action string) {
-	e.Transport = &Transport{}
-	e.ProcessM = &sync.Mutex{}
-	e.ReceivedActions = make(chan game.Action, 100)
-	e.ProcessActions = make([]game.Action, 0, 10)
-
-	e.Transport.OuterReceiver = callback
-	e.Transport.InnerReceiver = func(action string) {
-		act := game.Action{}
-		json.Unmarshal([]byte(action), &act)
-
-		e.ReceivedActions <- act
+func InitEngine(callback func(action *game.Action)) func(action interface{}) {
+	engine := &Engine{
+		Transport: &Transport{
+			OuterReceiver: callback,
+		},
+		ProcessM: &sync.Mutex{},
+		ReceivedActions: make(chan *game.Action, 100),
+		ProcessActions: make([]*game.Action, 0, 10),
 	}
 
-	go e.run()
+	engine.Transport.InnerReceiver = func(action interface{}) {
+		engine.ReceivedActions <- action.(*game.Action)
+	}
 
-	return e.Transport.InnerReceiver
+	go engine.run()
+
+	return engine.Transport.InnerReceiver
+}
+
+
+func InitEngineJS(callback func(actionType, payload string)) func(action interface{}) {
+	engine := &Engine{
+		Transport: &Transport{
+			OuterReceiver: func(action *game.Action) {
+				if action.Payload == nil {
+					callback(action.Type, "")
+					return
+				}
+
+				payload, _ := json.Marshal(action.Payload)
+				callback(action.Type, string(payload))
+			},
+		},
+		ProcessM: &sync.Mutex{},
+		ReceivedActions: make(chan *game.Action, 100),
+		ProcessActions: make([]*game.Action, 0, 10),
+	}
+
+	engine.Transport.InnerReceiver = func(action interface{}) {
+		raw := game.ActionRaw{}
+		json.Unmarshal([]byte(action.(string)), &raw)
+
+		act := &game.Action{
+			Type: raw.Type,
+		}
+
+		var payload interface{}
+		switch act.Type {
+		case game.InitPlayers:
+			{
+				payload = &game.InitPlayersPayload{}
+			}
+		case game.InitPlayerMove:
+			{
+				payload = &game.InitPlayerMovePayload{}
+			}
+		default:
+			return
+		}
+
+		json.Unmarshal([]byte(raw.Payload), payload)
+		act.Payload = payload
+
+		engine.ReceivedActions <- act
+	}
+
+	go engine.run()
+
+	return engine.Transport.InnerReceiver
 }
