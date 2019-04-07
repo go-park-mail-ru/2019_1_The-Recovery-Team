@@ -175,19 +175,27 @@ interface Payload {
 }
 ```
 
+###### INIT_PLAYERS
+Frontend only!
+```typescript
+interface Payload {
+    PlayerIds: Array<number>;
+}
+```
+
+###### INIT_PLAYER_READY
+```typescript
+interface Payload {
+    PlayerId: number;
+}
+```
+
 ###### INIT_PLAYER_MOVE
 
 ```typescript
 interface Payload {
     PlayerId: number;
     Move: string;
-}
-```
-
-###### INIT_PLAYERS
-```typescript
-interface Payload {
-    PlayersId: Array<string>;
 }
 ```
 
