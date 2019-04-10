@@ -1,14 +1,18 @@
 package game
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/mailru/easyjson"
+	"go.uber.org/zap"
+	"io"
 )
 
 type User struct {
 	SessionID     string
 	GameSessionID string
 	Conn          *websocket.Conn
+	Log *zap.Logger
 	Room          *Room
 	Messages      chan interface{}
 	Info          Info
@@ -22,13 +26,25 @@ type Info struct {
 	Avatar   string `json:"avatar"`
 }
 
-func (u *User) Send() {
+func (u *User) ListenAndSend(log *zap.Logger) {
+	u.Log = log.With(
+		zap.Uint64("user_id", u.Info.ID),
+	)
+	go u.send()
+	go u.listen()
+}
+
+func (u *User) send() {
 	for {
 		select {
-		case message := <-u.Messages:
+		case message, hasMore := <-u.Messages:
 			{
-				// TODO: Process error
+				if !hasMore {
+					u.Log.Info("Stop sending. Message channel was closed")
+					return
+				}
 				if err := u.Conn.WriteJSON(message); err != nil {
+					u.Log.Info("Stop sending. Error on writing to connection")
 					return
 				}
 			}
@@ -36,39 +52,91 @@ func (u *User) Send() {
 	}
 }
 
-func (u *User) Listen() {
+func (u *User) listen() {
 	for {
-		_, rawMessage, err := u.Conn.ReadMessage()
-		if err == nil {
-			raw := &ActionRaw{}
-			if err := easyjson.Unmarshal(rawMessage, raw); err != nil {
+		raw := &ActionRaw{}
+
+		err := u.Conn.ReadJSON(raw)
+		switch {
+		case websocket.IsCloseError(err, websocket.CloseAbnormalClosure):
+			{
+				u.Log.Info("Stop listening. Error on reading from connection")
+
+				if u.Room == nil {
+					return
+				}
+
+				if u.Room.Running.Load() {
+					u.Room.Actions <- &Action{
+						Type: InitEngineStop,
+					}
+				}
+
+				go u.Room.Close(&Action{
+					Type:    SetUserDisconnected,
+					Payload: u,
+				})
+				return
+			}
+		case err == io.ErrUnexpectedEOF:
+			{
+				u.Log.Warn("Received incorrect JSON")
 				continue
 			}
-
-			action := &Action{
-				Type: raw.Type,
+		case err != nil:
+			{
+				u.Log.Info("Stop listening. User was disconnected")
+				return
 			}
+		}
 
-			switch action.Type {
-			case InitPlayers:
-				{
-					payload := &InitPlayersPayload{}
-					if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
-						continue
-					}
-					action.Payload = payload
+		action := &Action{
+			Type: raw.Type,
+		}
+
+		switch action.Type {
+		case InitPlayers:
+			{
+				payload := &InitPlayersPayload{}
+				if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+					u.Log.Warn("Invalid players init payload")
+					continue
 				}
-			case InitPlayerMove:
-				{
-					payload := &InitPlayerMovePayload{}
-					if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
-						continue
-					}
-					action.Payload = payload
-				}
+				action.Payload = payload
 			}
+		case InitPlayerReady:
+			{
+				payload := &InitPlayerReadyPayload{}
+				if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+					u.Log.Warn("Invalid player ready payload")
+					continue
+				}
+
+				fmt.Println(payload)
+
+				if payload.PlayerId != u.Info.ID {
+					continue
+				}
+
+				action.Payload = payload
+			}
+		case InitPlayerMove:
+			{
+				payload := &InitPlayerMovePayload{}
+				if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+					u.Log.Warn("Invalid player move payload")
+					continue
+				}
+
+				if payload.PlayerId != u.Info.ID {
+					u.Log.Warn("Player trying to move opponent")
+					continue
+				}
+
+				action.Payload = payload
+			}
+		}
 
 			u.Room.Actions <- action
-		}
 	}
 }

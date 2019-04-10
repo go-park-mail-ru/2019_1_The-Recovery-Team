@@ -33,9 +33,9 @@ func Search(profileInteractor *usecase.ProfileInteractor, gameInteractor *usecas
 		}
 
 		user := &game.User{
-			SessionID: sessionID,
-			Conn:      conn,
-			Messages:  make(chan interface{}, 10),
+			SessionID:    sessionID,
+			Conn:         conn,
+			Messages:     make(chan interface{}, 10),
 			Info: game.Info{
 				ID:       profile.ID,
 				Nickname: profile.Nickname,
@@ -43,7 +43,6 @@ func Search(profileInteractor *usecase.ProfileInteractor, gameInteractor *usecas
 				Avatar:   profile.Avatar,
 			},
 		}
-		go user.Send()
 
 		gameInteractor.Players() <- user
 	}
