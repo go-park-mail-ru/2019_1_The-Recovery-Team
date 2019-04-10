@@ -1,43 +1,57 @@
 package game
 
 import (
+	"encoding/json"
 	"fmt"
+	"sync/atomic"
+	"math/rand"
 	"sadislands/internal/domain/game"
 	"strconv"
 	"sync"
 	"time"
-
-	"github.com/cathalgarvey/fmtless/encoding/json"
 )
 
 const (
-	Sand        = "SAND"
-	Water       = "WATER"
-	FieldWidth  = 10
-	FieldHeight = 10
-	Up          = "UP"
-	Down        = "DOWN"
-	Left        = "LEFT"
-	Right       = "RIGHT"
-	RoundDuration uint64 = 5
+	Sand                    = "SAND"
+	Water                   = "WATER"
+	Swamp                   = "SWAMP"
+	WaterStartNumber        = 10
+	SwampStartNumber        = 15
+	FieldWidth              = 10
+	FieldHeight             = 10
+	CellSize                = 4
+	Up                      = "UP"
+	Down                    = "DOWN"
+	Left                    = "LEFT"
+	Right                   = "RIGHT"
+	RoundDuration    uint64 = 5
+	TickerDuration          = 1000 / 60
 )
 
 type Engine struct {
-	Transport       *Transport
-	State           *game.State
-	StateDiff       *game.State
-	ProcessActions  []*game.Action
-	ProcessM        *sync.Mutex
+	Transport *Transport
+	State     *game.State
+	StateDiff *game.State
+
+	UpdateM *sync.Mutex
+
+	ProcessActions []*game.Action
+	ProcessM       *sync.Mutex
+
+	RoundRunning *atomic.Value
+	GameOver     *atomic.Value
+
 	ReceivedActions chan *game.Action
-	Ticker          *time.Ticker
-	Timer           *time.Timer
+
+	Ticker *time.Ticker
+	Timer  *time.Timer
 }
 
 func initState() *game.State {
 	return &game.State{
 		Field:       initField(),
 		Players:     make(map[string]game.Player),
-		ActiveItems: &sync.Map{},
+		ActiveItems: sync.Map{},
 		RoundNumber: 0,
 	}
 }
@@ -49,12 +63,27 @@ func initField() *game.Field {
 		Height: FieldHeight,
 	}
 
+	types := make([]string, 0, FieldWidth*FieldHeight)
+	for i := 0; i < SwampStartNumber; i++ {
+		types = append(types, Swamp)
+	}
+	for i := 0; i < WaterStartNumber; i++ {
+		types = append(types, Water)
+	}
+	for i := 0; i < FieldWidth*FieldHeight-SwampStartNumber-WaterStartNumber; i++ {
+		types = append(types, Sand)
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(types), func(i, j int) { types[i], types[j] = types[j], types[i] })
+	types[0] = Sand
+
 	for i := 0; i < FieldHeight; i++ {
 		for j := 0; j < FieldWidth; j++ {
 			cell := game.Cell{
 				Row:    i,
 				Col:    j,
-				Type:   Sand,
+				Type:   types[i+j*FieldWidth],
 				HasBox: false,
 			}
 
@@ -68,35 +97,48 @@ func initField() *game.Field {
 // Game action handlers
 func (e *Engine) setGameStart() {
 	e.State = initState()
-	e.StateDiff = e.State
+	//e.StateDiff = e.State
 }
 
 // Round action handlers
 func (e *Engine) setRoundStart() {
 	e.State.RoundNumber += 1
-	time.AfterFunc(5*time.Second, e.stopRound)
+	time.AfterFunc(time.Duration(RoundDuration)*time.Second, e.stopRound)
 
 	e.State.RoundTimer = new(uint64)
-	*e.State.RoundTimer = RoundDuration
+	e.StateDiff.RoundTimer = new(uint64)
+	atomic.StoreUint64(e.State.RoundTimer, RoundDuration)
 
 	go e.controlRemainingRoundTime()
 
 	e.StateDiff.RoundNumber = e.State.RoundNumber
-	e.StateDiff.RoundTimer = e.State.RoundTimer
+
+	atomic.StoreUint64(e.StateDiff.RoundTimer, atomic.LoadUint64(e.State.RoundTimer))
 }
 
 func (e *Engine) setRoundTime() {
-	*e.State.RoundTimer -= 1
-	e.StateDiff.RoundTimer = e.State.RoundTimer
+	e.StateDiff.RoundTimer = new(uint64)
+	atomic.StoreUint64(e.State.RoundTimer, atomic.LoadUint64(e.State.RoundTimer)-1)
+	atomic.StoreUint64(e.StateDiff.RoundTimer, atomic.LoadUint64(e.State.RoundTimer))
 }
 
 func (e *Engine) setRoundStop() {
-	*e.State.RoundTimer = 0
-	e.StateDiff.RoundTimer = e.State.RoundTimer
+	for idStr, player := range e.State.Players {
+		player.Ready = false
+		e.State.Players[idStr] = player
+	}
+
+	e.StateDiff.RoundTimer = new(uint64)
+	atomic.StoreUint64(e.State.RoundTimer, 0)
+	atomic.StoreUint64(e.StateDiff.RoundTimer, atomic.LoadUint64(e.State.RoundTimer))
 }
 
 // Players action handlers
 func (e *Engine) initPlayers(action *game.Action) {
+	if len(e.State.Players) != 0 {
+		return
+	}
+
 	payload := action.Payload.(*game.InitPlayersPayload)
 
 	for _, id := range payload.PlayersId {
@@ -107,11 +149,11 @@ func (e *Engine) initPlayers(action *game.Action) {
 			Items: make(map[string]uint64),
 		}
 	}
-	e.StateDiff.Players = e.State.Players
+	//e.StateDiff.Players = e.State.Players
 }
 
-func (e *Engine) movePlayer(action *game.Action) {
-	payload := action.Payload.(*game.InitPlayerMovePayload)
+func (e *Engine) initPlayerReady(action *game.Action) {
+	payload := action.Payload.(*game.InitPlayerReadyPayload)
 
 	idStr := strconv.FormatUint(payload.PlayerId, 10)
 	player, exists := e.State.Players[idStr]
@@ -120,38 +162,91 @@ func (e *Engine) movePlayer(action *game.Action) {
 		return
 	}
 
+	if player.Ready {
+		return
+	}
+
+	player.Ready = true
+	e.State.Players[idStr] = player
+
+	for _, player := range e.State.Players {
+		if !player.Ready {
+			return
+		}
+	}
+
+	e.ReceivedActions <- &game.Action{
+		Type: game.SetRoundStart,
+	}
+}
+
+func (e *Engine) movePlayer(action *game.Action) {
+	payload := action.Payload.(*game.InitPlayerMovePayload)
+
+	idStr := strconv.FormatUint(payload.PlayerId, 10)
+	player, exists := e.State.Players[idStr]
+
+	if !exists || player.LoseRound != nil {
+		return
+	}
+
 	switch payload.Move {
 	case Right:
-		if player.X == FieldWidth {
-			return
-		}
+		{
+			if player.X == FieldWidth*CellSize-1 {
+				return
+			}
 
-		player.X += 1
+			player.X += 1
+		}
 	case Up:
-		if player.Y == 0 {
-			return
-		}
+		{
+			if player.Y == 0 {
+				return
+			}
 
-		player.Y -= 1
+			player.Y -= 1
+		}
 	case Left:
-		if player.X == 0 {
-			return
-		}
+		{
+			if player.X == 0 {
+				return
+			}
 
-		player.X -= 1
+			player.X -= 1
+		}
 	case Down:
-		if player.Y == FieldHeight {
+		{
+			if player.Y == FieldHeight*CellSize-1 {
+				return
+			}
+
+			player.Y += 1
+		}
+	default:
+		{
 			return
 		}
-
-		player.Y += 1
 	}
 
 	e.State.Players[idStr] = player
+
+	if e.isPlayerDead(idStr) {
+		player.LoseRound = &e.State.RoundNumber
+		e.GameOver.Store(true)
+	}
+
 	e.StateDiff.Players[idStr] = player
 }
 
+func (e *Engine) isPlayerDead(id string) bool {
+	player := e.State.Players[id]
+	if e.State.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*FieldWidth].Type == Water {
+		return true
+	}
 
+	return false
+}
 
 func (e *Engine) controlRemainingRoundTime() {
 	action := &game.Action{
@@ -162,7 +257,7 @@ func (e *Engine) controlRemainingRoundTime() {
 	for {
 		<-t.C
 
-		if *e.State.RoundTimer == 2 {
+		if atomic.LoadUint64(e.State.RoundTimer) == 2 {
 			e.ReceivedActions <- action
 			t.Stop()
 			return
@@ -184,7 +279,53 @@ func initStateDiff() *game.State {
 	}
 }
 
+func (e *Engine) copyState() *game.State {
+	state := &game.State{
+		Field: &game.Field{},
+		Players: e.State.Players,
+		ActiveItems: e.State.ActiveItems,
+		RoundNumber: e.State.RoundNumber,
+		RoundTimer: new(uint64),
+	}
+
+	*state.Field = *e.State.Field
+	if e.State.RoundTimer != nil {
+		atomic.StoreUint64(state.RoundTimer, atomic.LoadUint64(e.State.RoundTimer))
+	}
+	return state
+}
+
+func (e *Engine) updateFieldRound() {
+	swampNumber := SwampStartNumber
+	for i := 0; i < FieldWidth*FieldHeight; i++ {
+		cell := &e.State.Field.Cells[i]
+		switch cell.Type {
+		case Swamp:
+			{
+				cell.Type = Water
+			}
+		case Sand:
+			{
+				if swampNumber != 0 && rand.Intn(2) == 1 {
+					cell.Type = Swamp
+					swampNumber--
+				}
+			}
+		}
+	}
+
+	for idStr, player := range e.State.Players {
+		if player.LoseRound == nil && e.isPlayerDead(idStr) {
+			player.LoseRound = &e.State.RoundNumber
+			e.State.Players[idStr] = player
+			e.GameOver.Store(true)
+		}
+	}
+}
+
 func (e *Engine) updateState(actions *[]*game.Action) {
+	e.UpdateM.Lock()
+	defer e.UpdateM.Unlock()
 	e.StateDiff = initStateDiff()
 
 	for _, action := range *actions {
@@ -193,11 +334,36 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 			{
 				e.setGameStart()
 				e.initPlayers(action)
-				e.setRoundStart()
+				go e.Transport.SendOut(&game.Action{
+					Type:    game.SetState,
+					Payload: *e.copyState(),
+				})
+				return
+			}
+		case game.InitPlayerReady:
+			{
+				e.initPlayerReady(action)
 			}
 		case game.InitPlayerMove:
 			{
 				e.movePlayer(action)
+
+				if e.GameOver.Load().(bool) {
+					e.Transport.SendOut(&game.Action{
+						Type:    game.SetStateDiff,
+						Payload: *e.StateDiff,
+					})
+
+					e.Transport.SendOut(&game.Action{
+						Type: game.SetGameOver,
+					})
+					return
+				}
+			}
+		case game.SetRoundStart:
+			{
+				e.setRoundStart()
+				e.RoundRunning.Store(true)
 			}
 		case game.SetRoundTime:
 			{
@@ -205,41 +371,74 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 			}
 		case game.SetRoundStop:
 			{
+				e.RoundRunning.Store(false)
 				e.setRoundStop()
-				go func() {
+				go func(state game.State) {
 					e.Transport.SendOut(&game.Action{
-						Type:    game.SetState,
-						Payload: e.StateDiff,
+						Type:    game.SetStateDiff,
+						Payload: state,
 					})
 					e.Transport.SendOut(&game.Action{Type: game.SetRoundStop})
-				}()
+				}(*e.StateDiff)
+
+				e.ReceivedActions <- &game.Action{
+					Type: game.SetFieldRound,
+				}
+				return
+			}
+		case game.SetFieldRound:
+			{
+				e.updateFieldRound()
+				e.Transport.SendOut(&game.Action{
+					Type:    game.SetState,
+					Payload: *e.copyState(),
+				})
+
+				if e.GameOver.Load().(bool) {
+					e.Transport.SendOut(&game.Action{
+						Type: game.SetGameOver,
+					})
+				}
+				return
+			}
+		case game.InitEngineStop:
+			{
+				e.GameOver.Store(true)
+				go e.Transport.SendOut(&game.Action{
+					Type: game.SetEngineStop,
+				})
 				return
 			}
 		}
 	}
 
-	go e.Transport.SendOut(&game.Action{
-		Type:    game.SetState,
-		Payload: e.StateDiff,
-	})
+	if !e.StateDiff.Empty() {
+		go e.Transport.SendOut(&game.Action{
+			Type:    game.SetStateDiff,
+			Payload: *e.StateDiff,
+		})
+	}
 }
 
 func (e *Engine) run() {
 	go e.collectActions()
-	e.Ticker = time.NewTicker(500 * time.Millisecond)
+	e.Ticker = time.NewTicker(TickerDuration * time.Millisecond)
 
 	for {
 		select {
 		case <-e.Ticker.C:
 			{
-				if len(e.ProcessActions) == 0 {
-					fmt.Println("Waiting for Actions...")
-					continue
+				if e.GameOver.Load().(bool) {
+					close(e.ReceivedActions)
+					fmt.Println("Engine stopped")
+					return
 				}
 
-				debug, _ := json.Marshal(e.ProcessActions)
-				fmt.Println("Process", string(debug))
 				e.ProcessM.Lock()
+				if len(e.ProcessActions) == 0 {
+					e.ProcessM.Unlock()
+					continue
+				}
 				actions := make([]*game.Action, len(e.ProcessActions))
 				copy(actions, e.ProcessActions)
 				go e.updateState(&actions)
@@ -253,11 +452,23 @@ func (e *Engine) run() {
 func (e *Engine) collectActions() {
 	for {
 		select {
-		case action := <-e.ReceivedActions:
+		case action, hasMore := <-e.ReceivedActions:
 			{
+				if !hasMore {
+					fmt.Println("Stop collect actions")
+					e.Transport.SendOut(&game.Action{
+						Type: game.SetEngineStop,
+					})
+					return
+				}
 				e.ProcessM.Lock()
 				e.ProcessActions = append(e.ProcessActions, action)
 				e.ProcessM.Unlock()
+				if action.Type == game.InitEngineStop {
+					close(e.ReceivedActions)
+					fmt.Println("Stop collect actions")
+					return
+				}
 			}
 		}
 	}
@@ -268,12 +479,33 @@ func InitEngine(callback func(action *game.Action)) func(action interface{}) {
 		Transport: &Transport{
 			OuterReceiver: callback,
 		},
-		ProcessM: &sync.Mutex{},
+		UpdateM: &sync.Mutex{},
+		ProcessM:        &sync.Mutex{},
 		ReceivedActions: make(chan *game.Action, 100),
-		ProcessActions: make([]*game.Action, 0, 10),
+		ProcessActions:  make([]*game.Action, 0, 10),
+		RoundRunning: &atomic.Value{},
+		GameOver: &atomic.Value{},
 	}
 
+	engine.RoundRunning.Store(false)
+	engine.GameOver.Store(false)
+
 	engine.Transport.InnerReceiver = func(action interface{}) {
+		if isRoundRunning := engine.RoundRunning.Load().(bool); isRoundRunning {
+			switch action.(*game.Action).Type {
+			case game.InitPlayers, game.InitPlayerReady:
+				{
+					return
+				}
+			}
+		} else {
+			switch action.(*game.Action).Type {
+			case game.InitPlayerMove:
+				{
+					return
+				}
+			}
+		}
 		engine.ReceivedActions <- action.(*game.Action)
 	}
 
@@ -281,7 +513,6 @@ func InitEngine(callback func(action *game.Action)) func(action interface{}) {
 
 	return engine.Transport.InnerReceiver
 }
-
 
 func InitEngineJS(callback func(actionType, payload string)) func(action interface{}) {
 	engine := &Engine{
@@ -296,12 +527,20 @@ func InitEngineJS(callback func(actionType, payload string)) func(action interfa
 				callback(action.Type, string(payload))
 			},
 		},
-		ProcessM: &sync.Mutex{},
+		UpdateM: &sync.Mutex{},
+		ProcessM:        &sync.Mutex{},
 		ReceivedActions: make(chan *game.Action, 100),
-		ProcessActions: make([]*game.Action, 0, 10),
+		ProcessActions:  make([]*game.Action, 0, 10),
+		RoundRunning: &atomic.Value{},
+		GameOver: &atomic.Value{},
 	}
 
+	engine.RoundRunning.Store(false)
+	engine.GameOver.Store(false)
+
 	engine.Transport.InnerReceiver = func(action interface{}) {
+		isRoundRunning := engine.RoundRunning.Load().(bool)
+
 		raw := game.ActionRaw{}
 		json.Unmarshal([]byte(action.(string)), &raw)
 
@@ -313,11 +552,24 @@ func InitEngineJS(callback func(actionType, payload string)) func(action interfa
 		switch act.Type {
 		case game.InitPlayers:
 			{
+				if isRoundRunning {
+					return
+				}
 				payload = &game.InitPlayersPayload{}
 			}
 		case game.InitPlayerMove:
 			{
+				if !isRoundRunning {
+					return
+				}
 				payload = &game.InitPlayerMovePayload{}
+			}
+		case game.InitPlayerReady:
+			{
+				if isRoundRunning {
+					return
+				}
+				payload = &game.InitPlayerReadyPayload{}
 			}
 		default:
 			return

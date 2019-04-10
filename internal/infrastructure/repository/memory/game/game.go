@@ -1,10 +1,9 @@
 package game
 
 import (
+	"go.uber.org/zap"
 	"sadislands/internal/domain/game"
 	"sync"
-
-	"go.uber.org/zap"
 )
 
 func NewGameRepo(log *zap.Logger) *Repo {
@@ -39,15 +38,22 @@ func (r *Repo) Run() {
 					zap.Uint64("user_id", player.Info.ID),
 					zap.String("session_id", player.SessionID))
 
+				go player.ListenAndSend(r.Log)
 				go r.addUser(player)
 			}
 		case room := <-r.Closed:
 			{
+				room.Users.Range(func(key, value interface{}) bool {
+					r.Playing.Delete(key)
+					return true
+				})
 				r.Rooms.Delete(room.ID)
 				r.TotalM.Lock()
 				r.Total--
 				r.TotalM.Unlock()
-
+				r.Log.Info("Room closed",
+					zap.String("room_id", room.ID),
+				)
 			}
 		}
 	}
@@ -56,8 +62,7 @@ func (r *Repo) Run() {
 func (r *Repo) addUser(player *game.User) {
 	if _, playing := r.Playing.Load(player.Info.ID); playing {
 		message := &game.Action{
-			Type:    "SET_ALREADY_PLAYING",
-			Payload: "Already playing",
+			Type:    game.SetAlreadyPlaying,
 		}
 		player.Messages <- message
 
@@ -71,15 +76,13 @@ func (r *Repo) addUser(player *game.User) {
 	r.Playing.Store(player.Info.ID, nil)
 
 	message := &game.Action{
-		Type:    "SET_SEARCHING_OPPONENT",
-		Payload: "Searching opponent",
+		Type:    game.SetOpponentSearch,
 	}
 	player.Messages <- message
 
 	if err := r.findRoom(player); err != nil {
 		message := &game.Action{
-			Type:    "SET_NOT_FIND_OPPONENT",
-			Payload: "Can't find opponent",
+			Type:    game.SetOpponentNotFound,
 		}
 		player.Messages <- message
 
@@ -88,13 +91,12 @@ func (r *Repo) addUser(player *game.User) {
 			zap.String("session_id", player.SessionID))
 	}
 
-	if player.Room.Total == 2 {
+	if player.Room.Total.Load() == 2 {
 		r.Log.Info("Start game at room",
 			zap.String("room_id", player.Room.ID),
 		)
 
 		sendInto := InitEngine(player.Room.ActionCallback)
-
 		go player.Room.Run(sendInto)
 	}
 }
@@ -104,7 +106,7 @@ func (r *Repo) findRoom(player *game.User) error {
 
 	r.Rooms.Range(func(key, value interface{}) bool {
 		received := value.(*game.Room)
-		if received.Total < 2 {
+		if received.Total.Load() < 2 {
 			result = received
 		}
 		return true
@@ -112,7 +114,7 @@ func (r *Repo) findRoom(player *game.User) error {
 
 	if result != nil {
 		result.Users.Store(player.Info.ID, player)
-		result.Total++
+		result.Total.Add(1)
 		player.Room = result
 
 		r.Log.Info("User connect to room",
@@ -133,7 +135,7 @@ func (r *Repo) findRoom(player *game.User) error {
 	r.TotalM.Unlock()
 
 	result.Users.Store(player.Info.ID, player)
-	result.Total++
+	result.Total.Add(1)
 	r.Rooms.Store(result.ID, result)
 	player.Room = result
 
