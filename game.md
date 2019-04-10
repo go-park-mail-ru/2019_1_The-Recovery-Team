@@ -93,6 +93,20 @@ interface Action {
 ```
 ### Action types
 
+#### Engine
+
+###### INIT_ENGINE_STOP
+
+```typescript
+interface Payload {}
+```
+
+###### SET_ENGINE_STOP
+
+```typescript
+interface Payload {}
+```
+
 #### Game
 
 ###### SET_GAME_START
@@ -205,7 +219,7 @@ interface Payload {
 
 ```typescript
 interface Payload {
-    Id: number;
+    Id: string;
     Item: ActiveItem;
 }
 ```
@@ -226,18 +240,11 @@ interface Payload {
 }
 ```
 
-###### SET_ITEM_REJECT
-
-```typescript
-interface Payload {
-    ItemType: ItemType;
-}
-```
-
 ###### INIT_ITEM_USE
 
 ```typescript
 interface Payload {
+    PlayerId: number;
     ItemType: ItemType;
 }
 ```
