@@ -2,6 +2,7 @@ package postgresql
 
 import "golang.org/x/crypto/bcrypt"
 
+// HashAndSalt encrypts password
 func HashAndSalt(pwd string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
 	if err != nil {
@@ -10,6 +11,7 @@ func HashAndSalt(pwd string) (string, error) {
 	return string(hash), nil
 }
 
+// VerifyPassword checks correctness of password
 func VerifyPassword(password, hash string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	switch err {

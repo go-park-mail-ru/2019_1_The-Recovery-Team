@@ -6,6 +6,7 @@ import (
 	"sync"
 )
 
+// NewGameRepo creates new instance of game repository
 func NewGameRepo(log *zap.Logger) *Repo {
 	return &Repo{
 		Rooms:   &sync.Map{},
@@ -29,6 +30,7 @@ type Repo struct {
 	Log *zap.Logger
 }
 
+// Run starts game handler
 func (r *Repo) Run() {
 	for {
 		select {
@@ -38,15 +40,21 @@ func (r *Repo) Run() {
 					zap.Uint64("user_id", player.Info.ID),
 					zap.String("session_id", player.SessionID))
 
+				// Activate player listening and sending
 				go player.ListenAndSend(r.Log)
+
+				// Add user to queue for room
 				go r.addUser(player)
 			}
 		case room := <-r.Closed:
 			{
+				// Remove users from already playing users
 				room.Users.Range(func(key, value interface{}) bool {
 					r.Playing.Delete(key)
 					return true
 				})
+
+				// Remove room, update statistics
 				r.Rooms.Delete(room.ID)
 				r.TotalM.Lock()
 				r.Total--
@@ -60,6 +68,7 @@ func (r *Repo) Run() {
 }
 
 func (r *Repo) addUser(player *game.User) {
+	// Check user that he is already playing
 	if _, playing := r.Playing.Load(player.Info.ID); playing {
 		message := &game.Action{
 			Type:    game.SetAlreadyPlaying,
@@ -73,6 +82,7 @@ func (r *Repo) addUser(player *game.User) {
 		return
 	}
 
+	// Add user for already playing user
 	r.Playing.Store(player.Info.ID, nil)
 
 	message := &game.Action{
@@ -80,6 +90,7 @@ func (r *Repo) addUser(player *game.User) {
 	}
 	player.Messages <- message
 
+	// Searching room
 	if err := r.findRoom(player); err != nil {
 		message := &game.Action{
 			Type:    game.SetOpponentNotFound,
@@ -91,12 +102,15 @@ func (r *Repo) addUser(player *game.User) {
 			zap.String("session_id", player.SessionID))
 	}
 
+	// Start game engine, if room is full
 	if player.Room.Total.Load() == 2 {
 		r.Log.Info("Start game at room",
 			zap.String("room_id", player.Room.ID),
 		)
 
 		sendInto := InitEngine(player.Room.ActionCallback)
+
+		// Turn room to game mode
 		go player.Room.Run(sendInto)
 	}
 }
@@ -104,6 +118,7 @@ func (r *Repo) addUser(player *game.User) {
 func (r *Repo) findRoom(player *game.User) error {
 	var result *game.Room
 
+	// Searching empty room
 	r.Rooms.Range(func(key, value interface{}) bool {
 		received := value.(*game.Room)
 		if received.Total.Load() < 2 {
@@ -112,6 +127,7 @@ func (r *Repo) findRoom(player *game.User) error {
 		return true
 	})
 
+	// If find room
 	if result != nil {
 		result.Users.Store(player.Info.ID, player)
 		result.Total.Add(1)
@@ -125,6 +141,7 @@ func (r *Repo) findRoom(player *game.User) error {
 		return nil
 	}
 
+	// Create new room
 	result = game.NewRoom(
 		r.Log,
 		r.Closed,
@@ -147,6 +164,7 @@ func (r *Repo) findRoom(player *game.User) error {
 	return nil
 }
 
+// PlayersChan returns players searching queue
 func (r *Repo) PlayersChan() chan *game.User {
 	return r.Players
 }

@@ -21,3 +21,15 @@ const (
 	SetOpponentNotFound = "SET_OPPONENT_NOT_FOUND"
 	SetOpponent = "SET_OPPONENT"
 )
+
+//easyjson:json
+type Action struct {
+	Type    string      `json:"type"`
+	Payload interface{} `json:"payload,omitempty"`
+}
+
+//easyjson:json
+type ActionRaw struct {
+	Type    string `json:"type"`
+	Payload string `json:"payload,omitempty"`
+}

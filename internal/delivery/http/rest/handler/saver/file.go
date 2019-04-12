@@ -9,14 +9,16 @@ import (
 	"time"
 )
 
-// SaveFile saves file to dir, if dir doesn't exist, creates it
+// SaveFile saves file to dir
 func SaveFile(file io.Reader, dir, filename string) error {
+	// Create file
 	fileCopy, err := os.OpenFile(dir+filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err
 	}
 	defer fileCopy.Close()
 
+	// Copy file to dir
 	_, err = io.Copy(fileCopy, file)
 	if err != nil {
 		return err

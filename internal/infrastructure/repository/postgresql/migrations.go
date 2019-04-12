@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// MakeMigrations process database migrations from file
 func MakeMigrations(conn *pgx.Conn, filePath string) error {
 	tx, err := conn.Begin()
 	if err != nil {

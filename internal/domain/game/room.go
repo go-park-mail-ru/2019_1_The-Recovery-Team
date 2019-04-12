@@ -29,6 +29,7 @@ type Room struct {
 	Log *zap.Logger
 }
 
+// NewRoom creates new instance of room
 func NewRoom(log *zap.Logger, closed chan *Room) *Room {
 	ctx, cancel := context.WithCancel(context.Background())
 	ctx = context.WithValue(ctx, "closed", closed)
@@ -50,16 +51,18 @@ func NewRoom(log *zap.Logger, closed chan *Room) *Room {
 	return room
 }
 
+// Run starts game engine at room
 func (r *Room) Run(sendInto func(action interface{})) {
 	users := make([]*User, 0, 2)
 
+	// Get list of users
 	r.Users.Range(func(key, value interface{}) bool {
 		user := value.(*User)
 		users = append(users, user)
-		//go user.Listen()
 		return true
 	})
 
+	// Send information about opponents
 	info := users[1].Info
 	users[0].Messages <- &Action{
 		Type:    SetOpponent,
@@ -72,8 +75,8 @@ func (r *Room) Run(sendInto func(action interface{})) {
 		Payload: info,
 	}
 
+	// Init players id in engine
 	playersId := make([]uint64, 0, len(users))
-
 	for _, user := range users {
 		playersId = append(playersId, user.Info.ID)
 	}
@@ -90,6 +93,7 @@ func (r *Room) Run(sendInto func(action interface{})) {
 
 	r.Running.Store(true)
 
+	// Receive actions form users
 	for {
 		select {
 		case action := <-r.Actions:
@@ -104,6 +108,7 @@ func (r *Room) Run(sendInto func(action interface{})) {
 	}
 }
 
+// Broadcast sends messages to all users in room
 func (r *Room) Broadcast(action *Action) {
 	r.Users.Range(func(key, value interface{}) bool {
 		value.(*User).Messages <- action
@@ -111,8 +116,11 @@ func (r *Room) Broadcast(action *Action) {
 	})
 }
 
+// Close removes room and stops engine
 func (r *Room) Close(action *Action) {
 	r.Log.Info("Closing room")
+
+	// Stop running engine
 	if r.Running.Load() {
 		r.Log.Info("Stopping engine")
 		<-r.EngineStopped
@@ -123,6 +131,7 @@ func (r *Room) Close(action *Action) {
 		{
 			r.Running.Store(false)
 
+			// Send information about leaver to players
 			leaver := action.Payload.(*User)
 			var user *User
 
@@ -143,15 +152,11 @@ func (r *Room) Close(action *Action) {
 		}
 	}
 
+	// Close player connections
 	r.Cancel()
 	r.Users.Range(func(key, value interface{}) bool {
 		player := value.(*User)
 		close(player.Messages)
-
-		//player.Conn.SetReadDeadline(time.Now().Add(time.Second))
-		//player.Conn.SetWriteDeadline(time.Now().Add(3 * time.Second))
-		//player.Conn.WriteMessage(websocket.CloseMessage, []byte{})
-		//player.Conn.Close()
 		player.Conn.Close()
 		r.Log.Info("User disconnected from game",
 			zap.Uint64("user_id", player.Info.ID))
@@ -161,6 +166,7 @@ func (r *Room) Close(action *Action) {
 	r.Ctx.Value("closed").(chan *Room) <- r
 }
 
+// ActionCallback process actions received from engine
 func (r *Room) ActionCallback(action *Action) {
 	switch action.Type {
 	case SetEngineStop:

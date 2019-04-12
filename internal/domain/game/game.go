@@ -5,18 +5,6 @@ import (
 	"time"
 )
 
-//easyjson:json
-type Action struct {
-	Type    string      `json:"type"`
-	Payload interface{} `json:"payload,omitempty"`
-}
-
-//easyjson:json
-type ActionRaw struct {
-	Type    string `json:"type"`
-	Payload string `json:"payload,omitempty"`
-}
-
 type State struct {
 	Field       *Field            `json:"field,omitempty"`
 	Players     map[string]Player `json:"players,omitempty"`
@@ -25,6 +13,7 @@ type State struct {
 	RoundTimer  *uint64    `json:"roundTimer,omitempty"`
 }
 
+// Empty checks state for emptiness
 func (s *State) Empty() bool {
 	if s.Field == nil && len(s.Players) == 0 && s.RoundNumber == 0 &&
 		s.RoundTimer == nil {
@@ -67,7 +56,7 @@ type Player struct {
 type Players []Player
 
 //easyjson:json
-type GameStartPayload struct {
+type SetGameStartPayload struct {
 	Field   *Field
 	Players []Player
 }

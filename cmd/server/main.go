@@ -41,6 +41,7 @@ func main() {
 		Password: "123456",
 	}
 
+	// Create connection for migrations
 	psqlConn, err := pgx.Connect(psqlConfig)
 	if err != nil {
 		log.Fatal("Postgresql connection refused")
@@ -52,6 +53,7 @@ func main() {
 	psqlConn.Close()
 
 
+	// Create new connection to database with updated OIDs
 	psqlConn, err = pgx.Connect(psqlConfig)
 	if err != nil {
 		log.Fatal("Postgresql connection refused")
@@ -76,9 +78,7 @@ func main() {
 	go gameInteractor.Run()
 
 	api := rest.NewRestApi(profileInteractor, sessionInterctor, gameInteractor, logger)
-
 	api.Router.Handler("GET", "/swagger/:file", httpSwagger.WrapHandler)
-
 	api.Router.ServeFiles("/upload/*filepath", http.Dir("upload"))
 
 	log.Print(http.ListenAndServe(":"+port, api.Router))

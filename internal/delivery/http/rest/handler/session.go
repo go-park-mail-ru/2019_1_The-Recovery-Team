@@ -65,7 +65,8 @@ func PostSession(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 			return
 		}
 
-		profile, err := profileInteractor.GetProfileByEmailWithPassword(login)
+		// Get profile by email and password
+		prof, err := profileInteractor.GetProfileByEmailWithPassword(login)
 		if err != nil {
 			if err == pgx.ErrNoRows {
 				message := handler.Error{
@@ -80,10 +81,11 @@ func PostSession(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 			return
 		}
 
-		token, err := sessionInteractor.Set(profile.ID, 24*time.Hour)
+		// Create session
+		token, err := sessionInteractor.Set(prof.ID, 24*time.Hour)
 		if err != nil {
 			log.Error(err.Error(),
-				zap.Uint64("profile_id", profile.ID))
+				zap.Uint64("profile_id", prof.ID))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -96,7 +98,7 @@ func PostSession(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 			HttpOnly: true,
 		})
 
-		writer.WriteResponseJSON(w, http.StatusOK, profile)
+		writer.WriteResponseJSON(w, http.StatusOK, prof)
 	}
 }
 

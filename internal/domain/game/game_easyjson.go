@@ -501,7 +501,7 @@ func (v *InitPlayerMovePayload) UnmarshalJSON(data []byte) error {
 func (v *InitPlayerMovePayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson85f0d656DecodeSadislandsInternalDomainGame4(l, v)
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame5(in *jlexer.Lexer, out *GameStartPayload) {
+func easyjson85f0d656DecodeSadislandsInternalDomainGame5(in *jlexer.Lexer, out *SetGameStartPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -563,7 +563,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame5(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame5(out *jwriter.Writer, in GameStartPayload) {
+func easyjson85f0d656EncodeSadislandsInternalDomainGame5(out *jwriter.Writer, in SetGameStartPayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -606,26 +606,26 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame5(out *jwriter.Writer, in
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v GameStartPayload) MarshalJSON() ([]byte, error) {
+func (v SetGameStartPayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjson85f0d656EncodeSadislandsInternalDomainGame5(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v GameStartPayload) MarshalEasyJSON(w *jwriter.Writer) {
+func (v SetGameStartPayload) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson85f0d656EncodeSadislandsInternalDomainGame5(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *GameStartPayload) UnmarshalJSON(data []byte) error {
+func (v *SetGameStartPayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjson85f0d656DecodeSadislandsInternalDomainGame5(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *GameStartPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *SetGameStartPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson85f0d656DecodeSadislandsInternalDomainGame5(l, v)
 }
 func easyjson85f0d656DecodeSadislandsInternalDomainGame6(in *jlexer.Lexer, out *Field) {

@@ -20,7 +20,14 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	EmailAlreadyExists = "EmailAlreadyExists"
+	NicknameAlreadyExists = "NicknameAlreadyExists"
+	IncorrectProfilePassword = "IncorrectProfilePassword"
+)
+
 func saveAvatar(profileInteractor *usecase.ProfileInteractor, avatar multipart.File, filename, dir string, id uint64) (string, error) {
+	// Hash filename
 	filename, err := saver.HashFileName(filename, id)
 	if err != nil {
 		return "", err
@@ -31,6 +38,7 @@ func saveAvatar(profileInteractor *usecase.ProfileInteractor, avatar multipart.F
 		return "", err
 	}
 
+	// Updates profile avatar path in database
 	avatarPath := "/" + dir + filename
 	err = profileInteractor.UpdateProfileAvatar(id, avatarPath)
 	if err != nil {
@@ -39,7 +47,7 @@ func saveAvatar(profileInteractor *usecase.ProfileInteractor, avatar multipart.F
 	return avatarPath, nil
 }
 
-// GetProfiles returns handler with environment which processes request for checking email or nickname existens
+// GetProfiles returns handler with environment which processes request for checking email or nickname existence
 // @Summary Get profiles
 // @Description Check profile existence with email or nickname
 // @ID get-profiles
@@ -58,6 +66,7 @@ func GetProfiles(profileInteractor *usecase.ProfileInteractor) httprouter.Handle
 		email := r.FormValue("email")
 		nickname := r.FormValue("nickname")
 
+		// Check email existence
 		if email != "" && govalidator.IsEmail(email) {
 			_, err := profileInteractor.GetProfileByEmail(email)
 			if err != nil {
@@ -75,6 +84,7 @@ func GetProfiles(profileInteractor *usecase.ProfileInteractor) httprouter.Handle
 			return
 		}
 
+		// Check nickname existence
 		if nickname != "" && govalidator.StringLength(nickname, "4", "20") {
 			_, err := profileInteractor.GetProfileByNickname(nickname)
 			if err != nil {
@@ -117,7 +127,7 @@ func GetProfile(profileInteractor *usecase.ProfileInteractor) httprouter.Handle 
 			return
 		}
 
-		profile, err := profileInteractor.GetProfile(id)
+		prof, err := profileInteractor.GetProfile(id)
 		if err != nil {
 			if err == pgx.ErrNoRows {
 				w.WriteHeader(http.StatusNotFound)
@@ -130,10 +140,10 @@ func GetProfile(profileInteractor *usecase.ProfileInteractor) httprouter.Handle 
 		}
 		profileID := r.Context().Value(middleware.ProfileID)
 		if profileID != id {
-			profile.Email = ""
+			prof.Email = ""
 		}
 
-		writer.WriteResponseJSON(w, http.StatusOK, profile)
+		writer.WriteResponseJSON(w, http.StatusOK, prof)
 	}
 }
 
@@ -161,6 +171,7 @@ func PutProfile(profileInteractor *usecase.ProfileInteractor) httprouter.Handle 
 			return
 		}
 
+		// Verification of rights for this profile
 		profileID := r.Context().Value(middleware.ProfileID)
 		if profileID != id {
 			w.WriteHeader(http.StatusForbidden)
@@ -183,7 +194,7 @@ func PutProfile(profileInteractor *usecase.ProfileInteractor) httprouter.Handle 
 		}
 
 		if err = profileInteractor.UpdateProfile(id, data); err != nil {
-			if err.Error() == "EmailAlreadyExists" || err.Error() == "NicknameAlreadyExists" {
+			if err.Error() == EmailAlreadyExists || err.Error() == NicknameAlreadyExists {
 				w.WriteHeader(http.StatusConflict)
 				return
 			}
@@ -223,6 +234,7 @@ func PutProfilePassword(profileInteractor *usecase.ProfileInteractor) httprouter
 			return
 		}
 
+		// Verification of rights for this profile
 		profileID := r.Context().Value(middleware.ProfileID)
 		if profileID != id {
 			w.WriteHeader(http.StatusForbidden)
@@ -252,7 +264,7 @@ func PutProfilePassword(profileInteractor *usecase.ProfileInteractor) httprouter
 		}
 
 		if err = profileInteractor.UpdateProfilePassword(id, data); err != nil {
-			if err.Error() == "IncorrectProfilePassword" {
+			if err.Error() == IncorrectProfilePassword {
 				message := handler.Error{
 					Description: "Incorrect password",
 				}
@@ -286,7 +298,7 @@ func PostProfile(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		log := r.Context().Value("logger").(*zap.Logger)
 
-		err := r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
+		err := r.ParseMultipartForm(5 * (1 << 20)) // Max avatar size 5 MB
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -322,9 +334,10 @@ func PostProfile(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 			return
 		}
 
+		// Create profile
 		created, err := profileInteractor.CreateProfile(data)
 		if err != nil {
-			if err.Error() == "EmailAlreadyExists" && err.Error() == "NicknameAlreadyExists" {
+			if err.Error() == EmailAlreadyExists && err.Error() == NicknameAlreadyExists {
 				log.Error(err.Error(),
 					zap.String("email", data.Email),
 					zap.String("nickname", data.Nickname))
@@ -338,12 +351,7 @@ func PostProfile(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 			return
 		}
 
-		err = r.ParseMultipartForm(5 * (1 << 20)) // max size 5 MB
-		if err != nil {
-			writer.WriteResponseJSON(w, http.StatusCreated, created)
-			return
-		}
-
+		// Save profile avatar
 		avatar, header, err := r.FormFile("avatar")
 		if err == nil {
 			defer avatar.Close()
@@ -357,6 +365,7 @@ func PostProfile(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 			}
 		}
 
+		// Create session
 		token, err := sessionInteractor.Set(created.ID, 24*time.Hour)
 		if err != nil {
 			log.Error(err.Error(),
@@ -400,6 +409,7 @@ func PutAvatar(profileInteractor *usecase.ProfileInteractor) httprouter.Handle {
 			return
 		}
 
+		// Save new profile avatar
 		avatar, header, err := r.FormFile("avatar")
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -454,6 +464,7 @@ func GetScoreboard(profileInteractor *usecase.ProfileInteractor) httprouter.Hand
 			List: []profile.Info{},
 		}
 
+		// Get scores
 		var err error
 		profiles.List, err = profileInteractor.GetProfiles(limit, offset)
 		if err != nil {
@@ -464,6 +475,7 @@ func GetScoreboard(profileInteractor *usecase.ProfileInteractor) httprouter.Hand
 			return
 		}
 
+		// Get total number of scores
 		profiles.Total, err = profileInteractor.GetProfileCount()
 		if err != nil {
 			log.Error(err.Error())

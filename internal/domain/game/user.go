@@ -26,6 +26,7 @@ type Info struct {
 	Avatar   string `json:"avatar"`
 }
 
+// ListenAndSend start player listening and sending functions
 func (u *User) ListenAndSend(log *zap.Logger) {
 	u.Log = log.With(
 		zap.Uint64("user_id", u.Info.ID),
@@ -56,6 +57,7 @@ func (u *User) listen() {
 	for {
 		raw := &ActionRaw{}
 
+		// Read json from connection
 		err := u.Conn.ReadJSON(raw)
 		switch {
 		case websocket.IsCloseError(err, websocket.CloseAbnormalClosure):
@@ -90,6 +92,7 @@ func (u *User) listen() {
 			}
 		}
 
+		// Send action to room actions
 		action := &Action{
 			Type: raw.Type,
 		}

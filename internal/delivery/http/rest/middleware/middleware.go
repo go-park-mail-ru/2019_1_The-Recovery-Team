@@ -29,7 +29,11 @@ var allowedOrigins = map[string]interface{}{
 	"https://sadislands.ru":     struct{}{},
 }
 
-// Authentication middleware to check authentication
+
+// Authentication middleware to check authentication.
+// If cookie wasn't transmitted, expired or doesn't exist,
+// returns status code unauthorized.
+// Otherwise process request.
 func Authentication(sessionInteractor *usecase.SessionInteractor, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
@@ -40,7 +44,6 @@ func Authentication(sessionInteractor *usecase.SessionInteractor, next httproute
 		}
 
 		id, err := sessionInteractor.Get(cookie.Value)
-
 		if err != nil {
 			cookie := http.Cookie{
 				Name:     "session_id",
@@ -59,7 +62,7 @@ func Authentication(sessionInteractor *usecase.SessionInteractor, next httproute
 	}
 }
 
-// CORSMiddleware CORS middleware
+// CORSMiddleware implements CORS mechanism
 func CORSMiddleware(next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		o := r.Header.Get("Origin")
@@ -80,7 +83,7 @@ func CORSMiddleware(next httprouter.Handle) httprouter.Handle {
 	}
 }
 
-// RecoverMiddleware catches panic
+// RecoverMiddleware catches panics
 func RecoverMiddleware(logger *zap.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		defer func() {
@@ -93,7 +96,7 @@ func RecoverMiddleware(logger *zap.Logger, next httprouter.Handle) httprouter.Ha
 	}
 }
 
-//LoggerMiddleware write logs
+// LoggerMiddleware write logs
 func LoggerMiddleware(logger *zap.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		start := time.Now()

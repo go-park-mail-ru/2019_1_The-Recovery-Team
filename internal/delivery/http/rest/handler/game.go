@@ -11,22 +11,25 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
-
+//
 func Search(profileInteractor *usecase.ProfileInteractor, gameInteractor *usecase.GameInteractor) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		// Get context data(sessionID, profileID)
 		sessionID := r.Context().Value(middleware.SessionID).(string)
 		profileID := r.Context().Value(middleware.ProfileID).(uint64)
 
+		// Get user information
 		profile, err := profileInteractor.GetProfile(profileID)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
+		// Upgrade connection
+		var upgrader = websocket.Upgrader{
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+		}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
@@ -44,6 +47,7 @@ func Search(profileInteractor *usecase.ProfileInteractor, gameInteractor *usecas
 			},
 		}
 
+		// Add new user to queue for searching game
 		gameInteractor.Players() <- user
 	}
 }
