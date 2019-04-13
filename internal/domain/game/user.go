@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/gorilla/websocket"
@@ -109,6 +108,13 @@ func (u *User) listen() {
 		}
 
 		switch action.Type {
+		case InitPing:
+			{
+				u.Messages <- &Action{
+					Type: SetPong,
+				}
+				continue
+			}
 		case InitPlayers:
 			{
 				payload := &InitPlayersPayload{}
@@ -125,8 +131,6 @@ func (u *User) listen() {
 					u.Log.Warn("Invalid player ready payload")
 					continue
 				}
-
-				fmt.Println(payload)
 
 				if payload.PlayerId != u.Info.ID {
 					continue
