@@ -1,9 +1,10 @@
 package game
 
 import (
-	"go.uber.org/zap"
 	"sadislands/internal/domain/game"
 	"sync"
+
+	"go.uber.org/zap"
 )
 
 // NewGameRepo creates new instance of game repository
@@ -40,9 +41,6 @@ func (r *Repo) Run() {
 					zap.Uint64("user_id", player.Info.ID),
 					zap.String("session_id", player.SessionID))
 
-				// Activate player listening and sending
-				go player.ListenAndSend(r.Log)
-
 				// Add user to queue for room
 				go r.addUser(player)
 			}
@@ -71,9 +69,13 @@ func (r *Repo) addUser(player *game.User) {
 	// Check user that he is already playing
 	if _, playing := r.Playing.Load(player.Info.ID); playing {
 		message := &game.Action{
-			Type:    game.SetAlreadyPlaying,
+			Type: game.SetAlreadyPlaying,
 		}
-		player.Messages <- message
+
+		if err := player.Conn.WriteJSON(message); err != nil {
+			r.Log.Info("Player disconnected")
+			return
+		}
 
 		r.Log.Info("Already playing user trying to start new game",
 			zap.Uint64("user_id", player.Info.ID),
@@ -86,16 +88,25 @@ func (r *Repo) addUser(player *game.User) {
 	r.Playing.Store(player.Info.ID, nil)
 
 	message := &game.Action{
-		Type:    game.SetOpponentSearch,
+		Type: game.SetOpponentSearch,
 	}
-	player.Messages <- message
+
+	if err := player.Conn.WriteJSON(message); err != nil {
+		r.Log.Info("Player disconnected")
+		r.Playing.Delete(player.Info.ID)
+		return
+	}
 
 	// Searching room
 	if err := r.findRoom(player); err != nil {
 		message := &game.Action{
-			Type:    game.SetOpponentNotFound,
+			Type: game.SetOpponentNotFound,
 		}
-		player.Messages <- message
+		if err := player.Conn.WriteJSON(message); err != nil {
+			r.Log.Info("Player disconnected")
+			r.Playing.Delete(player.Info.ID)
+			return
+		}
 
 		r.Log.Warn("User couldn't find opponent",
 			zap.Uint64("user_id", player.Info.ID),

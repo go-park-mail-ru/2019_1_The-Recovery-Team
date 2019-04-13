@@ -2,7 +2,9 @@ package game
 
 import (
 	"context"
+	"github.com/gorilla/websocket"
 	"sync"
+	"time"
 
 	"github.com/satori/go.uuid"
 	"go.uber.org/atomic"
@@ -19,35 +21,36 @@ type Room struct {
 	ID            string
 	Users         *sync.Map
 	Total         atomic.Uint64
-	Running       atomic.Bool
-	Exclude       chan *User
-	Ctx           context.Context
-	Cancel        context.CancelFunc
+	EngineStarted atomic.Bool
+	Closed        chan *Room
 	Actions       chan *Action
 	EngineStopped chan interface{}
+
+	Ctx context.Context
+	Cancel context.CancelFunc
 
 	Log *zap.Logger
 }
 
 // NewRoom creates new instance of room
 func NewRoom(log *zap.Logger, closed chan *Room) *Room {
-	ctx, cancel := context.WithCancel(context.Background())
-	ctx = context.WithValue(ctx, "closed", closed)
 	id := uuid.NewV4().String()
+	ctx, cancle := context.WithCancel(context.Background())
 
 	room := &Room{
 		ID:      id,
 		Users:   &sync.Map{},
-		Exclude: make(chan *User, 1),
-		Ctx:     ctx,
-		Cancel:  cancel,
+		Closed:  closed,
 		Actions: make(chan *Action, 10),
 		Log: log.With(
 			zap.String("room_id", id),
 		),
 		EngineStopped: make(chan interface{}),
+
+		Ctx: ctx,
+		Cancel: cancle,
 	}
-	room.Running.Store(false)
+	room.EngineStarted.Store(false)
 	return room
 }
 
@@ -58,6 +61,10 @@ func (r *Room) Run(sendInto func(action interface{})) {
 	// Get list of users
 	r.Users.Range(func(key, value interface{}) bool {
 		user := value.(*User)
+
+		// Activate player listening and sending
+		go user.ListenAndSend(r.Log)
+
 		users = append(users, user)
 		return true
 	})
@@ -91,7 +98,7 @@ func (r *Room) Run(sendInto func(action interface{})) {
 	}
 	sendInto(action)
 
-	r.Running.Store(true)
+	r.EngineStarted.Store(true)
 
 	// Receive actions form users
 	for {
@@ -104,6 +111,11 @@ func (r *Room) Run(sendInto func(action interface{})) {
 					return
 				}
 			}
+			case <-r.Ctx.Done():
+				{
+					r.Log.Info("Action channel was closed by running flag")
+					return
+				}
 		}
 	}
 }
@@ -121,7 +133,7 @@ func (r *Room) Close(action *Action) {
 	r.Log.Info("Closing room")
 
 	// Stop running engine
-	if r.Running.Load() {
+	if r.EngineStarted.Load() {
 		r.Log.Info("Stopping engine")
 		<-r.EngineStopped
 	}
@@ -129,8 +141,6 @@ func (r *Room) Close(action *Action) {
 	switch action.Type {
 	case SetUserDisconnected:
 		{
-			r.Running.Store(false)
-
 			// Send information about leaver to players
 			leaver := action.Payload.(*User)
 			var user *User
@@ -150,20 +160,31 @@ func (r *Room) Close(action *Action) {
 				zap.Uint64("opponent_id", user.Info.ID),
 				zap.String("room_id", r.ID))
 		}
+	case SetGameOver:
+		{
+
+		}
 	}
 
 	// Close player connections
-	r.Cancel()
 	r.Users.Range(func(key, value interface{}) bool {
 		player := value.(*User)
 		close(player.Messages)
+
+		player.Conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
+		player.Conn.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		time.Sleep(1 * time.Second)
 		player.Conn.Close()
+
 		r.Log.Info("User disconnected from game",
 			zap.Uint64("user_id", player.Info.ID))
 		return true
 	})
 
-	r.Ctx.Value("closed").(chan *Room) <- r
+	close(r.Actions)
+
+	r.Closed <- r
 }
 
 // ActionCallback process actions received from engine
@@ -171,11 +192,28 @@ func (r *Room) ActionCallback(action *Action) {
 	switch action.Type {
 	case SetEngineStop:
 		{
-			close(r.EngineStopped)
+			select {
+			case <-r.EngineStopped:
+				{
+					go r.Close(&Action{
+						Type: SetGameOver,
+					})
+					return
+				}
+			default:
+				{
+					close(r.EngineStopped)
+					go r.Close(&Action{
+						Type: SetGameOver,
+					})
+					return
+				}
+			}
 		}
-	default:
+	case SetGameOver:
 		{
-			r.Broadcast(action)
+			r.Cancel()
 		}
 	}
+	r.Broadcast(action)
 }

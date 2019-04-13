@@ -12,7 +12,7 @@ type User struct {
 	SessionID     string
 	GameSessionID string
 	Conn          *websocket.Conn
-	Log *zap.Logger
+	Log           *zap.Logger
 	Room          *Room
 	Messages      chan interface{}
 	Info          Info
@@ -38,17 +38,18 @@ func (u *User) ListenAndSend(log *zap.Logger) {
 func (u *User) send() {
 	for {
 		select {
-		case message, hasMore := <-u.Messages:
+		case message := <-u.Messages:
 			{
-				if !hasMore {
-					u.Log.Info("Stop sending. Message channel was closed")
-					return
-				}
 				if err := u.Conn.WriteJSON(message); err != nil {
 					u.Log.Info("Stop sending. Error on writing to connection")
 					return
 				}
 			}
+		case <-u.Room.Ctx.Done():
+		{
+			u.Log.Info("Correct stopping sending")
+			return
+		}
 		}
 	}
 }
@@ -59,6 +60,15 @@ func (u *User) listen() {
 
 		// Read json from connection
 		err := u.Conn.ReadJSON(raw)
+		select {
+		case <-u.Room.Ctx.Done():
+			{
+				u.Log.Info("Correct stopping listening")
+				return
+			}
+		default:
+		}
+
 		switch {
 		case websocket.IsCloseError(err, websocket.CloseAbnormalClosure):
 			{
@@ -68,7 +78,7 @@ func (u *User) listen() {
 					return
 				}
 
-				if u.Room.Running.Load() {
+				if u.Room.EngineStarted.Load() {
 					u.Room.Actions <- &Action{
 						Type: InitEngineStop,
 					}
@@ -140,6 +150,6 @@ func (u *User) listen() {
 			}
 		}
 
-			u.Room.Actions <- action
+		u.Room.Actions <- action
 	}
 }
