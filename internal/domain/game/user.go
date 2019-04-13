@@ -2,10 +2,11 @@ package game
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/gorilla/websocket"
 	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
-	"io"
 )
 
 type User struct {
@@ -46,10 +47,10 @@ func (u *User) send() {
 				}
 			}
 		case <-u.Room.Ctx.Done():
-		{
-			u.Log.Info("Correct stopping sending")
-			return
-		}
+			{
+				u.Log.Info("Correct stopping sending")
+				return
+			}
 		}
 	}
 }

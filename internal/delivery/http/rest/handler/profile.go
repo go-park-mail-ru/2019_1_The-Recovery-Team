@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	EmailAlreadyExists = "EmailAlreadyExists"
-	NicknameAlreadyExists = "NicknameAlreadyExists"
+	EmailAlreadyExists       = "EmailAlreadyExists"
+	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	IncorrectProfilePassword = "IncorrectProfilePassword"
 )
 

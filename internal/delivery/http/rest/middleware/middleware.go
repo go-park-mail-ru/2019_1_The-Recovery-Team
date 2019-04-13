@@ -29,7 +29,6 @@ var allowedOrigins = map[string]interface{}{
 	"https://sadislands.ru":     struct{}{},
 }
 
-
 // Authentication middleware to check authentication.
 // If cookie wasn't transmitted, expired or doesn't exist,
 // returns status code unauthorized.

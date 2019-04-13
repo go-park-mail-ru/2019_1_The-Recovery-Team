@@ -2,11 +2,12 @@ package game
 
 import (
 	"context"
-	"github.com/gorilla/websocket"
 	"sync"
 	"time"
 
-	"github.com/satori/go.uuid"
+	"github.com/gorilla/websocket"
+
+	uuid "github.com/satori/go.uuid"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
@@ -26,7 +27,7 @@ type Room struct {
 	Actions       chan *Action
 	EngineStopped chan interface{}
 
-	Ctx context.Context
+	Ctx    context.Context
 	Cancel context.CancelFunc
 
 	Log *zap.Logger
@@ -47,7 +48,7 @@ func NewRoom(log *zap.Logger, closed chan *Room) *Room {
 		),
 		EngineStopped: make(chan interface{}),
 
-		Ctx: ctx,
+		Ctx:    ctx,
 		Cancel: cancle,
 	}
 	room.EngineStarted.Store(false)
@@ -111,11 +112,11 @@ func (r *Room) Run(sendInto func(action interface{})) {
 					return
 				}
 			}
-			case <-r.Ctx.Done():
-				{
-					r.Log.Info("Action channel was closed by running flag")
-					return
-				}
+		case <-r.Ctx.Done():
+			{
+				r.Log.Info("Action channel was closed by running flag")
+				return
+			}
 		}
 	}
 }

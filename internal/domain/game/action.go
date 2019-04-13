@@ -13,13 +13,13 @@ const (
 	SetFieldRound       = "SET_FIELD_ROUND"
 	SetGameOver         = "SET_GAME_OVER"
 	SetUserDisconnected = "SET_USER_DISCONNECTED"
-	SetOpponentLeave = "SET_OPPONENT_LEAVE"
-	InitEngineStop = "INIT_ENGINE_STOP"
-	SetEngineStop = "SET_ENGINE_STOP"
-	SetOpponentSearch = "SET_OPPONENT_SEARCH"
-	SetAlreadyPlaying = "SET_ALREADY_PLAYING"
+	SetOpponentLeave    = "SET_OPPONENT_LEAVE"
+	InitEngineStop      = "INIT_ENGINE_STOP"
+	SetEngineStop       = "SET_ENGINE_STOP"
+	SetOpponentSearch   = "SET_OPPONENT_SEARCH"
+	SetAlreadyPlaying   = "SET_ALREADY_PLAYING"
 	SetOpponentNotFound = "SET_OPPONENT_NOT_FOUND"
-	SetOpponent = "SET_OPPONENT"
+	SetOpponent         = "SET_OPPONENT"
 )
 
 //easyjson:json

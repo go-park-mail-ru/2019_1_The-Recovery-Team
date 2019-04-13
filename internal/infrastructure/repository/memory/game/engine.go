@@ -40,7 +40,7 @@ type Engine struct {
 
 	RoundRunning *atomic.Value
 	GameOver     *atomic.Value
-	Stopped *atomic.Value
+	Stopped      *atomic.Value
 
 	ReceivedActions chan *game.Action
 
@@ -535,7 +535,7 @@ func InitEngine(callback func(action *game.Action)) func(action interface{}) {
 		ProcessActions:  make([]*game.Action, 0, 10),
 		RoundRunning:    &atomic.Value{},
 		GameOver:        &atomic.Value{},
-		Stopped: &atomic.Value{},
+		Stopped:         &atomic.Value{},
 	}
 
 	// Initialize atomic values with bools inside
@@ -595,7 +595,7 @@ func InitEngineJS(callback func(actionType, payload string)) func(action interfa
 		ProcessActions:  make([]*game.Action, 0, 10),
 		RoundRunning:    &atomic.Value{},
 		GameOver:        &atomic.Value{},
-		Stopped: &atomic.Value{},
+		Stopped:         &atomic.Value{},
 	}
 
 	// Initialize atomic values with bools inside

@@ -1,9 +1,10 @@
 package postgresql
 
 import (
-	"github.com/jackc/pgx"
 	"io/ioutil"
 	"os"
+
+	"github.com/jackc/pgx"
 )
 
 // MakeMigrations process database migrations from file

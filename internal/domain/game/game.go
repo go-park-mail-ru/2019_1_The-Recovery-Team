@@ -10,7 +10,7 @@ type State struct {
 	Players     map[string]Player `json:"players,omitempty"`
 	ActiveItems sync.Map          `json:"activeItems,omitempty"`
 	RoundNumber int               `json:"roundNumber,omitempty"`
-	RoundTimer  *uint64    `json:"roundTimer,omitempty"`
+	RoundTimer  *uint64           `json:"roundTimer,omitempty"`
 }
 
 // Empty checks state for emptiness

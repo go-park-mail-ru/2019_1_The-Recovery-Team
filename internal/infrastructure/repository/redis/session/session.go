@@ -1,9 +1,10 @@
 package session
 
 import (
-	"github.com/gomodule/redigo/redis"
-	"github.com/satori/go.uuid"
 	"time"
+
+	"github.com/gomodule/redigo/redis"
+	uuid "github.com/satori/go.uuid"
 )
 
 func NewSessionRepo(conn *redis.Conn) *Repo {
