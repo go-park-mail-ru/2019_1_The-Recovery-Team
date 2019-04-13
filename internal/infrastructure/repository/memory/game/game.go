@@ -113,6 +113,9 @@ func (r *Repo) addUser(player *game.User) {
 			zap.String("session_id", player.SessionID))
 	}
 
+	// Activate player listening and sending
+	go player.ListenAndSend(player.Room.Log)
+
 	// Start game engine, if room is full
 	if player.Room.Total.Load() == 2 {
 		r.Log.Info("Start game at room",

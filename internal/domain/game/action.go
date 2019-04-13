@@ -20,6 +20,8 @@ const (
 	SetAlreadyPlaying   = "SET_ALREADY_PLAYING"
 	SetOpponentNotFound = "SET_OPPONENT_NOT_FOUND"
 	SetOpponent         = "SET_OPPONENT"
+	InitPing            = "INIT_PING"
+	SetPong             = "SET_PONG"
 )
 
 //easyjson:json
