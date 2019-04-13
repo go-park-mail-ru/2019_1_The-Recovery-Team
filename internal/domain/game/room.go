@@ -62,10 +62,6 @@ func (r *Room) Run(sendInto func(action interface{})) {
 	// Get list of users
 	r.Users.Range(func(key, value interface{}) bool {
 		user := value.(*User)
-
-		// Activate player listening and sending
-		go user.ListenAndSend(r.Log)
-
 		users = append(users, user)
 		return true
 	})
@@ -132,6 +128,7 @@ func (r *Room) Broadcast(action *Action) {
 // Close removes room and stops engine
 func (r *Room) Close(action *Action) {
 	r.Log.Info("Closing room")
+	r.Cancel()
 
 	// Stop running engine
 	if r.EngineStarted.Load() {
@@ -148,11 +145,21 @@ func (r *Room) Close(action *Action) {
 
 			r.Users.Range(func(key, value interface{}) bool {
 				user = value.(*User)
+				close(user.Messages)
 				if user.Info.ID != leaver.Info.ID {
-					user.Messages <- &Action{
+					user.Conn.WriteJSON(&Action{
 						Type: SetOpponentLeave,
-					}
+					})
+					user.Conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
+					user.Conn.WriteMessage(websocket.CloseMessage,
+						websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+					time.Sleep(1 * time.Second)
+					user.Conn.Close()
+
+					r.Log.Info("User disconnected from game",
+						zap.Uint64("user_id", user.Info.ID))
 				}
+
 				return true
 			})
 
@@ -163,25 +170,23 @@ func (r *Room) Close(action *Action) {
 		}
 	case SetGameOver:
 		{
+			// Close player connections
+			r.Users.Range(func(key, value interface{}) bool {
+				user := value.(*User)
+				close(user.Messages)
 
+				user.Conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
+				user.Conn.WriteMessage(websocket.CloseMessage,
+					websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				time.Sleep(1 * time.Second)
+				user.Conn.Close()
+
+				r.Log.Info("User disconnected from game",
+					zap.Uint64("user_id", user.Info.ID))
+				return true
+			})
 		}
 	}
-
-	// Close player connections
-	r.Users.Range(func(key, value interface{}) bool {
-		player := value.(*User)
-		close(player.Messages)
-
-		player.Conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
-		player.Conn.WriteMessage(websocket.CloseMessage,
-			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-		time.Sleep(1 * time.Second)
-		player.Conn.Close()
-
-		r.Log.Info("User disconnected from game",
-			zap.Uint64("user_id", player.Info.ID))
-		return true
-	})
 
 	close(r.Actions)
 
@@ -196,24 +201,26 @@ func (r *Room) ActionCallback(action *Action) {
 			select {
 			case <-r.EngineStopped:
 				{
-					go r.Close(&Action{
-						Type: SetGameOver,
-					})
+					//go r.Close(&Action{
+					//	Type: SetGameOver,
+					//})
 					return
 				}
 			default:
 				{
 					close(r.EngineStopped)
-					go r.Close(&Action{
-						Type: SetGameOver,
-					})
+					//go r.Close(&Action{
+					//	Type: SetGameOver,
+					//})
 					return
 				}
 			}
 		}
 	case SetGameOver:
 		{
-			r.Cancel()
+			go r.Close(&Action{
+				Type: SetGameOver,
+			})
 		}
 	}
 	r.Broadcast(action)
