@@ -1,0 +1,205 @@
+package handler
+
+import (
+	"bytes"
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"sadislands/internal/delivery/http/rest/middleware"
+	profileDomain "sadislands/internal/domain/profile"
+	"sadislands/internal/infrastructure/repository/postgresql/profile"
+	"sadislands/internal/infrastructure/repository/redis/session"
+	"sadislands/internal/usecase"
+	"testing"
+
+	"go.uber.org/zap"
+
+	"github.com/mailru/easyjson"
+	"github.com/stretchr/testify/assert"
+)
+
+const (
+	ProfileID = 0
+	SessionID = 1
+)
+
+const (
+	sessionUrl = "http://127.0.0.1:8080/api/v1/session/"
+)
+
+var testCaseGetSession = []struct {
+	name       string
+	id         uint64
+	statusCode int
+	body       profileDomain.ID
+}{
+	{
+		name:       "Test correct getting session",
+		id:         1,
+		statusCode: http.StatusOK,
+		body:       profileDomain.ID{Id: 1},
+	},
+}
+
+var testCasePostSession = []struct {
+	name       string
+	email      string
+	password   string
+	setCookie  bool
+	statusCode int
+}{
+	{
+		name:       "Test without request data",
+		setCookie:  false,
+		statusCode: http.StatusBadRequest,
+	},
+	{
+		name:       "Test with invalid data",
+		email:      profile.IncorrectProfileEmail,
+		setCookie:  false,
+		statusCode: http.StatusUnprocessableEntity,
+	},
+	{
+		name:       "Test with invalid password",
+		email:      profile.ExistingProfileEmail,
+		password:   profile.ForbiddenProfilePassword,
+		setCookie:  false,
+		statusCode: http.StatusUnprocessableEntity,
+	},
+	{
+		name:       "Test with not existing email",
+		email:      profile.NotExistingProfileEmail,
+		password:   profile.ExistingProfilePassword,
+		setCookie:  false,
+		statusCode: http.StatusInternalServerError,
+	},
+	{
+		name:       "Test with setting session error",
+		email:      profile.ForbiddenProfileEmail,
+		password:   profile.ExistingProfilePassword,
+		setCookie:  false,
+		statusCode: http.StatusInternalServerError,
+	},
+	{
+		name:       "Test with correct data",
+		email:      profile.ExistingProfileEmail,
+		password:   profile.ExistingProfilePassword,
+		setCookie:  true,
+		statusCode: http.StatusOK,
+	},
+}
+
+var testCaseDeleteSession = []struct {
+	name         string
+	token        string
+	deleteCookie bool
+	statusCode   int
+}{
+	{
+		name:         "Test delete authorized",
+		token:        session.Authorized,
+		deleteCookie: true,
+		statusCode:   http.StatusOK,
+	},
+	{
+		name:         "Test delete unauthorized",
+		token:        session.Unauthorized,
+		deleteCookie: false,
+		statusCode:   http.StatusNotFound,
+	},
+}
+
+func TestGetSession(t *testing.T) {
+	for _, testCase := range testCaseGetSession {
+		t.Run(testCase.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", sessionUrl, nil)
+			ctx := context.WithValue(req.Context(), middleware.ProfileID, testCase.id)
+			req = req.WithContext(ctx)
+
+			w := httptest.NewRecorder()
+
+			GetSession()(w, req, nil)
+
+			assert.Equal(t, testCase.statusCode, w.Code,
+				"Wrong status code")
+
+			expectedBody, _ := easyjson.Marshal(testCase.body)
+			assert.Equal(t, string(expectedBody), w.Body.String(),
+				"Wrong response body")
+		})
+	}
+}
+
+func TestPostSession(t *testing.T) {
+	log, _ := zap.NewProduction()
+
+	for _, testCase := range testCasePostSession {
+		t.Run(testCase.name, func(t *testing.T) {
+			var req *http.Request
+			if testCase.email != "" || testCase.password != "" {
+				bodyRaw, _ := easyjson.Marshal(&profileDomain.Login{
+					Email:    testCase.email,
+					Password: testCase.password,
+				})
+				req = httptest.NewRequest("POST", sessionUrl, bytes.NewReader(bodyRaw))
+			} else {
+				req = httptest.NewRequest("POST", sessionUrl, nil)
+			}
+
+			ctx := context.WithValue(req.Context(), "logger", log)
+			req = req.WithContext(ctx)
+
+			w := httptest.NewRecorder()
+
+			sessionInteractor := usecase.NewSessionInteractor(&session.SessionRepoMock{})
+			profileInteractor := usecase.NewProfileInteractor(&profile.ProfileRepoMock{})
+			PostSession(profileInteractor, sessionInteractor)(w, req, nil)
+
+			assert.Equal(t, testCase.statusCode, w.Code,
+				"Wrong status code")
+
+			cookies := w.Result().Cookies()
+			if !testCase.setCookie {
+				assert.Empty(t, cookies, "Sets cookie on wrong data")
+				return
+			}
+
+			assert.NotEmpty(t, cookies, "Doesn't set cookie on correct data")
+
+			expectedBody, _ := easyjson.Marshal(profileDomain.Profile{
+				Info: profileDomain.Info{
+					ID: profile.DefaultProfileId,
+				},
+			})
+
+			assert.Equal(t, string(expectedBody), w.Body.String(),
+				"Wrong response body")
+		})
+	}
+}
+
+func TestDeleteSession(t *testing.T) {
+	for _, testCase := range testCaseDeleteSession {
+		t.Run(testCase.name, func(t *testing.T) {
+			req := httptest.NewRequest("DELETE", sessionUrl, nil)
+			ctx := context.WithValue(req.Context(), middleware.SessionID, testCase.token)
+			req = req.WithContext(ctx)
+
+			w := httptest.NewRecorder()
+
+			interactor := usecase.NewSessionInteractor(&session.SessionRepoMock{})
+			DeleteSession(interactor)(w, req, nil)
+
+			assert.Equal(t, testCase.statusCode, w.Code,
+				"Wrong status code")
+
+			cookies := w.Result().Cookies()
+			if testCase.deleteCookie {
+				assert.NotEqual(t, nil, cookies, "Doesn't delete cookie")
+				return
+			}
+
+			assert.Empty(t, cookies, "Deletes cookie on wrong token")
+		})
+	}
+}
