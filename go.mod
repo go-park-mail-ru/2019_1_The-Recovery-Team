@@ -17,6 +17,7 @@ require (
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mailru/easyjson v0.0.0-20190312143242-1de009706dbe
 	github.com/satori/go.uuid v1.2.0
+	github.com/stretchr/testify v1.3.0
 	github.com/swaggo/files v0.0.0-20190110041405-30649e0721f8 // indirect
 	github.com/swaggo/http-swagger v0.0.0-20190324132102-654001218d89
 	github.com/swaggo/swag v1.5.0
