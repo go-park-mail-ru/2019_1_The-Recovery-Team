@@ -3,7 +3,7 @@ package handler
 import (
 	"mime/multipart"
 	"net/http"
-	handler "sadislands/internal/delivery/http/rest/handler/error"
+	"sadislands/internal/delivery/http/rest/handler/error"
 	"sadislands/internal/delivery/http/rest/handler/saver"
 	"sadislands/internal/delivery/http/rest/handler/unmarshaler"
 	"sadislands/internal/delivery/http/rest/handler/writer"
@@ -337,17 +337,17 @@ func PostProfile(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 		// Create profile
 		created, err := profileInteractor.CreateProfile(data)
 		if err != nil {
-			if err.Error() == EmailAlreadyExists && err.Error() == NicknameAlreadyExists {
+			if err.Error() == EmailAlreadyExists || err.Error() == NicknameAlreadyExists {
 				log.Error(err.Error(),
 					zap.String("email", data.Email),
 					zap.String("nickname", data.Nickname))
-				w.WriteHeader(http.StatusInternalServerError)
+				w.WriteHeader(http.StatusConflict)
 				return
 			}
 			message := handler.Error{
 				Description: err.Error(),
 			}
-			writer.WriteResponseJSON(w, http.StatusConflict, message)
+			writer.WriteResponseJSON(w, http.StatusInternalServerError, message)
 			return
 		}
 
