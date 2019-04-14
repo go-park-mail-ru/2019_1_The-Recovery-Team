@@ -3,6 +3,7 @@ package profile
 import (
 	"errors"
 	"sadislands/internal/domain/profile"
+	"sadislands/internal/infrastructure/repository/postgresql"
 
 	"github.com/jackc/pgx"
 )
@@ -36,6 +37,7 @@ const (
 	ForbiddenProfileAvatar   = "forbidden"
 	ForbiddenProfilePassword = "password"
 	ForbiddenLimit           = -1
+	ForbiddenLimitStr           = "-1"
 
 	DefaultError = "error"
 	DefaultCount = 1
@@ -67,6 +69,10 @@ func (r *ProfileRepoMock) GetProfile(id interface{}) (*profile.Profile, error) {
 }
 
 func (r *ProfileRepoMock) CreateProfile(data *profile.Create) (*profile.Created, error) {
+	if data.Email == ForbiddenProfileEmail {
+		return nil, errors.New(DefaultError)
+	}
+
 	if data.Nickname == ExistingProfileNickname {
 		return nil, errors.New(NicknameAlreadyExists)
 	}
@@ -75,8 +81,13 @@ func (r *ProfileRepoMock) CreateProfile(data *profile.Create) (*profile.Created,
 		return nil, errors.New(EmailAlreadyExists)
 	}
 
-	if data.Email == ForbiddenProfileEmail {
-		return nil, errors.New(DefaultError)
+	if matches, _ := postgresql.VerifyPassword(IncorrectProfilePassword, data.Password); matches {
+		created := &profile.Created{
+			ID:       ForbiddenProfileId,
+			Email:    CreatedProfileEmail,
+			Nickname: CreatedProfileNickname,
+		}
+		return created, nil
 	}
 
 	created := &profile.Created{

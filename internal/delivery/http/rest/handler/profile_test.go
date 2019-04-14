@@ -3,10 +3,12 @@ package handler
 import (
 	"bytes"
 	"context"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	profileDomain "sadislands/internal/domain/profile"
 	"sadislands/internal/infrastructure/repository/postgresql/profile"
+	"sadislands/internal/infrastructure/repository/redis/session"
 	"sadislands/internal/usecase"
 	"strconv"
 	"testing"
@@ -20,6 +22,7 @@ import (
 
 const (
 	profileUrl = "http://127.0.0.1:8080/api/v1/profiles"
+	scoreUrl = "http://127.0.0.1:8080/api/v1/scores"
 )
 
 var testCaseGetProfile = []struct {
@@ -166,6 +169,133 @@ var testCasePutProfile = []struct {
 	},
 }
 
+var testPutProfilePassword = []struct {
+	name        string
+	id          string
+	profileId   string
+	password    string
+	passwordOld string
+	statusCode  int
+}{
+	{
+		name:        "Test with invalid profile id",
+		id:          "-1",
+		profileId:   profile.ExistingProfileIdStr,
+		password:    profile.NotExistingProfilePassword,
+		passwordOld: profile.ExistingProfilePassword,
+		statusCode:  http.StatusNotFound,
+	},
+	{
+		name:        "Test without permissions",
+		id:          profile.NotExistingProfileIdStr,
+		profileId:   profile.ExistingProfileIdStr,
+		password:    profile.NotExistingProfilePassword,
+		passwordOld: profile.ExistingProfilePassword,
+		statusCode:  http.StatusForbidden,
+	},
+	{
+		name:       "Test without data",
+		id:         profile.ExistingProfileIdStr,
+		profileId:  profile.ExistingProfileIdStr,
+		statusCode: http.StatusBadRequest,
+	},
+	{
+		name:        "Test with invalid password",
+		id:          profile.ExistingProfileIdStr,
+		profileId:   profile.ExistingProfileIdStr,
+		password:    profile.InvalidProfilePassword,
+		passwordOld: profile.InvalidProfilePassword,
+		statusCode:  http.StatusUnprocessableEntity,
+	},
+	{
+		name:        "Test with incorrect old password",
+		id:          profile.ExistingProfileIdStr,
+		profileId:   profile.ExistingProfileIdStr,
+		password:    profile.NotExistingProfilePassword,
+		passwordOld: profile.NotExistingProfilePassword,
+		statusCode:  http.StatusUnprocessableEntity,
+	},
+	{
+		name:        "Test with database error",
+		id:          profile.ExistingProfileIdStr,
+		profileId:   profile.ExistingProfileIdStr,
+		password:    profile.ForbiddenProfilePassword,
+		passwordOld: profile.ForbiddenProfilePassword,
+		statusCode:  http.StatusInternalServerError,
+	},
+	{
+		name:        "Test with correct data",
+		id:          profile.ExistingProfileIdStr,
+		profileId:   profile.ExistingProfileIdStr,
+		password:    profile.NotExistingProfilePassword,
+		passwordOld: profile.ExistingProfilePassword,
+		statusCode:  http.StatusNoContent,
+	},
+}
+
+var testCasePostProfile = []struct {
+	name        string
+	email string
+	nickname string
+	password string
+	multipart bool
+	statusCode  int
+}{
+	{
+		name: "Test not multipart",
+		email: profile.ExistingProfileEmail,
+		nickname: profile.ExistingProfileNickname,
+		password: profile.ExistingProfilePassword,
+		multipart: false,
+		statusCode: http.StatusBadRequest,
+	},
+	{
+		name: "Test with incorrect data",
+		multipart: true,
+		statusCode: http.StatusBadRequest,
+	},
+	{
+		name: "Test with invalid data",
+		email: profile.IncorrectProfileEmail,
+		nickname: profile.ExistingProfileNickname,
+		password: profile.InvalidProfilePassword,
+		multipart: true,
+		statusCode: http.StatusUnprocessableEntity,
+	},
+	{
+		name: "Test with conflict data",
+		email: profile.ExistingProfileEmail,
+		nickname: profile.ExistingProfileNickname,
+		password: profile.ExistingProfilePassword,
+		multipart: true,
+		statusCode: http.StatusConflict,
+	},
+	{
+		name: "Test with database error",
+		email: profile.ForbiddenProfileEmail,
+		nickname: profile.ExistingProfileNickname,
+		password: profile.ExistingProfilePassword,
+		multipart: true,
+		statusCode: http.StatusInternalServerError,
+	},
+	{
+		name: "Test with redis error",
+		email: profile.NotExistingProfileEmail,
+		nickname: profile.NotExistingProfileNickname,
+		password: profile.IncorrectProfilePassword,
+		multipart: true,
+		statusCode: http.StatusInternalServerError,
+	},
+	{
+		name: "Test with correct data",
+		email: profile.NotExistingProfileEmail,
+		nickname: profile.NotExistingProfileNickname,
+		password: profile.NotExistingProfilePassword,
+		multipart: true,
+		statusCode: http.StatusCreated,
+	},
+}
+
 func TestGetProfile(t *testing.T) {
 	log, _ := zap.NewProduction()
 
@@ -276,70 +406,6 @@ func TestPutProfile(t *testing.T) {
 	}
 }
 
-var testPutProfilePassword = []struct {
-	name        string
-	id          string
-	profileId   string
-	password    string
-	passwordOld string
-	statusCode  int
-}{
-	{
-		name:        "Test with invalid profile id",
-		id:          "-1",
-		profileId:   profile.ExistingProfileIdStr,
-		password:    profile.NotExistingProfilePassword,
-		passwordOld: profile.ExistingProfilePassword,
-		statusCode:  http.StatusNotFound,
-	},
-	{
-		name:        "Test without permissions",
-		id:          profile.NotExistingProfileIdStr,
-		profileId:   profile.ExistingProfileIdStr,
-		password:    profile.NotExistingProfilePassword,
-		passwordOld: profile.ExistingProfilePassword,
-		statusCode:  http.StatusForbidden,
-	},
-	{
-		name:       "Test without data",
-		id:         profile.ExistingProfileIdStr,
-		profileId:  profile.ExistingProfileIdStr,
-		statusCode: http.StatusBadRequest,
-	},
-	{
-		name:        "Test with invalid password",
-		id:          profile.ExistingProfileIdStr,
-		profileId:   profile.ExistingProfileIdStr,
-		password:    profile.InvalidProfilePassword,
-		passwordOld: profile.InvalidProfilePassword,
-		statusCode:  http.StatusUnprocessableEntity,
-	},
-	{
-		name:        "Test with incorrect old password",
-		id:          profile.ExistingProfileIdStr,
-		profileId:   profile.ExistingProfileIdStr,
-		password:    profile.NotExistingProfilePassword,
-		passwordOld: profile.NotExistingProfilePassword,
-		statusCode:  http.StatusUnprocessableEntity,
-	},
-	{
-		name:        "Test with database error",
-		id:          profile.ExistingProfileIdStr,
-		profileId:   profile.ExistingProfileIdStr,
-		password:    profile.ForbiddenProfilePassword,
-		passwordOld: profile.ForbiddenProfilePassword,
-		statusCode:  http.StatusInternalServerError,
-	},
-	{
-		name:        "Test with correct data",
-		id:          profile.ExistingProfileIdStr,
-		profileId:   profile.ExistingProfileIdStr,
-		password:    profile.NotExistingProfilePassword,
-		passwordOld: profile.ExistingProfilePassword,
-		statusCode:  http.StatusNoContent,
-	},
-}
-
 func TestPutProfilePassword(t *testing.T) {
 	log, _ := zap.NewProduction()
 
@@ -359,6 +425,7 @@ func TestPutProfilePassword(t *testing.T) {
 			profileId, _ := strconv.ParseUint(testCase.profileId, 10, 64)
 			ctx := context.WithValue(req.Context(), "logger", log)
 			ctx = context.WithValue(ctx, ProfileID, profileId)
+			req = req.WithContext(ctx)
 
 			w := httptest.NewRecorder()
 
@@ -370,7 +437,102 @@ func TestPutProfilePassword(t *testing.T) {
 			}
 
 			profileInteractor := usecase.NewProfileInteractor(&profile.ProfileRepoMock{})
-			PutProfilePassword(profileInteractor)(w, req.WithContext(ctx), ps)
+			PutProfilePassword(profileInteractor)(w, req, ps)
+
+			assert.Equal(t, testCase.statusCode, w.Code,
+				"Wrong status code")
+		})
+	}
+}
+
+func TestPostProfile(t *testing.T) {
+	log, _ := zap.NewProduction()
+
+	for _, testCase := range testCasePostProfile {
+		t.Run(testCase.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			writter := multipart.NewWriter(&buf)
+
+			if testCase.nickname != "" {
+				writter.WriteField("nickname", testCase.nickname)
+			}
+			if testCase.email != "" {
+				writter.WriteField("email", testCase.email)
+			}
+			if testCase.password != "" {
+				writter.WriteField("password", testCase.password)
+			}
+			writter.Close()
+
+			req := httptest.NewRequest("POST", profileUrl, bytes.NewReader(buf.Bytes()))
+			ctx := context.WithValue(req.Context(), "logger", log)
+			req = req.WithContext(ctx)
+			if testCase.multipart {
+				req.Header.Set("Content-Type", writter.FormDataContentType())
+			}
+
+			w := httptest.NewRecorder()
+			profileInteractor := usecase.NewProfileInteractor(&profile.ProfileRepoMock{})
+			sessionInteractor := usecase.NewSessionInteractor(&session.SessionRepoMock{})
+			PostProfile(profileInteractor, sessionInteractor)(w, req, nil)
+
+			assert.Equal(t, testCase.statusCode, w.Code,
+				"Wrong status code")
+		})
+	}
+}
+
+var testCaseGetScoreboard = []struct {
+	name        string
+	limit string
+	start string
+	statusCode  int
+}{
+	{
+		name: "Test with incorrect limit and start",
+		limit: "-",
+		start: "-",
+		statusCode: http.StatusBadRequest,
+	},
+	{
+		name: "Test with database error",
+		limit: profile.ForbiddenLimitStr,
+		start: "-1",
+		statusCode: http.StatusInternalServerError,
+	},
+	{
+		name: "Test with correct data",
+		limit: "100",
+		start: "-1",
+		statusCode: http.StatusOK,
+	},
+}
+
+func TestGetScoreboard(t *testing.T) {
+	log, _ := zap.NewProduction()
+
+	for _, testCase := range testCaseGetScoreboard {
+		t.Run(testCase.name, func(t *testing.T) {
+			url := scoreUrl
+			if testCase.limit != "" {
+				url += "?limit=" + testCase.limit
+			}
+			if testCase.start != "" {
+				if testCase.limit != "" {
+					url += "&start=" + testCase.start
+				} else {
+					url += "?start=" + testCase.start
+				}
+			}
+
+			req := httptest.NewRequest("GET", url, nil)
+			ctx := context.WithValue(req.Context(), "logger", log)
+			req = req.WithContext(ctx)
+
+			w := httptest.NewRecorder()
+
+			profileInteractor := usecase.NewProfileInteractor(&profile.ProfileRepoMock{})
+			GetScoreboard(profileInteractor)(w, req, nil)
 
 			assert.Equal(t, testCase.statusCode, w.Code,
 				"Wrong status code")
