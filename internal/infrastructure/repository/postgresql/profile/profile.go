@@ -53,6 +53,10 @@ const (
 	QueryProfileCount = `SELECT reltuples::bigint AS number
 	FROM   pg_class
 	WHERE  oid = 'public.profile'::regclass`
+
+	NicknameAlreadyExists    = "NicknameAlreadyExists"
+	EmailAlreadyExists       = "EmailAlreadyExists"
+	IncorrectProfilePassword = "IncorrectProfilePassword"
 )
 
 // NewProfileRepo creates new instance of profile repository
@@ -91,11 +95,11 @@ func (r *Repo) CreateProfile(data *profile.Create) (*profile.Created, error) {
 		switch {
 		case err.(pgx.PgError).ConstraintName == "profile_email_key":
 			{
-				return nil, errors.New("EmailAlreadyExists")
+				return nil, errors.New(EmailAlreadyExists)
 			}
 		case err.(pgx.PgError).ConstraintName == "profile_nickname_key":
 			{
-				return nil, errors.New("NicknameAlreadyExists")
+				return nil, errors.New(NicknameAlreadyExists)
 			}
 		default:
 			{
@@ -120,11 +124,11 @@ func (r *Repo) UpdateProfile(id interface{}, data *profile.UpdateInfo) error {
 		switch {
 		case err.(pgx.PgError).ConstraintName == "profile_email_key":
 			{
-				return errors.New("EmailAlreadyExists")
+				return errors.New(EmailAlreadyExists)
 			}
 		case err.(pgx.PgError).ConstraintName == "profile_nickname_key":
 			{
-				return errors.New("NicknameAlreadyExists")
+				return errors.New(NicknameAlreadyExists)
 			}
 		default:
 			{
@@ -153,7 +157,7 @@ func (r *Repo) UpdateProfilePassword(id interface{}, data *profile.UpdatePasswor
 
 	// Check current password correctness
 	if matches, err := postgresql.VerifyPassword(data.PasswordOld, password); !matches || err != nil {
-		return errors.New("IncorrectPassword")
+		return errors.New(IncorrectProfilePassword)
 	}
 
 	_, err := r.conn.Exec(QueryUpdateProfilePassword, data.Password, id)
