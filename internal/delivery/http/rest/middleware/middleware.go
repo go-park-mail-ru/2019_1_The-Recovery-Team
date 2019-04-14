@@ -10,11 +10,9 @@ import (
 	"go.uber.org/zap"
 )
 
-type key int
-
 const (
-	ProfileID key = iota
-	SessionID
+	ProfileID = 0
+	SessionID = 1
 )
 
 var allowedOrigins = map[string]interface{}{
