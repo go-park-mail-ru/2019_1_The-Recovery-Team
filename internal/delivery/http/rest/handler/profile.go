@@ -6,9 +6,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mailru/easyjson"
+
 	handler "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/error"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/saver"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/unmarshaler"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/writer"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/middleware"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/profile"
@@ -180,11 +181,12 @@ func PutProfile(profileInteractor *usecase.ProfileInteractor) httprouter.Handle 
 		}
 
 		data := &profile.UpdateInfo{}
-		err = unmarshaler.UnmarshalJSONBodyToStruct(r, data)
-		if err != nil {
+		if err := easyjson.UnmarshalFromReader(r.Body, data); err != nil {
+			r.Body.Close()
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		r.Body.Close()
 
 		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
 			message := handler.Error{
@@ -243,11 +245,12 @@ func PutProfilePassword(profileInteractor *usecase.ProfileInteractor) httprouter
 		}
 
 		data := &profile.UpdatePassword{}
-		err = unmarshaler.UnmarshalJSONBodyToStruct(r, data)
-		if err != nil {
+		if err := easyjson.UnmarshalFromReader(r.Body, data); err != nil {
+			r.Body.Close()
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		r.Body.Close()
 
 		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
 			message := handler.Error{

@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mailru/easyjson"
+
 	handler "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/error"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/unmarshaler"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/writer"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/middleware"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/profile"
@@ -52,11 +53,12 @@ func PostSession(profileInteractor *usecase.ProfileInteractor, sessionInteractor
 		log := r.Context().Value("logger").(*zap.Logger)
 
 		login := &profile.Login{}
-		err := unmarshaler.UnmarshalJSONBodyToStruct(r, login)
-		if err != nil {
+		if err := easyjson.UnmarshalFromReader(r.Body, login); err != nil {
+			r.Body.Close()
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		r.Body.Close()
 
 		if isValid, err := govalidator.ValidateStruct(login); !isValid && err != nil {
 			message := handler.Error{
