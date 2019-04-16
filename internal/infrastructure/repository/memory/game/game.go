@@ -1,6 +1,7 @@
 package game
 
 import (
+	"go.uber.org/atomic"
 	"sync"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
@@ -9,20 +10,21 @@ import (
 
 // NewGameRepo creates new instance of game repository
 func NewGameRepo(log *zap.Logger) *Repo {
-	return &Repo{
+	repo := &Repo{
 		Rooms:   &sync.Map{},
-		TotalM:  &sync.Mutex{},
+		Total: &atomic.Uint64{},
 		Playing: &sync.Map{},
 		Players: make(chan *game.User, 100),
 		Closed:  make(chan *game.Room, 100),
 		Log:     log,
 	}
+	repo.Total.Store(0)
+	return repo
 }
 
 type Repo struct {
 	Rooms  *sync.Map
-	Total  int
-	TotalM *sync.Mutex
+	Total  *atomic.Uint64
 
 	Playing *sync.Map
 	Players chan *game.User
@@ -54,9 +56,7 @@ func (r *Repo) Run() {
 
 				// Remove room, update statistics
 				r.Rooms.Delete(room.ID)
-				r.TotalM.Lock()
-				r.Total--
-				r.TotalM.Unlock()
+				r.Total.Sub(1)
 				r.Log.Info("Room closed",
 					zap.String("room_id", room.ID),
 				)
@@ -161,9 +161,7 @@ func (r *Repo) findRoom(player *game.User) error {
 		r.Closed,
 	)
 
-	r.TotalM.Lock()
-	r.Total++
-	r.TotalM.Unlock()
+	r.Total.Add(1)
 
 	result.Users.Store(player.Info.ID, player)
 	result.Total.Add(1)
