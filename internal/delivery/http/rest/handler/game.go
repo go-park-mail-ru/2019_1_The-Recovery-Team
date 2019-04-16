@@ -11,7 +11,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-//
 func Search(profileInteractor *usecase.ProfileInteractor, gameInteractor *usecase.GameInteractor) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// Get context data(sessionID, profileID)

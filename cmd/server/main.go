@@ -52,7 +52,6 @@ func main() {
 	}
 	psqlConn.Close()
 
-
 	// Create new connection to database with updated OIDs
 	psqlConn, err = pgx.Connect(psqlConfig)
 	if err != nil {
