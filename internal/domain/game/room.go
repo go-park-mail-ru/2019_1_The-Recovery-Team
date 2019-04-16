@@ -36,7 +36,7 @@ type Room struct {
 // NewRoom creates new instance of room
 func NewRoom(log *zap.Logger, closed chan *Room) *Room {
 	id := uuid.NewV4().String()
-	ctx, cancle := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 
 	room := &Room{
 		ID:      id,
@@ -49,7 +49,7 @@ func NewRoom(log *zap.Logger, closed chan *Room) *Room {
 		EngineStopped: make(chan interface{}),
 
 		Ctx:    ctx,
-		Cancel: cancle,
+		Cancel: cancel,
 	}
 	room.EngineStarted.Store(false)
 	return room
