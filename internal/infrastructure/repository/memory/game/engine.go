@@ -295,7 +295,7 @@ func (e *Engine) movePlayer(action *game.Action) {
 // isPlayerDead checks player for death
 func (e *Engine) isPlayerDead(id string) bool {
 	player := e.State.Players[id]
-	if e.State.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*FieldWidth].Type == Water {
+	if e.State.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*e.State.Field.Width].Type == Water {
 		return true
 	}
 
@@ -374,7 +374,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 					Type:    game.SetState,
 					Payload: *e.copyState(),
 				})
-				return
+				continue
 			}
 		case game.InitPlayerReady:
 			{
