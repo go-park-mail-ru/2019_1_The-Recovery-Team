@@ -3,7 +3,7 @@ package handler
 import (
 	"mime/multipart"
 	"net/http"
-	"sadislands/internal/delivery/http/rest/handler/error"
+	handler "sadislands/internal/delivery/http/rest/handler/error"
 	"sadislands/internal/delivery/http/rest/handler/saver"
 	"sadislands/internal/delivery/http/rest/handler/unmarshaler"
 	"sadislands/internal/delivery/http/rest/handler/writer"

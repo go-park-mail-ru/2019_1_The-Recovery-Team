@@ -37,7 +37,7 @@ const (
 	ForbiddenProfileAvatar   = "forbidden"
 	ForbiddenProfilePassword = "password"
 	ForbiddenLimit           = -1
-	ForbiddenLimitStr           = "-1"
+	ForbiddenLimitStr        = "-1"
 
 	DefaultError = "error"
 	DefaultCount = 1

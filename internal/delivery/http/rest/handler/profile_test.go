@@ -22,7 +22,7 @@ import (
 
 const (
 	profileUrl = "http://127.0.0.1:8080/api/v1/profiles"
-	scoreUrl = "http://127.0.0.1:8080/api/v1/scores"
+	scoreUrl   = "http://127.0.0.1:8080/api/v1/scores"
 )
 
 var testCaseGetProfile = []struct {
@@ -234,65 +234,91 @@ var testPutProfilePassword = []struct {
 }
 
 var testCasePostProfile = []struct {
-	name        string
-	email string
-	nickname string
-	password string
-	multipart bool
-	statusCode  int
+	name       string
+	email      string
+	nickname   string
+	password   string
+	multipart  bool
+	statusCode int
 }{
 	{
-		name: "Test not multipart",
-		email: profile.ExistingProfileEmail,
-		nickname: profile.ExistingProfileNickname,
-		password: profile.ExistingProfilePassword,
-		multipart: false,
+		name:       "Test not multipart",
+		email:      profile.ExistingProfileEmail,
+		nickname:   profile.ExistingProfileNickname,
+		password:   profile.ExistingProfilePassword,
+		multipart:  false,
 		statusCode: http.StatusBadRequest,
 	},
 	{
-		name: "Test with incorrect data",
-		multipart: true,
+		name:       "Test with incorrect data",
+		multipart:  true,
 		statusCode: http.StatusBadRequest,
 	},
 	{
-		name: "Test with invalid data",
-		email: profile.IncorrectProfileEmail,
-		nickname: profile.ExistingProfileNickname,
-		password: profile.InvalidProfilePassword,
-		multipart: true,
+		name:       "Test with invalid data",
+		email:      profile.IncorrectProfileEmail,
+		nickname:   profile.ExistingProfileNickname,
+		password:   profile.InvalidProfilePassword,
+		multipart:  true,
 		statusCode: http.StatusUnprocessableEntity,
 	},
 	{
-		name: "Test with conflict data",
-		email: profile.ExistingProfileEmail,
-		nickname: profile.ExistingProfileNickname,
-		password: profile.ExistingProfilePassword,
-		multipart: true,
+		name:       "Test with conflict data",
+		email:      profile.ExistingProfileEmail,
+		nickname:   profile.ExistingProfileNickname,
+		password:   profile.ExistingProfilePassword,
+		multipart:  true,
 		statusCode: http.StatusConflict,
 	},
 	{
-		name: "Test with database error",
-		email: profile.ForbiddenProfileEmail,
-		nickname: profile.ExistingProfileNickname,
-		password: profile.ExistingProfilePassword,
-		multipart: true,
+		name:       "Test with database error",
+		email:      profile.ForbiddenProfileEmail,
+		nickname:   profile.ExistingProfileNickname,
+		password:   profile.ExistingProfilePassword,
+		multipart:  true,
 		statusCode: http.StatusInternalServerError,
 	},
 	{
-		name: "Test with redis error",
-		email: profile.NotExistingProfileEmail,
-		nickname: profile.NotExistingProfileNickname,
-		password: profile.IncorrectProfilePassword,
-		multipart: true,
+		name:       "Test with redis error",
+		email:      profile.NotExistingProfileEmail,
+		nickname:   profile.NotExistingProfileNickname,
+		password:   profile.IncorrectProfilePassword,
+		multipart:  true,
 		statusCode: http.StatusInternalServerError,
 	},
 	{
-		name: "Test with correct data",
-		email: profile.NotExistingProfileEmail,
-		nickname: profile.NotExistingProfileNickname,
-		password: profile.NotExistingProfilePassword,
-		multipart: true,
+		name:       "Test with correct data",
+		email:      profile.NotExistingProfileEmail,
+		nickname:   profile.NotExistingProfileNickname,
+		password:   profile.NotExistingProfilePassword,
+		multipart:  true,
 		statusCode: http.StatusCreated,
+	},
+}
+
+var testCaseGetScoreboard = []struct {
+	name       string
+	limit      string
+	start      string
+	statusCode int
+}{
+	{
+		name:       "Test with incorrect limit and start",
+		limit:      "-",
+		start:      "-",
+		statusCode: http.StatusBadRequest,
+	},
+	{
+		name:       "Test with database error",
+		limit:      profile.ForbiddenLimitStr,
+		start:      "-1",
+		statusCode: http.StatusInternalServerError,
+	},
+	{
+		name:       "Test with correct data",
+		limit:      "100",
+		start:      "-1",
+		statusCode: http.StatusOK,
 	},
 }
 
@@ -480,32 +506,6 @@ func TestPostProfile(t *testing.T) {
 				"Wrong status code")
 		})
 	}
-}
-
-var testCaseGetScoreboard = []struct {
-	name        string
-	limit string
-	start string
-	statusCode  int
-}{
-	{
-		name: "Test with incorrect limit and start",
-		limit: "-",
-		start: "-",
-		statusCode: http.StatusBadRequest,
-	},
-	{
-		name: "Test with database error",
-		limit: profile.ForbiddenLimitStr,
-		start: "-1",
-		statusCode: http.StatusInternalServerError,
-	},
-	{
-		name: "Test with correct data",
-		limit: "100",
-		start: "-1",
-		statusCode: http.StatusOK,
-	},
 }
 
 func TestGetScoreboard(t *testing.T) {

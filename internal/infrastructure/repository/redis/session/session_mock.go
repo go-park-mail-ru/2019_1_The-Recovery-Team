@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	Authorized          = "AUTHORIZED"
-	Unauthorized        = "UNAUTHORIZED"
-	AuthorizedProfileId = 1
-	DefaultProfileId    = 1
-	IncorrectData       = "INCORRECT_DATA"
+	Authorized                 = "AUTHORIZED"
+	Unauthorized               = "UNAUTHORIZED"
+	AuthorizedProfileId        = 1
+	DefaultProfileId    uint64 = 1
+	IncorrectData              = "INCORRECT_DATA"
 )
 
 type SessionRepoMock struct{}
