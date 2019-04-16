@@ -12,7 +12,7 @@ const (
 	QueryProfileById = `SELECT id, nickname, email, avatar, record, win, loss 
     FROM profile 
     WHERE id = $1`
-
+	
 	QueryCreateProfile = `INSERT INTO profile (email, nickname, password) 
 	VALUES ($1, $2, $3) 
 	RETURNING id, email, nickname`
@@ -57,6 +57,9 @@ const (
 	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	EmailAlreadyExists       = "EmailAlreadyExists"
 	IncorrectProfilePassword = "IncorrectProfilePassword"
+
+	ProfileEmailKey    = "profile_email_key"
+	ProfileNicknameKey = "profile_nickname_key"
 )
 
 // NewProfileRepo creates new instance of profile repository
@@ -92,20 +95,19 @@ func (r *Repo) CreateProfile(data *profile.Create) (*profile.Created, error) {
 	created := &profile.Created{}
 	if err = tx.QueryRow(QueryCreateProfile, data.Email, data.Nickname, data.Password).
 		Scan(&created.ID, &created.Email, &created.Nickname); err != nil {
-		switch {
-		case err.(pgx.PgError).ConstraintName == "profile_email_key":
-			{
-				return nil, errors.New(EmailAlreadyExists)
-			}
-		case err.(pgx.PgError).ConstraintName == "profile_nickname_key":
-			{
-				return nil, errors.New(NicknameAlreadyExists)
-			}
-		default:
-			{
-				return nil, err
+		if pgErr, ok := err.(pgx.PgError); ok {
+			switch pgErr.ConstraintName {
+			case ProfileEmailKey:
+				{
+					return nil, errors.New(EmailAlreadyExists)
+				}
+			case ProfileNicknameKey:
+				{
+					return nil, errors.New(NicknameAlreadyExists)
+				}
 			}
 		}
+		return nil, err
 	}
 
 	tx.Commit()
@@ -121,20 +123,19 @@ func (r *Repo) UpdateProfile(id interface{}, data *profile.UpdateInfo) error {
 	defer tx.Rollback()
 
 	if _, err = tx.Exec(QueryUpdateProfile, data.Email, data.Nickname, id); err != nil {
-		switch {
-		case err.(pgx.PgError).ConstraintName == "profile_email_key":
-			{
-				return errors.New(EmailAlreadyExists)
-			}
-		case err.(pgx.PgError).ConstraintName == "profile_nickname_key":
-			{
-				return errors.New(NicknameAlreadyExists)
-			}
-		default:
-			{
-				return err
+		if pgErr, ok := err.(pgx.PgError); ok {
+			switch pgErr.ConstraintName {
+			case ProfileEmailKey:
+				{
+					return errors.New(EmailAlreadyExists)
+				}
+			case ProfileNicknameKey:
+				{
+					return errors.New(NicknameAlreadyExists)
+				}
 			}
 		}
+		return err
 	}
 
 	tx.Commit()
