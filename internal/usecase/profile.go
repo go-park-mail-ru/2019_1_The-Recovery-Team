@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"sadislands/internal/domain/profile"
-	"sadislands/internal/usecase/repository"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase/repository"
 )
 
 func NewProfileInteractor(repo repository.ProfileRepo) *ProfileInteractor {

@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"sadislands/internal/domain/game"
-	"sadislands/internal/usecase/repository"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase/repository"
 )
 
 func NewGameInteractor(repo repository.GameRepo) *GameInteractor {

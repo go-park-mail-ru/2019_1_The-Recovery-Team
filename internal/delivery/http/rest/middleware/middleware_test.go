@@ -3,10 +3,10 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
-	"sadislands/internal/infrastructure/repository/redis/session"
-	"sadislands/internal/usecase"
 	"testing"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/redis/session"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 )

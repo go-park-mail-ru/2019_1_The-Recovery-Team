@@ -1,6 +1,6 @@
 package repository
 
-import "sadislands/internal/domain/profile"
+import "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/profile"
 
 type ProfileRepo interface {
 	GetProfile(id interface{}) (*profile.Profile, error)

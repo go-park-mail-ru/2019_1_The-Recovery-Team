@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"sadislands/internal/domain/game"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
 )
 
 const (

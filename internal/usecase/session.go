@@ -1,8 +1,9 @@
 package usecase
 
 import (
-	"sadislands/internal/usecase/repository"
 	"time"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase/repository"
 )
 
 func NewSessionInteractor(repo repository.SessionRepo) *SessionInteractor {

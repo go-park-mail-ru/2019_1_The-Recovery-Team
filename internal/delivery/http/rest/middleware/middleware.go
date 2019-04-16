@@ -3,9 +3,9 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"sadislands/internal/usecase"
 	"time"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 )

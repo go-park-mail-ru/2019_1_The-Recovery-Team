@@ -1,13 +1,13 @@
 package game
 
 import (
-	"sadislands/internal/domain/game"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
 	"github.com/stretchr/testify/assert"
 )
 

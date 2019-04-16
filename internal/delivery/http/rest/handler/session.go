@@ -2,13 +2,14 @@ package handler
 
 import (
 	"net/http"
-	handler "sadislands/internal/delivery/http/rest/handler/error"
-	"sadislands/internal/delivery/http/rest/handler/unmarshaler"
-	"sadislands/internal/delivery/http/rest/handler/writer"
-	"sadislands/internal/delivery/http/rest/middleware"
-	"sadislands/internal/domain/profile"
-	"sadislands/internal/usecase"
 	"time"
+
+	handler "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/error"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/unmarshaler"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler/writer"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/middleware"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/jackc/pgx"

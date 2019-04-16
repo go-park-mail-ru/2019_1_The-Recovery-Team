@@ -2,9 +2,9 @@ package profile
 
 import (
 	"errors"
-	"sadislands/internal/domain/profile"
-	"sadislands/internal/infrastructure/repository/postgresql"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/postgresql"
 	"github.com/jackc/pgx"
 )
 

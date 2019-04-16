@@ -1,10 +1,9 @@
 package rest
 
 import (
-	"sadislands/internal/delivery/http/rest/handler"
-	"sadislands/internal/delivery/http/rest/middleware"
-	"sadislands/internal/usecase"
-
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/handler"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/middleware"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 )

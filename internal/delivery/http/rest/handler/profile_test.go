@@ -6,12 +6,13 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	profileDomain "sadislands/internal/domain/profile"
-	"sadislands/internal/infrastructure/repository/postgresql/profile"
-	"sadislands/internal/infrastructure/repository/redis/session"
-	"sadislands/internal/usecase"
 	"strconv"
 	"testing"
+
+	profileDomain "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/postgresql/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/redis/session"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 
 	"github.com/julienschmidt/httprouter"
 

@@ -5,12 +5,13 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"sadislands/internal/delivery/http/rest/middleware"
-	profileDomain "sadislands/internal/domain/profile"
-	"sadislands/internal/infrastructure/repository/postgresql/profile"
-	"sadislands/internal/infrastructure/repository/redis/session"
-	"sadislands/internal/usecase"
 	"testing"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/middleware"
+	profileDomain "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/postgresql/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/redis/session"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 
 	"go.uber.org/zap"
 

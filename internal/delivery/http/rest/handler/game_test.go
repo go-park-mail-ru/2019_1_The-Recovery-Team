@@ -4,11 +4,11 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"sadislands/internal/infrastructure/repository/memory/game"
-	"sadislands/internal/infrastructure/repository/postgresql/profile"
-	"sadislands/internal/usecase"
 	"testing"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/memory/game"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/postgresql/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )

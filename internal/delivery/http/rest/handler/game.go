@@ -2,10 +2,10 @@ package handler
 
 import (
 	"net/http"
-	"sadislands/internal/delivery/http/rest/middleware"
-	"sadislands/internal/domain/game"
-	"sadislands/internal/usecase"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/middleware"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"github.com/gorilla/websocket"
 
 	"github.com/julienschmidt/httprouter"
