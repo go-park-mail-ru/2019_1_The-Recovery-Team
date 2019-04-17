@@ -7,10 +7,15 @@ require (
 	github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6 // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
+	github.com/cathalgarvey/fmtless v0.0.0-20160509115409-5077ea938891
+	github.com/cockroachdb/apd v1.1.0 // indirect
+	github.com/go-chi/chi v4.0.2+incompatible // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.0
+	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.3.0+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/lib/pq v1.1.0 // indirect
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.3.0
