@@ -27,8 +27,9 @@ type Room struct {
 	Actions       chan *Action
 	EngineStopped chan interface{}
 
-	Ctx    context.Context
-	Cancel context.CancelFunc
+	Ctx     context.Context
+	Cancel  context.CancelFunc
+	Closing atomic.Bool
 
 	Log *zap.Logger
 }
@@ -48,9 +49,11 @@ func NewRoom(log *zap.Logger, closed chan *Room) *Room {
 		),
 		EngineStopped: make(chan interface{}),
 
-		Ctx:    ctx,
-		Cancel: cancel,
+		Ctx:     ctx,
+		Cancel:  cancel,
+		Closing: atomic.Bool{},
 	}
+	room.Closing.Store(false)
 	room.EngineStarted.Store(false)
 	return room
 }
@@ -127,14 +130,18 @@ func (r *Room) Broadcast(action *Action) {
 
 // Close removes room and stops engine
 func (r *Room) Close(action *Action) {
+	if r.Closing.Load() {
+		return
+	}
+	r.Closing.Store(true)
 	r.Log.Info("Closing room")
-	r.Cancel()
 
 	// Stop running engine
 	if r.EngineStarted.Load() {
 		r.Log.Info("Stopping engine")
 		<-r.EngineStopped
 	}
+	r.Cancel()
 
 	switch action.Type {
 	case SetUserDisconnected:
@@ -147,6 +154,7 @@ func (r *Room) Close(action *Action) {
 				user = value.(*User)
 				close(user.Messages)
 				if user.Info.ID != leaver.Info.ID {
+					<-user.StoppedSending
 					user.Conn.WriteJSON(&Action{
 						Type: SetOpponentLeave,
 					})
@@ -175,6 +183,7 @@ func (r *Room) Close(action *Action) {
 				user := value.(*User)
 				close(user.Messages)
 
+				<-user.StoppedSending
 				user.Conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
 				user.Conn.WriteMessage(websocket.CloseMessage,
 					websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
@@ -218,9 +227,11 @@ func (r *Room) ActionCallback(action *Action) {
 		}
 	case SetGameOver:
 		{
+			r.Broadcast(action)
 			go r.Close(&Action{
 				Type: SetGameOver,
 			})
+			return
 		}
 	}
 	r.Broadcast(action)

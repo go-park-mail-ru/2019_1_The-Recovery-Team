@@ -1,13 +1,14 @@
 package game
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/cathalgarvey/fmtless/encoding/json"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
 )
@@ -451,6 +452,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 				go e.Transport.SendOut(&game.Action{
 					Type: game.SetEngineStop,
 				})
+				e.GameOver.Store(true)
 				fmt.Println("Close actions channel")
 				close(e.ReceivedActions)
 				return
@@ -507,6 +509,12 @@ func (e *Engine) collectActions() {
 				if !hasMore {
 					fmt.Println("Stop collect actions")
 					return
+				}
+
+				if action.Type == game.InitEngineStop {
+					e.Transport.SendOut(&game.Action{
+						Type: game.SetGameOver,
+					})
 				}
 
 				e.ProcessM.Lock()

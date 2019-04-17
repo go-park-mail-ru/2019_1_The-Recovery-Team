@@ -389,6 +389,10 @@ func TestEngineInitPlayersAction(t *testing.T) {
 		"Doesn't set state on correct players init")
 
 	action, _ = <-actions
+	assert.Equal(t, game.SetGameOver, action.Type,
+		"Doesn't correctly stop engine")
+
+	action, _ = <-actions
 	assert.Equal(t, game.SetEngineStop, action.Type,
 		"Doesn't correctly stop engine")
 	close(actions)

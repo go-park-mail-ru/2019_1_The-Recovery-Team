@@ -44,6 +44,7 @@ func Search(profileInteractor *usecase.ProfileInteractor, gameInteractor *usecas
 				Rating:   profile.Record,
 				Avatar:   profile.Avatar,
 			},
+			StoppedSending: make(chan interface{}),
 		}
 
 		// Add new user to queue for searching game
