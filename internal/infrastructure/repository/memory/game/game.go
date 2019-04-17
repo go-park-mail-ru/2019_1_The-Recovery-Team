@@ -1,8 +1,9 @@
 package game
 
 import (
-	"go.uber.org/atomic"
 	"sync"
+
+	"go.uber.org/atomic"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
 	"go.uber.org/zap"
@@ -12,7 +13,7 @@ import (
 func NewGameRepo(log *zap.Logger) *Repo {
 	repo := &Repo{
 		Rooms:   &sync.Map{},
-		Total: &atomic.Uint64{},
+		Total:   &atomic.Uint64{},
 		Playing: &sync.Map{},
 		Players: make(chan *game.User, 100),
 		Closed:  make(chan *game.Room, 100),
@@ -23,8 +24,8 @@ func NewGameRepo(log *zap.Logger) *Repo {
 }
 
 type Repo struct {
-	Rooms  *sync.Map
-	Total  *atomic.Uint64
+	Rooms *sync.Map
+	Total *atomic.Uint64
 
 	Playing *sync.Map
 	Players chan *game.User

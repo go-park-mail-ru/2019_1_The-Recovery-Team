@@ -9,13 +9,14 @@ import (
 )
 
 type User struct {
-	SessionID     string
-	GameSessionID string
-	Conn          *websocket.Conn
-	Log           *zap.Logger
-	Room          *Room
-	Messages      chan interface{}
-	Info          Info
+	SessionID      string
+	GameSessionID  string
+	Conn           *websocket.Conn
+	Log            *zap.Logger
+	Room           *Room
+	Messages       chan interface{}
+	Info           Info
+	StoppedSending chan interface{}
 }
 
 //easyjson:json
@@ -48,6 +49,7 @@ func (u *User) send() {
 		case <-u.Room.Ctx.Done():
 			{
 				u.Log.Info("Correct stopping sending")
+				u.StoppedSending <- new(interface{})
 				return
 			}
 		}
@@ -70,7 +72,7 @@ func (u *User) listen() {
 		}
 
 		switch {
-		case websocket.IsCloseError(err, websocket.CloseAbnormalClosure):
+		case websocket.IsCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseGoingAway, websocket.CloseNoStatusReceived):
 			{
 				u.Log.Info("Stop listening. Error on reading from connection")
 
@@ -78,16 +80,16 @@ func (u *User) listen() {
 					return
 				}
 
+				go u.Room.Close(&Action{
+					Type:    SetUserDisconnected,
+					Payload: u,
+				})
+
 				if u.Room.EngineStarted.Load() {
 					u.Room.Actions <- &Action{
 						Type: InitEngineStop,
 					}
 				}
-
-				go u.Room.Close(&Action{
-					Type:    SetUserDisconnected,
-					Payload: u,
-				})
 				return
 			}
 		case err == io.ErrUnexpectedEOF:
