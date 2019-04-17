@@ -1,9 +1,8 @@
 package game
 
 import (
-	"sync"
-
 	"go.uber.org/atomic"
+	"sync"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
 	"go.uber.org/zap"
@@ -52,6 +51,8 @@ func (r *Repo) Run() {
 				// Remove users from already playing users
 				room.Users.Range(func(key, value interface{}) bool {
 					r.Playing.Delete(key)
+					r.Log.Info("User can already playing",
+						zap.Uint64("user_id", key.(uint64)))
 					return true
 				})
 

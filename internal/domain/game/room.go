@@ -148,12 +148,13 @@ func (r *Room) Close(action *Action) {
 		{
 			// Send information about leaver to players
 			leaver := action.Payload.(*User)
-			var user *User
+			var opponent User
 
 			r.Users.Range(func(key, value interface{}) bool {
-				user = value.(*User)
+				user := value.(*User)
 				close(user.Messages)
 				if user.Info.ID != leaver.Info.ID {
+					opponent = *user
 					<-user.StoppedSending
 					user.Conn.WriteJSON(&Action{
 						Type: SetOpponentLeave,
@@ -173,7 +174,7 @@ func (r *Room) Close(action *Action) {
 
 			r.Log.Info("User left the game",
 				zap.Uint64("leaver_id", leaver.Info.ID),
-				zap.Uint64("opponent_id", user.Info.ID),
+				zap.Uint64("opponent_id", opponent.Info.ID),
 				zap.String("room_id", r.ID))
 		}
 	case SetGameOver:
