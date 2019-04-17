@@ -208,20 +208,16 @@ func (r *Room) ActionCallback(action *Action) {
 	switch action.Type {
 	case SetEngineStop:
 		{
+			r.Log.Info("Engine was stopped")
 			select {
 			case <-r.EngineStopped:
 				{
-					//go r.Close(&Action{
-					//	Type: SetGameOver,
-					//})
 					return
 				}
 			default:
 				{
+					r.Log.Info("Setting flag for engine stopped")
 					close(r.EngineStopped)
-					//go r.Close(&Action{
-					//	Type: SetGameOver,
-					//})
 					return
 				}
 			}

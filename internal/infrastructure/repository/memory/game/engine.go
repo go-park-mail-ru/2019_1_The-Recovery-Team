@@ -449,12 +449,12 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 			}
 		case game.InitEngineStop:
 			{
-				go e.Transport.SendOut(&game.Action{
+				e.Transport.SendOut(&game.Action{
 					Type: game.SetEngineStop,
 				})
 				e.GameOver.Store(true)
-				fmt.Println("Close actions channel")
 				close(e.ReceivedActions)
+				e.Stopped.Store(true)
 				return
 			}
 		}
@@ -479,7 +479,6 @@ func (e *Engine) run() {
 		case <-e.Ticker.C:
 			{
 				if e.Stopped.Load().(bool) {
-					fmt.Println("Engine stopped")
 					return
 				}
 
@@ -523,7 +522,6 @@ func (e *Engine) collectActions() {
 
 				// Action for stopping engine
 				if action.Type == game.InitEngineStop {
-					fmt.Println("Stop collect actions, received InitEngineStop action")
 					return
 				}
 			}
