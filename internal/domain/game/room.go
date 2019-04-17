@@ -130,15 +130,10 @@ func (r *Room) Broadcast(action *Action) {
 
 // Close removes room and stops engine
 func (r *Room) Close(action *Action) {
-	if r.Closing.Load() {
-		return
-	}
-	r.Closing.Store(true)
 	r.Log.Info("Closing room")
 
 	// Stop running engine
 	if r.EngineStarted.Load() {
-		r.Log.Info("Stopping engine")
 		<-r.EngineStopped
 	}
 	r.Cancel()
@@ -155,6 +150,7 @@ func (r *Room) Close(action *Action) {
 				close(user.Messages)
 				if user.Info.ID != leaver.Info.ID {
 					opponent = *user
+
 					<-user.StoppedSending
 					user.Conn.WriteJSON(&Action{
 						Type: SetOpponentLeave,
@@ -208,7 +204,6 @@ func (r *Room) ActionCallback(action *Action) {
 	switch action.Type {
 	case SetEngineStop:
 		{
-			r.Log.Info("Engine was stopped")
 			select {
 			case <-r.EngineStopped:
 				{
@@ -216,7 +211,6 @@ func (r *Room) ActionCallback(action *Action) {
 				}
 			default:
 				{
-					r.Log.Info("Setting flag for engine stopped")
 					close(r.EngineStopped)
 					return
 				}
@@ -225,9 +219,12 @@ func (r *Room) ActionCallback(action *Action) {
 	case SetGameOver:
 		{
 			r.Broadcast(action)
-			go r.Close(&Action{
-				Type: SetGameOver,
-			})
+			if !r.Closing.Load() {
+				r.Closing.Store(true)
+				go r.Close(&Action{
+					Type: SetGameOver,
+				})
+			}
 			return
 		}
 	}

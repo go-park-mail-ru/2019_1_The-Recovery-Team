@@ -49,7 +49,7 @@ func (u *User) send() {
 		case <-u.Room.Ctx.Done():
 			{
 				u.Log.Info("Correct stopping sending")
-				u.StoppedSending <- new(interface{})
+				close(u.StoppedSending)
 				return
 			}
 		}
@@ -80,10 +80,13 @@ func (u *User) listen() {
 					return
 				}
 
-				go u.Room.Close(&Action{
-					Type:    SetUserDisconnected,
-					Payload: u,
-				})
+				if !u.Room.Closing.Load() {
+					u.Room.Closing.Store(true)
+					go u.Room.Close(&Action{
+						Type:    SetUserDisconnected,
+						Payload: u,
+					})
+				}
 
 				if u.Room.EngineStarted.Load() {
 					u.Room.Actions <- &Action{
