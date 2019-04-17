@@ -384,6 +384,10 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 			}
 		case game.InitPlayerMove:
 			{
+				if !e.RoundRunning.Load().(bool) || e.GameOver.Load().(bool) {
+					continue
+				}
+
 				e.movePlayer(action)
 
 				// Check game end
@@ -399,7 +403,6 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 					e.ReceivedActions <- &game.Action{
 						Type: game.InitEngineStop,
 					}
-					return
 				}
 			}
 		case game.SetRoundStart:
@@ -426,7 +429,6 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 				e.ReceivedActions <- &game.Action{
 					Type: game.SetFieldRound,
 				}
-				return
 			}
 		case game.SetFieldRound:
 			{
@@ -445,16 +447,15 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 						Type: game.InitEngineStop,
 					}
 				}
-				return
 			}
 		case game.InitEngineStop:
 			{
 				e.Transport.SendOut(&game.Action{
 					Type: game.SetEngineStop,
 				})
+				e.Stopped.Store(true)
 				e.GameOver.Store(true)
 				close(e.ReceivedActions)
-				e.Stopped.Store(true)
 				return
 			}
 		}
