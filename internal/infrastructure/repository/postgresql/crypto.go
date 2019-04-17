@@ -16,10 +16,10 @@ func VerifyPassword(password, hash string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	switch err {
 	case bcrypt.ErrMismatchedHashAndPassword:
-			return false, nil
+		return false, nil
 	case nil:
-			return true, nil
+		return true, nil
 	default:
-			return false, err
+		return false, err
 	}
 }
