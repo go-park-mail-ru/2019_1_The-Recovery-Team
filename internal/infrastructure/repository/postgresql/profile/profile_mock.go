@@ -43,9 +43,9 @@ const (
 	DefaultCount = 1
 )
 
-type ProfileRepoMock struct{}
+type RepoMock struct{}
 
-func (r *ProfileRepoMock) GetProfile(id interface{}) (*profile.Profile, error) {
+func (r *RepoMock) Get(id interface{}) (*profile.Profile, error) {
 	profileId, _ := id.(uint64)
 	if id.(uint64) == ForbiddenProfileId {
 		return nil, errors.New(DefaultError)
@@ -68,7 +68,7 @@ func (r *ProfileRepoMock) GetProfile(id interface{}) (*profile.Profile, error) {
 	}
 }
 
-func (r *ProfileRepoMock) CreateProfile(data *profile.Create) (*profile.Created, error) {
+func (r *RepoMock) Create(data *profile.Create) (*profile.Created, error) {
 	if data.Email == ForbiddenProfileEmail {
 		return nil, errors.New(DefaultError)
 	}
@@ -98,7 +98,7 @@ func (r *ProfileRepoMock) CreateProfile(data *profile.Create) (*profile.Created,
 	return created, nil
 }
 
-func (r *ProfileRepoMock) UpdateProfile(id interface{}, data *profile.UpdateInfo) error {
+func (r *RepoMock) Update(id interface{}, data *profile.UpdateInfo) error {
 	if data.Email == ForbiddenProfileEmail {
 		return errors.New(DefaultError)
 	}
@@ -114,7 +114,7 @@ func (r *ProfileRepoMock) UpdateProfile(id interface{}, data *profile.UpdateInfo
 	return nil
 }
 
-func (r *ProfileRepoMock) UpdateProfileAvatar(id, avatarPath interface{}) error {
+func (r *RepoMock) UpdateAvatar(id, avatarPath interface{}) error {
 	if avatarPath.(string) == ForbiddenProfileAvatar {
 		return errors.New(DefaultError)
 	}
@@ -122,7 +122,7 @@ func (r *ProfileRepoMock) UpdateProfileAvatar(id, avatarPath interface{}) error 
 	return nil
 }
 
-func (r *ProfileRepoMock) UpdateProfilePassword(id interface{}, data *profile.UpdatePassword) error {
+func (r *RepoMock) UpdatePassword(id interface{}, data *profile.UpdatePassword) error {
 	if data.Password == ForbiddenProfilePassword || data.PasswordOld == ForbiddenProfilePassword {
 		return errors.New(DefaultError)
 	}
@@ -134,7 +134,7 @@ func (r *ProfileRepoMock) UpdateProfilePassword(id interface{}, data *profile.Up
 	return nil
 }
 
-func (r *ProfileRepoMock) GetProfileByEmail(email interface{}) (*profile.Profile, error) {
+func (r *RepoMock) GetByEmail(email interface{}) (*profile.Profile, error) {
 	profileEmail := email.(string)
 
 	if profileEmail == ForbiddenProfileEmail {
@@ -152,7 +152,7 @@ func (r *ProfileRepoMock) GetProfileByEmail(email interface{}) (*profile.Profile
 	return received, nil
 }
 
-func (r *ProfileRepoMock) GetProfileByNickname(nickname interface{}) (*profile.Profile, error) {
+func (r *RepoMock) GetByNickname(nickname interface{}) (*profile.Profile, error) {
 	profileNickname := nickname.(string)
 
 	if profileNickname == ForbiddenProfileNickname {
@@ -172,7 +172,7 @@ func (r *ProfileRepoMock) GetProfileByNickname(nickname interface{}) (*profile.P
 	return received, nil
 }
 
-func (r *ProfileRepoMock) GetProfileByEmailWithPassword(data *profile.Login) (*profile.Profile, error) {
+func (r *RepoMock) GetByEmailAndPassword(data *profile.Login) (*profile.Profile, error) {
 	if data.Email != ExistingProfileEmail {
 		return nil, errors.New(DefaultError)
 	}
@@ -198,7 +198,7 @@ func (r *ProfileRepoMock) GetProfileByEmailWithPassword(data *profile.Login) (*p
 	return received, nil
 }
 
-func (r *ProfileRepoMock) GetProfiles(limit, offset int64) ([]profile.Info, error) {
+func (r *RepoMock) List(limit, offset int64) ([]profile.Info, error) {
 	if limit == ForbiddenLimit {
 		return nil, errors.New(DefaultError)
 	}
@@ -209,7 +209,7 @@ func (r *ProfileRepoMock) GetProfiles(limit, offset int64) ([]profile.Info, erro
 	return profiles, nil
 }
 
-func (r *ProfileRepoMock) GetProfileCount() (count int64, err error) {
+func (r *RepoMock) Count() (count int64, err error) {
 	count = DefaultCount
 	err = nil
 	return

@@ -12,7 +12,7 @@ const (
 	QueryProfileById = `SELECT id, nickname, email, avatar, record, win, loss 
     FROM profile 
     WHERE id = $1`
-	
+
 	QueryCreateProfile = `INSERT INTO profile (email, nickname, password) 
 	VALUES ($1, $2, $3) 
 	RETURNING id, email, nickname`
@@ -62,8 +62,8 @@ const (
 	ProfileNicknameKey = "profile_nickname_key"
 )
 
-// NewProfileRepo creates new instance of profile repository
-func NewProfileRepo(conn *pgx.Conn) *Repo {
+// NewRepo creates new instance of profile repository
+func NewRepo(conn *pgx.Conn) *Repo {
 	return &Repo{
 		conn: conn,
 	}
@@ -73,8 +73,8 @@ type Repo struct {
 	conn *pgx.Conn
 }
 
-// GetProfile gets profile data by id
-func (r *Repo) GetProfile(id interface{}) (*profile.Profile, error) {
+// Get gets profile data by id
+func (r *Repo) Get(id interface{}) (*profile.Profile, error) {
 	profile := &profile.Profile{}
 	if err := r.conn.QueryRow(QueryProfileById, id).Scan(&profile.ID, &profile.Nickname, &profile.Email,
 		&profile.Avatar, &profile.Record, &profile.Win, &profile.Loss); err != nil {
@@ -84,8 +84,8 @@ func (r *Repo) GetProfile(id interface{}) (*profile.Profile, error) {
 	return profile, nil
 }
 
-// CreateProfile creates new profile
-func (r *Repo) CreateProfile(data *profile.Create) (*profile.Created, error) {
+// Create creates new profile
+func (r *Repo) Create(data *profile.Create) (*profile.Created, error) {
 	tx, err := r.conn.Begin()
 	if err != nil {
 		return nil, err
@@ -114,8 +114,8 @@ func (r *Repo) CreateProfile(data *profile.Create) (*profile.Created, error) {
 	return created, nil
 }
 
-// UpdateProfile updates profile
-func (r *Repo) UpdateProfile(id interface{}, data *profile.UpdateInfo) error {
+// Update updates profile
+func (r *Repo) Update(id interface{}, data *profile.UpdateInfo) error {
 	tx, err := r.conn.Begin()
 	if err != nil {
 		return err
@@ -142,14 +142,14 @@ func (r *Repo) UpdateProfile(id interface{}, data *profile.UpdateInfo) error {
 	return nil
 }
 
-// UpdateProfileAvatar updates profile avatar
-func (r *Repo) UpdateProfileAvatar(id, avatarPath interface{}) error {
+// UpdateAvatar updates profile avatar
+func (r *Repo) UpdateAvatar(id, avatarPath interface{}) error {
 	_, err := r.conn.Exec(QueryUpdateProfileAvatar, avatarPath, id)
 	return err
 }
 
-// UpdateProfilePassword updates profile password
-func (r *Repo) UpdateProfilePassword(id interface{}, data *profile.UpdatePassword) error {
+// UpdatePassword updates profile password
+func (r *Repo) UpdatePassword(id interface{}, data *profile.UpdatePassword) error {
 	var password string
 	if err := r.conn.QueryRow(QueryProfileByIdWithPassword, id).
 		Scan(&password); err != nil {
@@ -165,22 +165,22 @@ func (r *Repo) UpdateProfilePassword(id interface{}, data *profile.UpdatePasswor
 	return err
 }
 
-// GetProfileByEmail gets profile by email
-func (r *Repo) GetProfileByEmail(email interface{}) (*profile.Profile, error) {
+// GetByEmail gets profile by email
+func (r *Repo) GetByEmail(email interface{}) (*profile.Profile, error) {
 	received := &profile.Profile{}
 	err := r.conn.QueryRow(QueryProfileByEmail, email).Scan(&received.ID, &received.Email, &received.Nickname)
 	return received, err
 }
 
-// GetProfileByNickname gets profile by nickname
-func (r *Repo) GetProfileByNickname(nickname interface{}) (*profile.Profile, error) {
+// GetByNickname gets profile by nickname
+func (r *Repo) GetByNickname(nickname interface{}) (*profile.Profile, error) {
 	received := &profile.Profile{}
 	err := r.conn.QueryRow(QueryProfileByNickname, nickname).Scan(&received.ID, &received.Email, &received.Nickname)
 	return received, err
 }
 
-// GetProfileByEmailWithPassword gets profile by email and password(login)
-func (r *Repo) GetProfileByEmailWithPassword(data *profile.Login) (*profile.Profile, error) {
+// GetByEmailAndPassword gets profile by email and password(login)
+func (r *Repo) GetByEmailAndPassword(data *profile.Login) (*profile.Profile, error) {
 	received := &profile.Profile{}
 	if err := r.conn.QueryRow(QueryProfileByEmailWithPassword, data.Email).
 		Scan(&received.ID, &received.Email, &received.Nickname, &received.Password, &received.Avatar, &received.Record, &received.Win, &received.Loss); err != nil {
@@ -194,8 +194,8 @@ func (r *Repo) GetProfileByEmailWithPassword(data *profile.Login) (*profile.Prof
 	return received, nil
 }
 
-// GetProfiles gets profile list
-func (r *Repo) GetProfiles(limit, offset int64) ([]profile.Info, error) {
+// List gets profile list
+func (r *Repo) List(limit, offset int64) ([]profile.Info, error) {
 	profiles := make([]profile.Info, 0, 10)
 	rows, err := r.conn.Query(QueryProfilesWithLimitAndOffset, limit, offset)
 	if err != nil {
@@ -212,8 +212,8 @@ func (r *Repo) GetProfiles(limit, offset int64) ([]profile.Info, error) {
 	return profiles, nil
 }
 
-// GetProfileCount gets number of profiles
-func (r *Repo) GetProfileCount() (count int64, err error) {
+// Count gets number of profiles
+func (r *Repo) Count() (count int64, err error) {
 	err = r.conn.QueryRow(QueryProfileCount).Scan(&count)
 	return
 }
