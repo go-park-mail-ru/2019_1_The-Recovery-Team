@@ -10,6 +10,7 @@ require (
 	github.com/cathalgarvey/fmtless v0.0.0-20160509115409-5077ea938891
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible // indirect
+	github.com/golang/protobuf v1.3.1
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.0
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
@@ -26,5 +27,12 @@ require (
 	go.uber.org/atomic v1.3.2
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
-	golang.org/x/crypto v0.0.0-20190411191339-88737f569e3a
+	golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480
+	golang.org/x/net v0.0.0-20190415214537-1da14a5a36f2 // indirect
+	golang.org/x/sys v0.0.0-20190418153312-f0ce4c0180be // indirect
+	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
+	golang.org/x/tools v0.0.0-20190418152851-6732636ccdfd // indirect
+	google.golang.org/appengine v1.4.0 // indirect
+	google.golang.org/genproto v0.0.0-20190418145605-e7d98fc518a7 // indirect
+	google.golang.org/grpc v1.20.0
 )
