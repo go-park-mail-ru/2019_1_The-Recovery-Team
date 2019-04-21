@@ -15,6 +15,9 @@ func newMockRedis() *redis.Conn {
 		panic(err)
 	}
 	conn, err := redis.Dial("tcp", s.Addr())
+	if err != nil {
+		panic(err)
+	}
 	return &conn
 }
 

@@ -1,8 +1,9 @@
 package game
 
 import (
-	"go.uber.org/atomic"
 	"sync"
+
+	"go.uber.org/atomic"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/domain/game"
 	"go.uber.org/zap"

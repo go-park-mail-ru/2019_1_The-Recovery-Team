@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -297,11 +296,7 @@ func (e *Engine) movePlayer(action *game.Action) {
 // isPlayerDead checks player for death
 func (e *Engine) isPlayerDead(id string) bool {
 	player := e.State.Players[id]
-	if e.State.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*e.State.Field.Width].Type == Water {
-		return true
-	}
-
-	return false
+	return e.State.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*e.State.Field.Width].Type == Water
 }
 
 // initStateDiff creates instance of empty state
@@ -316,10 +311,13 @@ func (e *Engine) copyState() *game.State {
 	state := &game.State{
 		Field:       &game.Field{},
 		Players:     e.State.Players,
-		ActiveItems: e.State.ActiveItems,
 		RoundNumber: e.State.RoundNumber,
 		RoundTimer:  new(uint64),
 	}
+	e.State.ActiveItems.Range(func(key, value interface{}) bool {
+		state.ActiveItems.Store(key, value)
+		return true
+	})
 
 	*state.Field = *e.State.Field
 	if e.State.RoundTimer != nil {
@@ -394,7 +392,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 				if e.GameOver.Load().(bool) {
 					e.Transport.SendOut(&game.Action{
 						Type:    game.SetStateDiff,
-						Payload: *e.StateDiff,
+						Payload: e.StateDiff,
 					})
 
 					e.Transport.SendOut(&game.Action{
@@ -418,13 +416,13 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 			{
 				e.RoundRunning.Store(false)
 				e.setRoundStop()
-				go func(state game.State) {
+				go func() {
 					e.Transport.SendOut(&game.Action{
 						Type:    game.SetStateDiff,
-						Payload: state,
+						Payload: e.StateDiff,
 					})
 					e.Transport.SendOut(&game.Action{Type: game.SetRoundStop})
-				}(*e.StateDiff)
+				}()
 
 				e.ReceivedActions <- &game.Action{
 					Type: game.SetFieldRound,
@@ -464,7 +462,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 	if !e.StateDiff.Empty() {
 		go e.Transport.SendOut(&game.Action{
 			Type:    game.SetStateDiff,
-			Payload: *e.StateDiff,
+			Payload: e.StateDiff,
 		})
 	}
 }
@@ -475,57 +473,42 @@ func (e *Engine) run() {
 	go e.collectActions()
 
 	e.Ticker = time.NewTicker(TickerDuration * time.Millisecond)
-	for {
-		select {
-		case <-e.Ticker.C:
-			{
-				if e.Stopped.Load().(bool) {
-					return
-				}
-
-				// Start processing actions
-				e.ProcessM.Lock()
-				if len(e.ProcessActions) == 0 {
-					e.ProcessM.Unlock()
-					continue
-				}
-				actions := make([]*game.Action, len(e.ProcessActions))
-				copy(actions, e.ProcessActions)
-				go e.updateState(&actions)
-				e.ProcessActions = make([]*game.Action, 0, 100)
-				e.ProcessM.Unlock()
-			}
+	for range e.Ticker.C {
+		if e.Stopped.Load().(bool) {
+			return
 		}
+
+		// Start processing actions
+		e.ProcessM.Lock()
+		if len(e.ProcessActions) == 0 {
+			e.ProcessM.Unlock()
+			continue
+		}
+		actions := make([]*game.Action, len(e.ProcessActions))
+		copy(actions, e.ProcessActions)
+		go e.updateState(&actions)
+		e.ProcessActions = make([]*game.Action, 0, 100)
+		e.ProcessM.Unlock()
 	}
 }
 
 // collectActions receives actions from channel
 // and saves to slice
 func (e *Engine) collectActions() {
-	for {
-		select {
-		case action, hasMore := <-e.ReceivedActions:
-			{
-				if !hasMore {
-					fmt.Println("Stop collect actions")
-					return
-				}
+	for action := range e.ReceivedActions {
+		if action.Type == game.InitEngineStop {
+			e.Transport.SendOut(&game.Action{
+				Type: game.SetGameOver,
+			})
+		}
 
-				if action.Type == game.InitEngineStop {
-					e.Transport.SendOut(&game.Action{
-						Type: game.SetGameOver,
-					})
-				}
+		e.ProcessM.Lock()
+		e.ProcessActions = append(e.ProcessActions, action)
+		e.ProcessM.Unlock()
 
-				e.ProcessM.Lock()
-				e.ProcessActions = append(e.ProcessActions, action)
-				e.ProcessM.Unlock()
-
-				// Action for stopping engine
-				if action.Type == game.InitEngineStop {
-					return
-				}
-			}
+		// Action for stopping engine
+		if action.Type == game.InitEngineStop {
+			return
 		}
 	}
 }

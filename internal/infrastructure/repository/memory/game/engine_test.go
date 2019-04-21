@@ -173,18 +173,10 @@ func TestControlRemainingRoundTime(t *testing.T) {
 			wg := sync.WaitGroup{}
 			wg.Add(1)
 			go func() {
-				for {
-					select {
-					case _, hasMore := <-engine.ReceivedActions:
-						{
-							if !hasMore {
-								wg.Done()
-								return
-							}
-							atomic.StoreUint64(engine.State.RoundTimer, atomic.LoadUint64(engine.State.RoundTimer)-1)
-						}
-					}
+				for range engine.ReceivedActions {
+					atomic.StoreUint64(engine.State.RoundTimer, atomic.LoadUint64(engine.State.RoundTimer)-1)
 				}
+				wg.Done()
 			}()
 
 			engine.controlRemainingRoundTime()
@@ -348,7 +340,7 @@ func TestCopyState(t *testing.T) {
 
 	*engine.State.RoundTimer = 5
 
-	assert.Equal(t, *engine.State, *engine.copyState(),
+	assert.Equal(t, engine.State, engine.copyState(),
 		"Doesn't return copy of state")
 }
 
@@ -384,24 +376,22 @@ func TestEngineInitPlayersAction(t *testing.T) {
 		Type: game.InitEngineStop,
 	})
 
-	action, _ := <-actions
+	action := <-actions
 	assert.Equal(t, game.SetState, action.Type,
 		"Doesn't set state on correct players init")
 
-	action, _ = <-actions
+	action = <-actions
 	assert.Equal(t, game.SetGameOver, action.Type,
 		"Doesn't correctly stop engine")
 
-	action, _ = <-actions
+	action = <-actions
 	assert.Equal(t, game.SetEngineStop, action.Type,
 		"Doesn't correctly stop engine")
 	close(actions)
 }
 
 func TestInitEngineJS(t *testing.T) {
-	InitEngineJS(func(actionType, payload string) {
-		return
-	})
+	InitEngineJS(func(actionType, payload string) {})
 }
 
 func waitForActionWithTimeout(t *testing.T, actionType string, duration time.Duration, channel chan *game.Action) {
