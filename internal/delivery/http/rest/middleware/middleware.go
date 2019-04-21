@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/session"
+
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 )
@@ -27,11 +28,11 @@ var allowedOrigins = map[string]interface{}{
 	"https://sadislands.ru":     struct{}{},
 }
 
-// Authentication middleware to check authentication.
+// Authentication middleware to check session.
 // If cookie wasn't transmitted, expired or doesn't exist,
 // returns status code unauthorized.
 // Otherwise process request.
-func Authentication(sessionInteractor *usecase.SessionInteractor, next httprouter.Handle) httprouter.Handle {
+func Authentication(sessionManager *session.SessionClient, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
 		cookie, err := r.Cookie("session_id")
@@ -40,7 +41,12 @@ func Authentication(sessionInteractor *usecase.SessionInteractor, next httproute
 			return
 		}
 
-		id, err := sessionInteractor.Get(cookie.Value)
+		sessionId := &session.SessionId{
+			Id: cookie.Value,
+		}
+
+		profileId, err := (*sessionManager).Get(context.Background(), sessionId)
+
 		if err != nil {
 			cookie := http.Cookie{
 				Name:     "session_id",
@@ -53,7 +59,7 @@ func Authentication(sessionInteractor *usecase.SessionInteractor, next httproute
 			return
 		}
 
-		ctx = context.WithValue(ctx, ProfileID, id)
+		ctx = context.WithValue(ctx, ProfileID, profileId.Id)
 		ctx = context.WithValue(ctx, SessionID, cookie.Value)
 		next(w, r.WithContext(ctx), ps)
 	}
