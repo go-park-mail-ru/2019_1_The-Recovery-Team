@@ -18,7 +18,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson9e1087fdDecodeSadislandsInternalDomainGame(in *jlexer.Lexer, out *Info) {
+func easyjson9e1087fdDecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(in *jlexer.Lexer, out *Info) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -42,7 +42,7 @@ func easyjson9e1087fdDecodeSadislandsInternalDomainGame(in *jlexer.Lexer, out *I
 		case "nickname":
 			out.Nickname = string(in.String())
 		case "rating":
-			out.Rating = int(in.Int())
+			out.Rating = int64(in.Int64())
 		case "avatar":
 			out.Avatar = string(in.String())
 		default:
@@ -55,7 +55,7 @@ func easyjson9e1087fdDecodeSadislandsInternalDomainGame(in *jlexer.Lexer, out *I
 		in.Consumed()
 	}
 }
-func easyjson9e1087fdEncodeSadislandsInternalDomainGame(out *jwriter.Writer, in Info) {
+func easyjson9e1087fdEncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(out *jwriter.Writer, in Info) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -87,7 +87,7 @@ func easyjson9e1087fdEncodeSadislandsInternalDomainGame(out *jwriter.Writer, in 
 		} else {
 			out.RawString(prefix)
 		}
-		out.Int(int(in.Rating))
+		out.Int64(int64(in.Rating))
 	}
 	{
 		const prefix string = ",\"avatar\":"
@@ -105,23 +105,23 @@ func easyjson9e1087fdEncodeSadislandsInternalDomainGame(out *jwriter.Writer, in 
 // MarshalJSON supports json.Marshaler interface
 func (v Info) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson9e1087fdEncodeSadislandsInternalDomainGame(&w, v)
+	easyjson9e1087fdEncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Info) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson9e1087fdEncodeSadislandsInternalDomainGame(w, v)
+	easyjson9e1087fdEncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Info) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson9e1087fdDecodeSadislandsInternalDomainGame(&r, v)
+	easyjson9e1087fdDecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Info) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson9e1087fdDecodeSadislandsInternalDomainGame(l, v)
+	easyjson9e1087fdDecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(l, v)
 }

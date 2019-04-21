@@ -23,7 +23,7 @@ type User struct {
 type Info struct {
 	ID       uint64 `json:"id"`
 	Nickname string `json:"nickname"`
-	Rating   int    `json:"rating"`
+	Rating   int64  `json:"rating"`
 	Avatar   string `json:"avatar"`
 }
 

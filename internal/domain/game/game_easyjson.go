@@ -18,7 +18,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson85f0d656DecodeSadislandsInternalDomainGame(in *jlexer.Lexer, out *SetGameStartPayload) {
+func easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(in *jlexer.Lexer, out *SetGameStartPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -45,7 +45,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame(in *jlexer.Lexer, out *S
 				if out.Field == nil {
 					out.Field = new(Field)
 				}
-				easyjson85f0d656DecodeSadislandsInternalDomainGame1(in, out.Field)
+				easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame1(in, out.Field)
 			}
 		case "Players":
 			if in.IsNull() {
@@ -80,7 +80,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame(in *jlexer.Lexer, out *S
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame(out *jwriter.Writer, in SetGameStartPayload) {
+func easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(out *jwriter.Writer, in SetGameStartPayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -95,7 +95,7 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame(out *jwriter.Writer, in 
 		if in.Field == nil {
 			out.RawString("null")
 		} else {
-			easyjson85f0d656EncodeSadislandsInternalDomainGame1(out, *in.Field)
+			easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame1(out, *in.Field)
 		}
 	}
 	{
@@ -125,27 +125,27 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame(out *jwriter.Writer, in 
 // MarshalJSON supports json.Marshaler interface
 func (v SetGameStartPayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson85f0d656EncodeSadislandsInternalDomainGame(&w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v SetGameStartPayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson85f0d656EncodeSadislandsInternalDomainGame(w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *SetGameStartPayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson85f0d656DecodeSadislandsInternalDomainGame(&r, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *SetGameStartPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson85f0d656DecodeSadislandsInternalDomainGame(l, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame(l, v)
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame1(in *jlexer.Lexer, out *Field) {
+func easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame1(in *jlexer.Lexer, out *Field) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -181,7 +181,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame1(in *jlexer.Lexer, out *
 				}
 				for !in.IsDelim(']') {
 					var v4 Cell
-					easyjson85f0d656DecodeSadislandsInternalDomainGame2(in, &v4)
+					easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame2(in, &v4)
 					out.Cells = append(out.Cells, v4)
 					in.WantComma()
 				}
@@ -201,7 +201,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame1(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame1(out *jwriter.Writer, in Field) {
+func easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame1(out *jwriter.Writer, in Field) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -219,7 +219,7 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame1(out *jwriter.Writer, in
 				if v5 > 0 {
 					out.RawByte(',')
 				}
-				easyjson85f0d656EncodeSadislandsInternalDomainGame2(out, v6)
+				easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame2(out, v6)
 			}
 			out.RawByte(']')
 		}
@@ -246,7 +246,7 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame1(out *jwriter.Writer, in
 	}
 	out.RawByte('}')
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame2(in *jlexer.Lexer, out *Cell) {
+func easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame2(in *jlexer.Lexer, out *Cell) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -283,7 +283,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame2(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame2(out *jwriter.Writer, in Cell) {
+func easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame2(out *jwriter.Writer, in Cell) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -329,7 +329,7 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame2(out *jwriter.Writer, in
 	}
 	out.RawByte('}')
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame3(in *jlexer.Lexer, out *Players) {
+func easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame3(in *jlexer.Lexer, out *Players) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		in.Skip()
@@ -357,7 +357,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame3(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame3(out *jwriter.Writer, in Players) {
+func easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame3(out *jwriter.Writer, in Players) {
 	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 		out.RawString("null")
 	} else {
@@ -375,27 +375,27 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame3(out *jwriter.Writer, in
 // MarshalJSON supports json.Marshaler interface
 func (v Players) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson85f0d656EncodeSadislandsInternalDomainGame3(&w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame3(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Players) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson85f0d656EncodeSadislandsInternalDomainGame3(w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame3(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Players) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson85f0d656DecodeSadislandsInternalDomainGame3(&r, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame3(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Players) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson85f0d656DecodeSadislandsInternalDomainGame3(l, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame3(l, v)
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame4(in *jlexer.Lexer, out *Player) {
+func easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame4(in *jlexer.Lexer, out *Player) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -460,7 +460,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame4(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame4(out *jwriter.Writer, in Player) {
+func easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame4(out *jwriter.Writer, in Player) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -536,27 +536,27 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame4(out *jwriter.Writer, in
 // MarshalJSON supports json.Marshaler interface
 func (v Player) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson85f0d656EncodeSadislandsInternalDomainGame4(&w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame4(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Player) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson85f0d656EncodeSadislandsInternalDomainGame4(w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame4(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Player) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson85f0d656DecodeSadislandsInternalDomainGame4(&r, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame4(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Player) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson85f0d656DecodeSadislandsInternalDomainGame4(l, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame4(l, v)
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame5(in *jlexer.Lexer, out *InitPlayersPayload) {
+func easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame5(in *jlexer.Lexer, out *InitPlayersPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -608,7 +608,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame5(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame5(out *jwriter.Writer, in InitPlayersPayload) {
+func easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame5(out *jwriter.Writer, in InitPlayersPayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -639,27 +639,27 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame5(out *jwriter.Writer, in
 // MarshalJSON supports json.Marshaler interface
 func (v InitPlayersPayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson85f0d656EncodeSadislandsInternalDomainGame5(&w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame5(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v InitPlayersPayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson85f0d656EncodeSadislandsInternalDomainGame5(w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame5(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *InitPlayersPayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson85f0d656DecodeSadislandsInternalDomainGame5(&r, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame5(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *InitPlayersPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson85f0d656DecodeSadislandsInternalDomainGame5(l, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame5(l, v)
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame6(in *jlexer.Lexer, out *InitPlayerReadyPayload) {
+func easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame6(in *jlexer.Lexer, out *InitPlayerReadyPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -690,7 +690,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame6(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame6(out *jwriter.Writer, in InitPlayerReadyPayload) {
+func easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame6(out *jwriter.Writer, in InitPlayerReadyPayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -710,27 +710,27 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame6(out *jwriter.Writer, in
 // MarshalJSON supports json.Marshaler interface
 func (v InitPlayerReadyPayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson85f0d656EncodeSadislandsInternalDomainGame6(&w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame6(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v InitPlayerReadyPayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson85f0d656EncodeSadislandsInternalDomainGame6(w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame6(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *InitPlayerReadyPayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson85f0d656DecodeSadislandsInternalDomainGame6(&r, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame6(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *InitPlayerReadyPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson85f0d656DecodeSadislandsInternalDomainGame6(l, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame6(l, v)
 }
-func easyjson85f0d656DecodeSadislandsInternalDomainGame7(in *jlexer.Lexer, out *InitPlayerMovePayload) {
+func easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame7(in *jlexer.Lexer, out *InitPlayerMovePayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -763,7 +763,7 @@ func easyjson85f0d656DecodeSadislandsInternalDomainGame7(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjson85f0d656EncodeSadislandsInternalDomainGame7(out *jwriter.Writer, in InitPlayerMovePayload) {
+func easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame7(out *jwriter.Writer, in InitPlayerMovePayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -793,23 +793,23 @@ func easyjson85f0d656EncodeSadislandsInternalDomainGame7(out *jwriter.Writer, in
 // MarshalJSON supports json.Marshaler interface
 func (v InitPlayerMovePayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson85f0d656EncodeSadislandsInternalDomainGame7(&w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame7(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v InitPlayerMovePayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson85f0d656EncodeSadislandsInternalDomainGame7(w, v)
+	easyjson85f0d656EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame7(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *InitPlayerMovePayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson85f0d656DecodeSadislandsInternalDomainGame7(&r, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame7(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *InitPlayerMovePayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson85f0d656DecodeSadislandsInternalDomainGame7(l, v)
+	easyjson85f0d656DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalDomainGame7(l, v)
 }
