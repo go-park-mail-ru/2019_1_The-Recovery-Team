@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+// protoc --go_out=plugins=grpc:. *.proto
+
+package session;
+
+import "google/protobuf/duration.proto";
+
+service Session {
+    rpc Get(SessionId) returns (ProfileId) {}
+    rpc Set(Create) returns (SessionId) {}
+    rpc Delete(SessionId) returns (Nothing) {}
+}
+
+message SessionId {
+    string id = 1;
+}
+
+message ProfileId {
+    uint64 id = 1;
+}
+
+message Create {
+    ProfileId profileId = 1;
+    google.protobuf.Duration expires = 2;
+}
+
+message Nothing {
+    bool dummy = 1;
+}
+
+
+
