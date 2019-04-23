@@ -2,10 +2,13 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"time"
+
+	"google.golang.org/grpc/status"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/response"
 
@@ -55,7 +58,7 @@ func saveAvatar(profileManager *profileService.ProfileClient, avatar multipart.F
 	}
 	_, err = (*profileManager).UpdateAvatar(context.Background(), request)
 	if err != nil {
-		return "", err
+		return "", errors.New(status.Convert(err).Message())
 	}
 	return avatarPath, nil
 }
@@ -86,11 +89,12 @@ func GetProfiles(profileManager *profileService.ProfileClient) httprouter.Handle
 			}
 			_, err := (*profileManager).GetByEmail(context.Background(), request)
 			if err != nil {
-				if err == pgx.ErrNoRows {
+				message := status.Convert(err).Message()
+				if message == pgx.ErrNoRows.Error() {
 					w.WriteHeader(http.StatusNotFound)
 					return
 				}
-				log.Error(err.Error(),
+				log.Error(message,
 					zap.String("email", email),
 				)
 				w.WriteHeader(http.StatusInternalServerError)
@@ -107,11 +111,12 @@ func GetProfiles(profileManager *profileService.ProfileClient) httprouter.Handle
 			}
 			_, err := (*profileManager).GetByNickname(context.Background(), request)
 			if err != nil {
-				if err == pgx.ErrNoRows {
+				message := status.Convert(err).Message()
+				if message == pgx.ErrNoRows.Error() {
 					w.WriteHeader(http.StatusNotFound)
 					return
 				}
-				log.Error(err.Error(),
+				log.Error(message,
 					zap.String("nickname", nickname),
 				)
 				w.WriteHeader(http.StatusInternalServerError)
@@ -152,11 +157,14 @@ func GetProfile(profileManager *profileService.ProfileClient) httprouter.Handle 
 
 		prof, err := (*profileManager).Get(context.Background(), request)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			message := status.Convert(err).Message()
+			if message == pgx.ErrNoRows.Error() {
+				log.Info(message,
+					zap.Uint64("profile_id", id))
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			log.Error(err.Error(),
+			log.Error(message,
 				zap.Uint64("profile_id", id))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -222,10 +230,10 @@ func PutProfile(profileManager *profileService.ProfileClient) httprouter.Handle 
 		r.Body.Close()
 
 		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
-			message := response.Error{
+			resp := response.Error{
 				Description: err.Error(),
 			}
-			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, message)
+			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, resp)
 			return
 		}
 
@@ -235,11 +243,12 @@ func PutProfile(profileManager *profileService.ProfileClient) httprouter.Handle 
 			Nickname: data.Nickname,
 		}
 		if _, err = (*profileManager).Update(context.Background(), request); err != nil {
-			if err.Error() == EmailAlreadyExists || err.Error() == NicknameAlreadyExists {
+			message := status.Convert(err).Message()
+			if message == EmailAlreadyExists || message == NicknameAlreadyExists {
 				w.WriteHeader(http.StatusConflict)
 				return
 			}
-			log.Error(err.Error(),
+			log.Error(message,
 				zap.Uint64("profile_id", id),
 				zap.String("email", data.Email),
 				zap.String("nickname", data.Nickname))
@@ -291,10 +300,10 @@ func PutProfilePassword(profileManager *profileService.ProfileClient) httprouter
 		r.Body.Close()
 
 		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
-			message := response.Error{
+			resp := response.Error{
 				Description: err.Error(),
 			}
-			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, message)
+			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, resp)
 			return
 		}
 
@@ -311,14 +320,16 @@ func PutProfilePassword(profileManager *profileService.ProfileClient) httprouter
 			PasswordOld: data.PasswordOld,
 		}
 		if _, err = (*profileManager).UpdatePassword(context.Background(), request); err != nil {
-			if err.Error() == IncorrectProfilePassword {
-				message := response.Error{
+			message := status.Convert(err).Message()
+			if message == IncorrectProfilePassword {
+				resp := response.Error{
 					Description: "Incorrect password",
 				}
-				writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, message)
+				writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, resp)
 				return
 			}
-			log.Error(err.Error())
+			log.Error(message,
+				zap.Uint64("profile_id", id))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -367,10 +378,10 @@ func PostProfile(profileManager *profileService.ProfileClient, sessionManager *s
 		}
 
 		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
-			message := response.Error{
+			resp := response.Error{
 				Description: err.Error(),
 			}
-			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, message)
+			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, resp)
 			return
 		}
 
@@ -389,17 +400,18 @@ func PostProfile(profileManager *profileService.ProfileClient, sessionManager *s
 		}
 		created, err := (*profileManager).Create(context.Background(), request)
 		if err != nil {
-			if err.Error() == EmailAlreadyExists || err.Error() == NicknameAlreadyExists {
-				log.Error(err.Error(),
+			message := status.Convert(err).Message()
+			if message == EmailAlreadyExists || message == NicknameAlreadyExists {
+				log.Error(message,
 					zap.String("email", data.Email),
 					zap.String("nickname", data.Nickname))
 				w.WriteHeader(http.StatusConflict)
 				return
 			}
-			message := response.Error{
-				Description: err.Error(),
+			resp := response.Error{
+				Description: message,
 			}
-			writer.WriteResponseJSON(w, http.StatusInternalServerError, message)
+			writer.WriteResponseJSON(w, http.StatusInternalServerError, resp)
 			return
 		}
 
@@ -413,7 +425,7 @@ func PostProfile(profileManager *profileService.ProfileClient, sessionManager *s
 			if avatarPath, err := saveAvatar(profileManager, avatar, filename, dir, created.Id); err == nil {
 				created.Avatar = avatarPath
 			} else {
-				log.Warn(err.Error())
+				log.Warn(status.Convert(err).Message())
 			}
 		}
 
@@ -427,7 +439,7 @@ func PostProfile(profileManager *profileService.ProfileClient, sessionManager *s
 
 		sessionId, err := (*sessionManager).Set(context.Background(), create)
 		if err != nil {
-			log.Error(err.Error(),
+			log.Error(status.Convert(err).Message(),
 				zap.Uint64("created_id", created.Id))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -485,7 +497,7 @@ func PutAvatar(profileManager *profileService.ProfileClient) httprouter.Handle {
 
 		avatarPath, err := saveAvatar(profileManager, avatar, filename, dir, id)
 		if err != nil {
-			log.Error(err.Error(),
+			log.Error(status.Convert(err).Message(),
 				zap.Uint64("profile_id", id))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -529,9 +541,9 @@ func GetScoreboard(profileManager *profileService.ProfileClient) httprouter.Hand
 			Limit:  limit,
 			Offset: offset,
 		}
-		response, err := (*profileManager).List(context.Background(), request)
+		resp, err := (*profileManager).List(context.Background(), request)
 		if err != nil {
-			log.Error(err.Error(),
+			log.Error(status.Convert(err).Message(),
 				zap.Int64("limit", limit),
 				zap.Int64("offset", offset))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -541,7 +553,7 @@ func GetScoreboard(profileManager *profileService.ProfileClient) httprouter.Hand
 		profiles := profile.Profiles{
 			List: []profile.Info{},
 		}
-		for _, info := range response.List {
+		for _, info := range resp.List {
 			profiles.List = append(profiles.List, profile.Info{
 				ID:       info.Id,
 				Nickname: info.Nickname,
@@ -557,7 +569,7 @@ func GetScoreboard(profileManager *profileService.ProfileClient) httprouter.Hand
 		// Get total number of scores
 		total, err := (*profileManager).Count(context.Background(), &profileService.Nothing{})
 		if err != nil {
-			log.Error(err.Error())
+			log.Error(status.Convert(err).Message())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

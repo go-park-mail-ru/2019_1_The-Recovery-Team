@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"google.golang.org/grpc/status"
+
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/response"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/writer"
 
@@ -65,10 +67,10 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 		r.Body.Close()
 
 		if isValid, err := govalidator.ValidateStruct(login); !isValid && err != nil {
-			message := response.Error{
+			resp := response.Error{
 				Description: err.Error(),
 			}
-			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, message)
+			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, resp)
 			return
 		}
 
@@ -77,16 +79,18 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 			Email:    login.Email,
 			Password: login.Password,
 		}
-		prof, err := (*profileManager).GetByEmailAndPassword(context.Background(), request)
+		ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+		prof, err := (*profileManager).GetByEmailAndPassword(ctx, request)
 		if err != nil {
-			if err == pgx.ErrNoRows {
-				message := response.Error{
+			message := status.Convert(err).Message()
+			if message == pgx.ErrNoRows.Error() {
+				resp := response.Error{
 					Description: "Invalid email or password",
 				}
-				writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, message)
+				writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, resp)
 				return
 			}
-			log.Error(err.Error(),
+			log.Error(message,
 				zap.String("email", login.Email))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -99,9 +103,10 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 			},
 			Expires: ptypes.DurationProto(24 * time.Hour),
 		}
-		sessionId, err := (*sessionManager).Set(context.Background(), create)
+		ctx, _ = context.WithTimeout(context.Background(), 3*time.Second)
+		sessionId, err := (*sessionManager).Set(ctx, create)
 		if err != nil {
-			log.Error(err.Error(),
+			log.Error(status.Convert(err).Message(),
 				zap.Uint64("profile_id", prof.Info.Id))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -141,10 +146,15 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 // @Router /sessions [DELETE]
 func DeleteSession(sessionManager *session.SessionClient) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		log := r.Context().Value("logger").(*zap.Logger)
+
 		sessionID := &session.SessionId{
 			Id: r.Context().Value(middleware.SessionID).(string),
 		}
-		if _, err := (*sessionManager).Delete(context.Background(), sessionID); err != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+		if _, err := (*sessionManager).Delete(ctx, sessionID); err != nil {
+			log.Error(status.Convert(err).Message(),
+				zap.String("session_id", sessionID.Id))
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
