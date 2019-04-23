@@ -4,42 +4,22 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
-
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/pkg/resolver"
 
 	"google.golang.org/grpc/balancer/roundrobin"
 
-	"google.golang.org/grpc"
-
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/profile/api"
-
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/profile"
-
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/session"
-
-	_ "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/docs"
-	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/game/api"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/memory/game"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
-
-// @title Sad Islands API
-// @version 1.0
-// @description This is a super game.
-
-// @host 104.248.28.45
-// @BasePath /api/v1
-
-func init() {
-	consulAddr := "consul"
-	consulPort := 8500
-	resolver.RegisterDefault(consulAddr, consulPort, 5*time.Second)
-}
 
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8081"
 	}
 
 	logger, err := zap.NewProduction()
@@ -62,10 +42,11 @@ func main() {
 
 	sessionManager := session.NewSessionClient(sessionConn)
 	profileManager := profile.NewProfileClient(profileConn)
+	gameManager := usecase.NewGameInteractor(game.NewGameRepo(logger))
 
-	profileApi := api.NewApi(&profileManager, &sessionManager, logger)
-	profileApi.Router.Handler("GET", "/swagger/:file", httpSwagger.WrapHandler)
-	profileApi.Router.ServeFiles("/upload/*filepath", http.Dir("upload"))
+	go gameManager.Run()
 
-	log.Print(http.ListenAndServe(":"+port, profileApi.Router))
+	gameApi := api.NewApi(&profileManager, &sessionManager, gameManager, logger)
+
+	log.Print(http.ListenAndServe(":"+port, gameApi.Router))
 }

@@ -1,17 +1,62 @@
 version: '3.1'
 services:
 
-  api-service:
-    build: .
-    command: /bin/sh -c "/app/wait-for-it.sh db:5432 && /app/wait-for-it.sh redis:6379 && /app/api"
-    container_name: sadislands-api
+  consul:
+    image: consul
+    ports:
+      - 8500:8500
+
+  api:
+    build:
+      context: .
+      dockerfile: build/docker/server/Dockerfile
+    command: ["/app/api"]
+    container_name: api
+    links:
+      - profile
+      - session
+      - consul
     volumes:
       - ./upload/img:/app/upload/img
-    links:
-      - db
-      - redis
     ports:
       - 8080:8080
+
+  profile:
+    build:
+      context: .
+      dockerfile: build/docker/service/profile/Dockerfile
+    command: /bin/sh -c "/app/wait-for-it.sh db:5432 && /app/profile"
+    container_name: profile
+    links:
+      - db
+      - consul
+    ports:
+      - 50051:50051
+
+  session:
+    build:
+      context: .
+      dockerfile: build/docker/service/session/Dockerfile
+    command: /bin/sh -c "/app/wait-for-it.sh redis:6379 && /app/session"
+    container_name: session
+    links:
+      - redis
+      - consul
+    ports:
+      - 50052:50052
+
+  game:
+    build:
+      context: .
+      dockerfile: build/docker/service/game/Dockerfile
+    command: /bin/sh -c "/app/game"
+    container_name: game
+    links:
+      - session
+      - profile
+      - consul
+    ports:
+      - 8081:8081
 
   db:
     image: postgres
