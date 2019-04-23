@@ -21,7 +21,7 @@ type Service struct {
 func (s *Service) Get(ctx context.Context, in *GetRequest) (*GetResponse, error) {
 	prof, err := s.interactor.Get(in.Id)
 	if err != nil {
-		return nil, err
+		return &GetResponse{}, err
 	}
 
 	response := &GetResponse{
@@ -48,7 +48,7 @@ func (s *Service) Create(ctx context.Context, in *CreateRequest) (*CreateRespons
 	}
 	created, err := s.interactor.Create(create)
 	if err != nil {
-		return nil, err
+		return &CreateResponse{}, err
 	}
 
 	response := &CreateResponse{
@@ -66,12 +66,12 @@ func (s *Service) Update(ctx context.Context, in *UpdateRequest) (*Nothing, erro
 		Nickname: in.Nickname,
 	}
 	err := s.interactor.Update(in.Id, update)
-	return nil, err
+	return &Nothing{}, err
 }
 
 func (s *Service) UpdateAvatar(ctx context.Context, in *UpdateAvatarRequest) (*Nothing, error) {
 	err := s.interactor.UpdateAvatar(in.Id, in.Avatar)
-	return nil, err
+	return &Nothing{}, err
 }
 
 func (s *Service) UpdatePassword(ctx context.Context, in *UpdatePasswordRequest) (*Nothing, error) {
@@ -80,13 +80,13 @@ func (s *Service) UpdatePassword(ctx context.Context, in *UpdatePasswordRequest)
 		PasswordOld: in.PasswordOld,
 	}
 	err := s.interactor.UpdatePassword(in.Id, update)
-	return nil, err
+	return &Nothing{}, err
 }
 
 func (s *Service) GetByEmail(ctx context.Context, in *GetByEmailRequest) (*GetResponse, error) {
 	prof, err := s.interactor.GetByEmail(in.Email)
 	if err != nil {
-		return nil, err
+		return &GetResponse{}, err
 	}
 
 	response := &GetResponse{
@@ -108,7 +108,7 @@ func (s *Service) GetByEmail(ctx context.Context, in *GetByEmailRequest) (*GetRe
 func (s *Service) GetByNickname(ctx context.Context, in *GetByNicknameRequest) (*GetResponse, error) {
 	prof, err := s.interactor.GetByNickname(in.Nickname)
 	if err != nil {
-		return nil, err
+		return &GetResponse{}, err
 	}
 
 	response := &GetResponse{
@@ -134,7 +134,7 @@ func (s *Service) GetByEmailAndPassword(ctx context.Context, in *GetByEmailAndPa
 	}
 	prof, err := s.interactor.GetByEmailAndPassword(login)
 	if err != nil {
-		return nil, err
+		return &GetResponse{}, err
 	}
 
 	response := &GetResponse{
@@ -156,7 +156,7 @@ func (s *Service) GetByEmailAndPassword(ctx context.Context, in *GetByEmailAndPa
 func (s *Service) List(ctx context.Context, in *ListRequest) (*ListResponse, error) {
 	list, err := s.interactor.List(in.Limit, in.Offset)
 	if err != nil {
-		return nil, err
+		return &ListResponse{}, err
 	}
 
 	response := &ListResponse{
@@ -181,7 +181,7 @@ func (s *Service) List(ctx context.Context, in *ListRequest) (*ListResponse, err
 func (s *Service) Count(ctx context.Context, in *Nothing) (*CountResponse, error) {
 	count, err := s.interactor.Count()
 	if err != nil {
-		return nil, err
+		return &CountResponse{}, err
 	}
 
 	response := &CountResponse{
