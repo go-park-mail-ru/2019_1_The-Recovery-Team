@@ -6,12 +6,13 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql"
+	profileRepo "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
+
 	consulapi "github.com/hashicorp/consul/api"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/profile"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/postgresql"
-	repo "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/postgresql/profile"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"github.com/jackc/pgx"
 	"google.golang.org/grpc"
 )
@@ -59,7 +60,7 @@ func main() {
 	}
 	defer psqlConn.Close()
 
-	interactor := usecase.NewProfileInteractor(repo.NewRepo(psqlConn))
+	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(psqlConn))
 	service := profile.NewService(interactor)
 	server := grpc.NewServer()
 

@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
+	gameApi "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/game"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/memory/game"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
+
 	"google.golang.org/grpc/balancer/roundrobin"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/profile"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/session"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/game/api"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/memory/game"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -46,7 +47,7 @@ func main() {
 
 	go gameManager.Run()
 
-	gameApi := api.NewApi(&profileManager, &sessionManager, gameManager, logger)
+	api := gameApi.NewApi(&profileManager, &sessionManager, gameManager, logger)
 
-	log.Print(http.ListenAndServe(":"+port, gameApi.Router))
+	log.Print(http.ListenAndServe(":"+port, api.Router))
 }

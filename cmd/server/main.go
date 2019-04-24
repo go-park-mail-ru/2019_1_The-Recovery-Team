@@ -6,17 +6,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/pkg/resolver"
+	profileApi "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/profile"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
 
 	"google.golang.org/grpc/balancer/roundrobin"
 
 	"google.golang.org/grpc"
-
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/http/rest/profile/api"
-
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/profile"
-
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/session"
 
 	_ "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -63,7 +61,7 @@ func main() {
 	sessionManager := session.NewSessionClient(sessionConn)
 	profileManager := profile.NewProfileClient(profileConn)
 
-	profileApi := api.NewApi(&profileManager, &sessionManager, logger)
+	profileApi := profileApi.NewApi(&profileManager, &sessionManager, logger)
 	profileApi.Router.Handler("GET", "/swagger/:file", httpSwagger.WrapHandler)
 	profileApi.Router.ServeFiles("/upload/*filepath", http.Dir("upload"))
 

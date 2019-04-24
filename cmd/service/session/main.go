@@ -6,12 +6,12 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
+	sessionRepo "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/redis/session"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
+
 	consulapi "github.com/hashicorp/consul/api"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/delivery/grpc/service/session"
-
-	repo "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/infrastructure/repository/redis/session"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/usecase"
 	"github.com/gomodule/redigo/redis"
 	"google.golang.org/grpc"
 )
@@ -39,7 +39,7 @@ func main() {
 	}
 	defer redisConn.Close()
 
-	interactor := usecase.NewSessionInteractor(repo.NewSessionRepo(&redisConn))
+	interactor := usecase.NewSessionInteractor(sessionRepo.NewSessionRepo(&redisConn))
 	service := session.NewService(interactor)
 	server := grpc.NewServer()
 
