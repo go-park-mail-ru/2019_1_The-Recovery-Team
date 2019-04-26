@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
 
 	"github.com/spf13/viper"
 
@@ -20,13 +23,20 @@ import (
 	"google.golang.org/grpc"
 )
 
-func main() {
+func init() {
 	viper.SetConfigType("json")
 	viper.SetConfigName("config")
 	viper.AddConfigPath("build/config/")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Can't read config files:", err)
 	}
+
+	addr := viper.GetString("consul.address")
+	port := viper.GetInt("consul.port")
+	resolver.RegisterDefault(addr, port, 5*time.Second)
+}
+
+func main() {
 	port := viper.GetInt("game.port")
 	profileName := viper.Get("profile.name")
 	sessionName := viper.Get("session.name")
