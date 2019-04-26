@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -77,14 +76,12 @@ func main() {
 	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(psqlConn))
 	service := profile.NewService(interactor)
 	server := grpc.NewServer()
-	fmt.Println("Started grpc")
 
 	profile.RegisterProfileServer(server, service)
 
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
 	consul, err := consulapi.NewClient(config)
-	fmt.Println("Started consul")
 
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
 		ID:      serviceId + strconv.Itoa(*port),
