@@ -36,7 +36,7 @@ func (s *Service) Get(ctx context.Context, in *GetRequest) (*GetResponse, error)
 		},
 		Email: prof.Email,
 	}
-	return response, err
+	return response, nil
 }
 
 func (s *Service) Create(ctx context.Context, in *CreateRequest) (*CreateResponse, error) {
