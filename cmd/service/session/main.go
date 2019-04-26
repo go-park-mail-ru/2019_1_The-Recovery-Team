@@ -1,10 +1,13 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net"
-	"os"
 	"strconv"
+
+	"github.com/spf13/viper"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
 	sessionRepo "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/redis/session"
@@ -21,19 +24,29 @@ const (
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	portI, err := strconv.Atoi(port)
-	if err != nil {
-		port = "50052"
-		portI = 50052
+	viper.SetConfigType("json")
+	viper.SetConfigName("config")
+	viper.AddConfigPath("build/config/")
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatal("Can't read config files:", err)
 	}
 
-	lis, err := net.Listen("tcp", ":"+port)
+	consulAddr := viper.GetString("consul.address")
+	consulPort := viper.GetInt("consul.port")
+	sessionName := viper.GetString("session.name")
+	sessionAddr := viper.GetString("session.address")
+	redisAddr := viper.GetString("redis.address")
+	redisPort := viper.GetInt("redis.port")
+
+	port := flag.Int("port", 50052, "service port")
+	flag.Parse()
+
+	lis, err := net.Listen("tcp", ":"+strconv.Itoa(*port))
 	if err != nil {
 		log.Fatal("Failed to listen port", port)
 	}
 
-	redisConn, err := redis.DialURL("redis://:@redis:6379")
+	redisConn, err := redis.DialURL(fmt.Sprintf("redis://:@%s:%d", redisAddr, redisPort))
 	if err != nil {
 		log.Fatal("Redis connection refused")
 	}
@@ -46,14 +59,14 @@ func main() {
 	session.RegisterSessionServer(server, service)
 
 	config := consulapi.DefaultConfig()
-	config.Address = "consul:8500"
+	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
 	consul, err := consulapi.NewClient(config)
 
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
-		ID:      serviceId + port,
-		Name:    "session-service",
-		Port:    portI,
-		Address: "session",
+		ID:      serviceId + strconv.Itoa(*port),
+		Name:    sessionName,
+		Port:    *port,
+		Address: sessionAddr,
 	})
 	if err != nil {
 		log.Println("Can't add session service to resolver:", err)
@@ -62,7 +75,7 @@ func main() {
 	log.Println("Registered in consul", serviceId, port)
 
 	defer func() {
-		err := consul.Agent().ServiceDeregister(serviceId + port)
+		err := consul.Agent().ServiceDeregister(serviceId + strconv.Itoa(*port))
 		if err != nil {
 			log.Println("Can't remove service from resolver:", err)
 		}

@@ -7,5 +7,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 FROM alpine
 WORKDIR /app
 COPY --from=builder /src/api .
+COPY build/config/ build/config/
 
 VOLUME ["/app/upload/img"]

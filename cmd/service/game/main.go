@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"strconv"
+
+	"github.com/spf13/viper"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
@@ -18,10 +21,16 @@ import (
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8081"
+	viper.SetConfigType("json")
+	viper.SetConfigName("config")
+	viper.AddConfigPath("build/config/")
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatal("Can't read config files:", err)
 	}
+	port := viper.GetInt("game.port")
+	profileName := viper.Get("profile.name")
+	sessionName := viper.Get("session.name")
+	consulAddr := viper.Get("consul.address")
 
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -29,13 +38,15 @@ func main() {
 	}
 	defer logger.Sync()
 
-	profileConn, err := grpc.Dial("srv://consul/profile-service", grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+	profileConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, profileName),
+		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
 	if err != nil {
 		log.Fatal("Can't connect to profile service:", err)
 	}
 	defer profileConn.Close()
 
-	sessionConn, err := grpc.Dial("srv://consul/session-service", grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+	sessionConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, sessionName),
+		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
 	if err != nil {
 		log.Fatal("Authentication service connection refused:", err)
 	}
@@ -49,5 +60,5 @@ func main() {
 
 	api := gameApi.NewApi(&profileManager, &sessionManager, gameManager, logger)
 
-	log.Print(http.ListenAndServe(":"+port, api.Router))
+	log.Print(http.ListenAndServe(":"+strconv.Itoa(port), api.Router))
 }

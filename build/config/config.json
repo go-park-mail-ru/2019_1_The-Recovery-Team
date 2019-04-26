@@ -1,0 +1,31 @@
+{
+  "server": {
+    "port": "8080"
+  },
+  "consul": {
+    "address": "consul",
+    "port": 8500
+  },
+  "profile": {
+    "name": "profile-service",
+    "address": "profile"
+  },
+  "session": {
+    "name": "session-service",
+    "address": "session"
+  },
+  "game": {
+    "port": 8081
+  },
+  "postgresql": {
+    "address": "db",
+    "port": 5432,
+    "migrations": {
+      "file": "build/schema/0_initial.sql"
+    }
+  },
+  "redis": {
+    "address": "redis",
+    "port": 6379
+  }
+}

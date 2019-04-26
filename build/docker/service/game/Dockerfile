@@ -7,5 +7,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 FROM alpine
 WORKDIR /app
 COPY --from=builder /src/game .
+COPY build/config/ build/config/
 
 EXPOSE 8081

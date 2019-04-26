@@ -8,7 +8,9 @@ FROM alpine
 WORKDIR /app
 COPY --from=builder /src/profile .
 COPY build/schema/ build/schema/
+COPY build/config/ build/config/
 COPY wait-for-it.sh .
+
 
 RUN ["chmod", "+x", "./wait-for-it.sh"]
 

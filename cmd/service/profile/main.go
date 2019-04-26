@@ -1,10 +1,13 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net"
-	"os"
 	"strconv"
+
+	"github.com/spf13/viper"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql"
@@ -18,25 +21,36 @@ import (
 )
 
 const (
-	serviceId = "SProfile_127.0.0.1:"
+	serviceId = "SProfile_"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	portI, err := strconv.Atoi(port)
-	if err != nil {
-		port = "50051"
-		portI = 50051
+	viper.SetConfigType("json")
+	viper.SetConfigName("config")
+	viper.AddConfigPath("build/config/")
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatal("Can't read config files:", err)
 	}
 
-	lis, err := net.Listen("tcp", ":"+port)
+	consulAddr := viper.GetString("consul.address")
+	consulPort := viper.GetInt("consul.port")
+	profileName := viper.GetString("profile.name")
+	profileAddr := viper.GetString("profile.address")
+	postgresqlPort := viper.GetInt("postgresql.port")
+	postgresqlAddr := viper.GetString("postgresql.address")
+	migrationsFile := viper.GetString("postgresql.migrations.file")
+
+	port := flag.Int("port", 50051, "service port")
+	flag.Parse()
+
+	lis, err := net.Listen("tcp", ":"+strconv.Itoa(*port))
 	if err != nil {
 		log.Fatal("Failed to listen port", port)
 	}
 
 	psqlConfig := pgx.ConnConfig{
-		Host:     "db",
-		Port:     5432,
+		Host:     postgresqlAddr,
+		Port:     uint16(postgresqlPort),
 		Database: "sadislands",
 		User:     "recoveryteam",
 		Password: "123456",
@@ -48,7 +62,7 @@ func main() {
 		log.Fatal("Postgresql connection refused")
 	}
 
-	if err := postgresql.MakeMigrations(psqlConn, "build/schema/0_initial.sql"); err != nil {
+	if err := postgresql.MakeMigrations(psqlConn, migrationsFile); err != nil {
 		log.Fatal("Database migrations failed", err)
 	}
 	psqlConn.Close()
@@ -63,18 +77,20 @@ func main() {
 	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(psqlConn))
 	service := profile.NewService(interactor)
 	server := grpc.NewServer()
+	fmt.Println("Started grpc")
 
 	profile.RegisterProfileServer(server, service)
 
 	config := consulapi.DefaultConfig()
-	config.Address = "consul:8500"
+	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
 	consul, err := consulapi.NewClient(config)
+	fmt.Println("Started consul")
 
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
-		ID:      serviceId + port,
-		Name:    "profile-service",
-		Port:    portI,
-		Address: "profile",
+		ID:      serviceId + strconv.Itoa(*port),
+		Name:    profileName,
+		Port:    *port,
+		Address: profileAddr,
 	})
 	if err != nil {
 		log.Println("Can't add profile service to resolver:", err)
@@ -83,7 +99,7 @@ func main() {
 	log.Println("Registered in resolver", serviceId, port)
 
 	defer func() {
-		err := consul.Agent().ServiceDeregister(serviceId + port)
+		err := consul.Agent().ServiceDeregister(serviceId + strconv.Itoa(*port))
 		if err != nil {
 			log.Println("Can't remove service from resolver:", err)
 		}

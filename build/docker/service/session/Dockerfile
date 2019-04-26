@@ -7,6 +7,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 FROM alpine
 WORKDIR /app
 COPY --from=builder /src/session .
+COPY build/config/ build/config/
 COPY wait-for-it.sh .
 
 RUN ["chmod", "+x", "./wait-for-it.sh"]

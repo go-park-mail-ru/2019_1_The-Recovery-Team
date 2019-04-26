@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
+
+	"github.com/spf13/viper"
 
 	profileApi "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/profile"
 
@@ -29,16 +31,23 @@ import (
 // @BasePath /api/v1
 
 func init() {
-	consulAddr := "consul"
-	consulPort := 8500
-	resolver.RegisterDefault(consulAddr, consulPort, 5*time.Second)
+	viper.SetConfigType("json")
+	viper.SetConfigName("config")
+	viper.AddConfigPath("build/config/")
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatal("Can't read config files:", err)
+	}
+
+	addr := viper.GetString("consul.address")
+	port := viper.GetInt("consul.port")
+	resolver.RegisterDefault(addr, port, 5*time.Second)
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := viper.GetString("server.port")
+	profileName := viper.Get("profile.name")
+	sessionName := viper.Get("session.name")
+	consulAddr := viper.Get("consul.address")
 
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -46,13 +55,13 @@ func main() {
 	}
 	defer logger.Sync()
 
-	profileConn, err := grpc.Dial("srv://consul/profile-service", grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+	profileConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, profileName), grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
 	if err != nil {
 		log.Fatal("Can't connect to profile service:", err)
 	}
 	defer profileConn.Close()
 
-	sessionConn, err := grpc.Dial("srv://consul/session-service", grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+	sessionConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, sessionName), grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
 	if err != nil {
 		log.Fatal("Authentication service connection refused:", err)
 	}
