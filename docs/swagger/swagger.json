@@ -1,14 +1,8 @@
 {
-    "swagger": "2.0",
     "info": {
-        "description": "This is a super game.",
-        "title": "Sad Islands API",
         "contact": {},
-        "license": {},
-        "version": "1.0"
+        "license": {}
     },
-    "host": "104.248.28.45",
-    "basePath": "/api/v1",
     "paths": {
         "/avatars": {
             "put": {
@@ -36,7 +30,7 @@
                         "description": "Profile avatar is updated successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileAvatar"
+                            "$ref": "#/definitions/profile.Avatar"
                         }
                     },
                     "400": {
@@ -106,7 +100,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileInfo"
+                            "$ref": "#/definitions/profile.Create"
                         }
                     },
                     {
@@ -119,15 +113,25 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Profile created successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Profile"
+                            "$ref": "#/definitions/profile.Created"
                         }
                     },
                     "400": {
                         "description": "Incorrect request data"
+                    },
+                    "409": {
+                        "description": "Email or nickname already exists"
+                    },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/handler.Error"
+                        }
                     },
                     "500": {
                         "description": "Database error"
@@ -157,7 +161,7 @@
                         "description": "Profile found successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Profile"
+                            "$ref": "#/definitions/profile.Profile"
                         }
                     },
                     "403": {
@@ -187,13 +191,13 @@
                         "required": true
                     },
                     {
-                        "description": "Email, nickname, password",
+                        "description": "Email, nickname",
                         "name": "profile_info",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileInfo"
+                            "$ref": "#/definitions/profile.UpdateInfo"
                         }
                     }
                 ],
@@ -211,7 +215,64 @@
                         "description": "Not found"
                     },
                     "422": {
-                        "description": "Incorrrect current password"
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/handler.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            }
+        },
+        "/profiles/{id}/password": {
+            "put": {
+                "description": "Update profile password",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Put profile password",
+                "operationId": "put-profile_password",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Profile ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Password",
+                        "name": "profile_info",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.UpdatePassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Profile password is updated successfully"
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/handler.Error"
+                        }
                     },
                     "500": {
                         "description": "Database error"
@@ -221,12 +282,12 @@
         },
         "/scores": {
             "get": {
-                "description": "Get scoreboard",
+                "description": "Get score",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get scoreboard",
-                "operationId": "get-scoreboard",
+                "summary": "Get score",
+                "operationId": "get-score",
                 "parameters": [
                     {
                         "type": "integer",
@@ -246,7 +307,7 @@
                         "description": "Scoreboard found successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Profiles"
+                            "$ref": "#/definitions/profile.Profiles"
                         }
                     },
                     "400": {
@@ -270,7 +331,8 @@
                     "200": {
                         "description": "Profile ID found successfully",
                         "schema": {
-                            "type": "int"
+                            "type": "object",
+                            "$ref": "#/definitions/profile.ID"
                         }
                     },
                     "403": {
@@ -293,7 +355,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ProfileLogin"
+                            "$ref": "#/definitions/profile.Login"
                         }
                     }
                 ],
@@ -302,7 +364,7 @@
                         "description": "Session is created successfully",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Profile"
+                            "$ref": "#/definitions/profile.Profile"
                         }
                     },
                     "400": {
@@ -312,7 +374,11 @@
                         "description": "Not authorized"
                     },
                     "422": {
-                        "description": "Unprocessable request data"
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/handler.Error"
+                        }
                     }
                 }
             },
@@ -335,7 +401,113 @@
         }
     },
     "definitions": {
-        "models.Profile": {
+        "handler.Error": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "profile.Avatar": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                }
+            }
+        },
+        "profile.Create": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "profile.Created": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                }
+            }
+        },
+        "profile.ID": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "profile.Info": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "loss": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "record": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "win": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "profile.Login": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "profile.Profile": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -358,10 +530,6 @@
                     "type": "string",
                     "example": "test"
                 },
-                "password": {
-                    "type": "string",
-                    "example": "-"
-                },
                 "record": {
                     "type": "integer",
                     "example": 1500
@@ -372,16 +540,22 @@
                 }
             }
         },
-        "models.ProfileAvatar": {
+        "profile.Profiles": {
             "type": "object",
             "properties": {
-                "avatar": {
-                    "type": "string",
-                    "example": "upload/img/1.png"
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/profile.Info"
+                    }
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 50
                 }
             }
         },
-        "models.ProfileInfo": {
+        "profile.UpdateInfo": {
             "type": "object",
             "properties": {
                 "email": {
@@ -391,38 +565,19 @@
                 "nickname": {
                     "type": "string",
                     "example": "test"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "-"
                 }
             }
         },
-        "models.ProfileLogin": {
+        "profile.UpdatePassword": {
             "type": "object",
             "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "test@mail.ru"
-                },
                 "password": {
                     "type": "string",
                     "example": "password"
-                }
-            }
-        },
-        "models.Profiles": {
-            "type": "object",
-            "properties": {
-                "list": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Profile"
-                    }
                 },
-                "total": {
-                    "type": "integer",
-                    "example": 50
+                "password_old": {
+                    "type": "string",
+                    "example": "password_old"
                 }
             }
         }
