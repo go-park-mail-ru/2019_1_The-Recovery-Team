@@ -3,6 +3,8 @@ package chat
 const (
 	SetMessage  = "SET_CHAT_MESSAGE"
 	InitMessage = "INIT_CHAT_MESSAGE"
+	InitPing    = "INIT_PING"
+	SetPong     = "SET_PONG"
 )
 
 //easyjson:json

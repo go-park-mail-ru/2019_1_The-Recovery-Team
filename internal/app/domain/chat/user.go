@@ -75,6 +75,13 @@ func (u *User) listen() {
 		}
 
 		switch action.Type {
+		case InitPing:
+			{
+				u.Messages <- &Action{
+					Type: SetPong,
+				}
+				continue
+			}
 		case InitMessage:
 			{
 				u.Log.Info("Receive message")
