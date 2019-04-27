@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -24,8 +25,14 @@ import (
 )
 
 func init() {
+	dev := flag.Bool("local", false, "local config flag")
+	flag.Parse()
+	if *dev {
+		viper.SetConfigName("local")
+	} else {
+		viper.SetConfigName("config")
+	}
 	viper.SetConfigType("json")
-	viper.SetConfigName("config")
 	viper.AddConfigPath("build/config/")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Can't read config files:", err)

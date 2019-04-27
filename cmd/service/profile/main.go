@@ -24,8 +24,15 @@ const (
 )
 
 func main() {
+	port := flag.Int("port", 50051, "service port")
+	dev := flag.Bool("local", false, "local config flag")
+	flag.Parse()
+	if *dev {
+		viper.SetConfigName("local")
+	} else {
+		viper.SetConfigName("config")
+	}
 	viper.SetConfigType("json")
-	viper.SetConfigName("config")
 	viper.AddConfigPath("build/config/")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Can't read config files:", err)
@@ -38,9 +45,6 @@ func main() {
 	postgresqlPort := viper.GetInt("postgresql.port")
 	postgresqlAddr := viper.GetString("postgresql.address")
 	migrationsFile := viper.GetString("postgresql.migrations.file")
-
-	port := flag.Int("port", 50051, "service port")
-	flag.Parse()
 
 	lis, err := net.Listen("tcp", ":"+strconv.Itoa(*port))
 	if err != nil {
