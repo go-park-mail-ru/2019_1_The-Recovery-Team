@@ -32,6 +32,8 @@ const (
 
 	QueryUpdateMessage = `UPDATE message SET text = $1, edited = true WHERE id = $2
 		RETURNING id, author, receiver, created, edited`
+
+	QueryDeleteMessage = `DELETE FROM message WHERE id = $1`
 )
 
 // NewRepo creates new instance of chat repository
@@ -104,4 +106,25 @@ func (r *Repo) Update(message *chat.Message) (*chat.Message, error) {
 	}
 	tx.Commit()
 	return message, nil
+}
+
+func (r *Repo) Delete(message *chat.Message) error {
+	tx, err := r.conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var realAuthor uint64
+	if err := r.conn.QueryRow(QueryGetMesssageAuthor, message.ID).Scan(&realAuthor); err != nil {
+		return err
+	}
+
+	if *message.Author != realAuthor {
+		return errors.New("permission denied")
+	}
+
+	r.conn.QueryRow(QueryDeleteMessage, message.ID)
+
+	return tx.Commit()
 }

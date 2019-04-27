@@ -6,4 +6,5 @@ type MessageRepo interface {
 	Create(message *chat.Message) (*chat.Message, error)
 	Update(message *chat.Message) (*chat.Message, error)
 	GetGlobal(data *chat.Query) (*[]chat.Message, error)
+	Delete(message *chat.Message) error
 }
