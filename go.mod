@@ -3,7 +3,6 @@ module github.com/go-park-mail-ru/2019_1_The-Recovery-Team
 go 1.12
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6 // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
@@ -11,6 +10,7 @@ require (
 	github.com/cathalgarvey/fmtless v0.0.0-20160509115409-5077ea938891
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible // indirect
+	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/golang/protobuf v1.3.1
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.0
@@ -23,12 +23,13 @@ require (
 	github.com/hashicorp/serf v0.8.3 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.3.0+incompatible
-	github.com/jmoiron/sqlx v1.2.0
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/lib/pq v1.1.0 // indirect
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
 	github.com/miekg/dns v1.1.8 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
+	github.com/onsi/ginkgo v1.8.0 // indirect
+	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/pascaldekloe/goe v0.1.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.3.2

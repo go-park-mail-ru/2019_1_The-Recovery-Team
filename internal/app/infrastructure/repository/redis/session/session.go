@@ -3,26 +3,26 @@ package session
 import (
 	"time"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis"
+
 	uuid "github.com/satori/go.uuid"
 )
 
-func NewSessionRepo(conn *redis.Conn) *Repo {
+func NewSessionRepo(conn *redis.Client) *Repo {
 	return &Repo{
 		conn: conn,
 	}
 }
 
 type Repo struct {
-	conn *redis.Conn
+	conn *redis.Client
 }
 
 // Set sets value to redis
 func (r *Repo) Set(profileID uint64, expires time.Duration) (string, error) {
 	token := uuid.NewV4()
 
-	_, err := (*r.conn).Do("SETEX", token.String(), int(expires), profileID)
-	if err != nil {
+	if err := r.conn.Set(token.String(), profileID, expires).Err(); err != nil {
 		return "", err
 	}
 
@@ -31,13 +31,13 @@ func (r *Repo) Set(profileID uint64, expires time.Duration) (string, error) {
 
 // Delete deletes value from redis
 func (r *Repo) Delete(token string) error {
-	_, err := (*r.conn).Do("DEL", token)
+	err := r.conn.Del(token).Err()
 	return err
 }
 
 // Get gets value from redis
 func (r *Repo) Get(token string) (uint64, error) {
-	id, err := redis.Uint64((*r.conn).Do("GET", token))
+	id, err := r.conn.Get(token).Uint64()
 	if err != nil {
 		return 0, err
 	}

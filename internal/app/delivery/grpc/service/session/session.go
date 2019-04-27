@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
@@ -28,7 +29,11 @@ func (s *Service) Get(ctx context.Context, in *SessionId) (*ProfileId, error) {
 }
 
 func (s *Service) Set(ctx context.Context, in *Create) (*SessionId, error) {
-	duration := time.Duration(in.Expires.Seconds)
+	duration, err := time.ParseDuration(strconv.Itoa(int((*in.Expires).Seconds)) + "s")
+	if err != nil {
+		return &SessionId{}, err
+	}
+
 	id, err := s.interactor.Set(in.ProfileId.Id, duration)
 	session := &SessionId{Id: id}
 	return session, err

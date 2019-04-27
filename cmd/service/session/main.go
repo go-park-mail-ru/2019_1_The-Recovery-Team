@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net"
 	"strconv"
+
+	"github.com/go-redis/redis"
 
 	"github.com/spf13/viper"
 
@@ -15,7 +16,6 @@ import (
 
 	consulapi "github.com/hashicorp/consul/api"
 
-	"github.com/gomodule/redigo/redis"
 	"google.golang.org/grpc"
 )
 
@@ -51,13 +51,17 @@ func main() {
 		log.Fatal("Failed to listen port", port)
 	}
 
-	redisConn, err := redis.DialURL(fmt.Sprintf("redis://:@%s:%d", redisAddr, redisPort))
-	if err != nil {
+	redisConn := redis.NewClient(&redis.Options{
+		Addr:     redisAddr + ":" + strconv.Itoa(redisPort),
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	if _, err := redisConn.Ping().Result(); err != nil {
 		log.Fatal("Redis connection refused")
 	}
 	defer redisConn.Close()
 
-	interactor := usecase.NewSessionInteractor(sessionRepo.NewSessionRepo(&redisConn))
+	interactor := usecase.NewSessionInteractor(sessionRepo.NewSessionRepo(redisConn))
 	service := session.NewService(interactor)
 	server := grpc.NewServer()
 
