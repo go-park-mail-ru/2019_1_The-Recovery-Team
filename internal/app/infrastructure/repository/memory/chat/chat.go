@@ -99,6 +99,12 @@ func (c *Chat) Run() {
 					c.Sessions.Store(*user.Id, user.SessionID)
 				}
 				go user.ListenAndSend(c.Log)
+				user.Messages <- &chat.Action{
+					Type: chat.SetSession,
+					Payload: chat.SetSessionPayload{
+						SessionID: user.SessionID,
+					},
+				}
 			}
 		case user := <-c.Disconnect:
 			{

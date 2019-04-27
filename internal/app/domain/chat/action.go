@@ -5,6 +5,7 @@ const (
 	InitMessage = "INIT_CHAT_MESSAGE"
 	InitPing    = "INIT_PING"
 	SetPong     = "SET_PONG"
+	SetSession  = "SET_CHAT_SESSION"
 )
 
 //easyjson:json
