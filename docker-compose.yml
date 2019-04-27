@@ -61,7 +61,7 @@ services:
     build:
       context: .
       dockerfile: build/docker/service/chat/Dockerfile
-    command: /bin/sh -c "/app/wait-for-it.sh db:5433 && /app/chat"
+    command: /bin/sh -c "/app/wait-for-it.sh db_chat:5433 && /app/chat"
     container_name: chat
     links:
       - db_chat
