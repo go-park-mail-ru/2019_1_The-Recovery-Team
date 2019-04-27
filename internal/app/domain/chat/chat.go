@@ -36,3 +36,14 @@ type InitUpdateMessagePayload struct {
 	Author    *uint64 `json:"authorId"`
 	Data      Data    `json:"data"`
 }
+
+//easyjson:json
+type InitPrintingPayload struct {
+	SessionID string `json:"-"`
+	Author    uint64 `json:"authorId"`
+}
+
+//easyjson:json
+type SetPrintingPayload struct {
+	Id uint64 `json:"id"`
+}

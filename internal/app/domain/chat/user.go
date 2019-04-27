@@ -126,6 +126,18 @@ func (u *User) listen() {
 				payload.SessionID = u.SessionID
 				action.Payload = payload
 			}
+		case InitPrinting:
+			{
+				if u.Id == nil {
+					continue
+				}
+
+				u.Log.Info("Receive message printing")
+				payload := &InitPrintingPayload{}
+				payload.Author = *u.Id
+				payload.SessionID = u.SessionID
+				action.Payload = payload
+			}
 		}
 		u.Actions <- action
 	}

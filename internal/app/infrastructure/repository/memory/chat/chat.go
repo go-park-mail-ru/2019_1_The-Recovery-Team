@@ -155,6 +155,20 @@ func (c *Chat) processAction() {
 					return true
 				})
 			}
+		case chat.InitPrinting:
+			payload := action.Payload.(*chat.InitPrintingPayload)
+			c.Users.Range(func(key, value interface{}) bool {
+				if key.(string) == payload.SessionID {
+					return true
+				}
+				value.(*chat.User).Messages <- &chat.Action{
+					Type: chat.SetPrinting,
+					Payload: chat.SetPrintingPayload{
+						Id: payload.Author,
+					},
+				}
+				return true
+			})
 		}
 	}
 }

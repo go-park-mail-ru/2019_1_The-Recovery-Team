@@ -10,6 +10,8 @@ const (
 	SetGlobalMessages  = "SET_CHAT_GLOBAL_MESSAGES"
 	InitUpdateMessage  = "INIT_CHAT_MESSAGE_UPDATE"
 	SetUpdateMessage   = "SET_CHAT_MESSAGE_UPDATE"
+	InitPrinting       = "INIT_CHAT_PRINTING"
+	SetPrinting        = "SET_CHAT_PRINTING"
 )
 
 //easyjson:json
@@ -25,3 +27,5 @@ type ActionRaw struct {
 }
 
 //{"type": "INIT_CHAT_MESSAGE_UPDATE", "payload": "{\"messageId\":24, \"data\":{\"text\":\"Fedya Pidor\"}}"}
+
+{"type": "INIT_CHAT_PRINTING"}
