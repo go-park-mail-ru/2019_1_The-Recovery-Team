@@ -24,11 +24,15 @@ type InitGlobalMessagesPayload struct {
 	Receiver  *uint64 `json:"toId"`
 }
 
+//easyjson:json
 type SetSessionPayload struct {
 	SessionID string `json:"sessionId"`
 }
 
-type UpdateMessagePayload struct {
-	MessageId *uint64
-	Data      Data `json:"data"`
+//easyjson:json
+type InitUpdateMessagePayload struct {
+	Id        uint64  `json:"messageId"`
+	SessionID string  `json:"-"`
+	Author    *uint64 `json:"authorId"`
+	Data      Data    `json:"data"`
 }

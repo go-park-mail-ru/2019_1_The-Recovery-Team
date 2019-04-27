@@ -1,11 +1,16 @@
 package message
 
 import (
+	"errors"
+
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/domain/chat"
 	"github.com/jackc/pgx"
 )
 
 const (
+	QueryGetMesssageAuthor = `SELECT author FROM message
+		WHERE id = $1`
+
 	QueryCreateMessage = `INSERT INTO message (author, receiver, text)
 		VALUES ($1, $2, $3)
 		RETURNING id, created, edited`
@@ -25,7 +30,7 @@ const (
 		ORDER BY created DESC
 		LIMIT $2`
 
-	QueryUpdateMessage = `UPDATE message SET text = $1, isEdited = true WHERE id = $2
+	QueryUpdateMessage = `UPDATE message SET text = $1, edited = true WHERE id = $2
 		RETURNING id, author, receiver, created, edited`
 )
 
@@ -78,9 +83,25 @@ func (r *Repo) GetGlobal(data *chat.Query) (*[]chat.Message, error) {
 
 // Update text of message
 func (r *Repo) Update(message *chat.Message) (*chat.Message, error) {
+	tx, err := r.conn.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var realAuthor uint64
+	if err := r.conn.QueryRow(QueryGetMesssageAuthor, message.ID).Scan(&realAuthor); err != nil {
+		return nil, err
+	}
+
+	if *message.Author != realAuthor {
+		return nil, errors.New("permission denied")
+	}
+
 	if err := r.conn.QueryRow(QueryUpdateMessage, message.Data.Text, message.ID).
 		Scan(&message.ID, &message.Author, &message.Receiver, &message.Created, &message.Edited); err != nil {
 		return nil, err
 	}
+	tx.Commit()
 	return message, nil
 }

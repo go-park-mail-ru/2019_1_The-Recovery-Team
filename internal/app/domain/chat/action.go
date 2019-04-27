@@ -8,7 +8,8 @@ const (
 	SetSession         = "SET_CHAT_SESSION"
 	InitGlobalMessages = "INIT_CHAT_GLOBAL_MESSAGES"
 	SetGlobalMessages  = "SET_CHAT_GLOBAL_MESSAGES"
-	UpdateMessage = "SET_CHAT_MESSAGE_UPDATE"
+	InitUpdateMessage  = "INIT_CHAT_MESSAGE_UPDATE"
+	SetUpdateMessage   = "SET_CHAT_MESSAGE_UPDATE"
 )
 
 //easyjson:json
@@ -22,3 +23,5 @@ type ActionRaw struct {
 	Type    string `json:"type"`
 	Payload string `json:"payload,omitempty"`
 }
+
+//{"type": "INIT_CHAT_MESSAGE_UPDATE", "payload": "{\"messageId\":24, \"data\":{\"text\":\"Fedya Pidor\"}}"}

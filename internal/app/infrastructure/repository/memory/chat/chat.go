@@ -111,14 +111,15 @@ func (c *Chat) processAction() {
 					return true
 				})
 			}
-		case chat.UpdateMessage:
+		case chat.InitUpdateMessage:
 			{
-				payload := action.Payload.(*chat.UpdateMessagePayload)
+				payload := action.Payload.(*chat.InitUpdateMessagePayload)
 				message := &chat.Message{
-					ID: *payload.MessageId,
+					ID: payload.Id,
 					Data: chat.Data{
 						Text: payload.Data.Text,
 					},
+					Author: payload.Author,
 				}
 
 				updated, err := c.MessageManager.Update(message)
@@ -128,10 +129,27 @@ func (c *Chat) processAction() {
 					continue
 				}
 
+				if updated.Receiver != nil {
+					c.Log.Info("Private message update",
+						zap.Uint64("user_id", *updated.Receiver))
+					session, ok := c.Sessions.Load(*updated.Receiver)
+					if ok {
+						c.Log.Info("Private message update receiver is online",
+							zap.Uint64("user_id", *updated.Receiver))
+						if user, ok := c.Users.Load(session); ok {
+							user.(*chat.User).Messages <- &chat.Action{
+								Type:    chat.SetUpdateMessage,
+								Payload: updated,
+							}
+						}
+					}
+					continue
+				}
+
 				c.Users.Range(func(key, value interface{}) bool {
 					user := value.(*chat.User)
 					user.Messages <- &chat.Action{
-						Type:    chat.UpdateMessage,
+						Type:    chat.SetUpdateMessage,
 						Payload: updated,
 					}
 					return true

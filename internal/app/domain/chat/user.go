@@ -30,7 +30,8 @@ func (u *User) ListenAndSend(log *zap.Logger) {
 func (u *User) send() {
 	for message := range u.Messages {
 		if err := u.Conn.WriteJSON(message); err != nil {
-			u.Log.Info("Stop sending. Error on writing to connection")
+			u.Log.Info("Stop sending. Error on writing to connection",
+				zap.String("error", err.Error()))
 			return
 		}
 	}
@@ -96,18 +97,36 @@ func (u *User) listen() {
 				action.Payload = payload
 			}
 		case InitGlobalMessages:
-			u.Log.Info("Receive request for global messages")
-			payload := &InitGlobalMessagesPayload{}
-			if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
-				u.Log.Warn("Invalid message init payload")
-				continue
+			{
+				u.Log.Info("Receive request for global messages")
+				payload := &InitGlobalMessagesPayload{}
+				if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+					u.Log.Warn("Invalid message init global payload")
+					continue
+				}
+
+				payload.Author = u.Id
+				payload.SessionID = u.SessionID
+				action.Payload = payload
 			}
+		case InitUpdateMessage:
+			{
+				if u.Id == nil {
+					continue
+				}
 
-			payload.Author = u.Id
-			payload.SessionID = u.SessionID
-			action.Payload = payload
+				u.Log.Info("Receive message update")
+				payload := &InitUpdateMessagePayload{}
+				if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+					u.Log.Warn("Invalid message init update payload")
+					continue
+				}
+
+				payload.Author = u.Id
+				payload.SessionID = u.SessionID
+				action.Payload = payload
+			}
 		}
-
 		u.Actions <- action
 	}
 }
