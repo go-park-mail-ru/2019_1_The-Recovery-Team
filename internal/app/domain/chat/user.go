@@ -95,6 +95,17 @@ func (u *User) listen() {
 				payload.SessionID = u.SessionID
 				action.Payload = payload
 			}
+		case InitGlobalMessages:
+			u.Log.Info("Receive request for global messages")
+			payload := &InitGlobalMessagesPayload{}
+			if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+				u.Log.Warn("Invalid message init payload")
+				continue
+			}
+
+			payload.Author = u.Id
+			payload.SessionID = u.SessionID
+			action.Payload = payload
 		}
 
 		u.Actions <- action

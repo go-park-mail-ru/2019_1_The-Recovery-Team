@@ -37,6 +37,36 @@ func (c *Chat) processAction() {
 	for action := range c.Actions {
 		c.Log.Info("Receive message")
 		switch action.Type {
+		case chat.InitGlobalMessages:
+			{
+				payload := action.Payload.(*chat.InitGlobalMessagesPayload)
+				query := &chat.Query{
+					Author:   payload.Author,
+					Receiver: payload.Receiver,
+					Start:    payload.Start,
+					Limit:    payload.Limit,
+				}
+				if query.Limit == 0 {
+					query.Limit = 10
+				}
+				messages, err := c.MessageManager.GetGlobal(query)
+				if err != nil {
+					c.Log.Error("Can't get global messages",
+						zap.String("error", err.Error()))
+					continue
+				}
+
+				user, ok := c.Users.Load(payload.SessionID)
+				if !ok {
+					c.Log.Error("Can't find user requested global messages")
+					continue
+				}
+
+				user.(*chat.User).Messages <- &chat.Action{
+					Type:    chat.SetGlobalMessages,
+					Payload: messages,
+				}
+			}
 		case chat.InitMessage:
 			{
 				payload := action.Payload.(*chat.InitMessagePayload)

@@ -1,11 +1,13 @@
 package chat
 
 const (
-	SetMessage  = "SET_CHAT_MESSAGE"
-	InitMessage = "INIT_CHAT_MESSAGE"
-	InitPing    = "INIT_PING"
-	SetPong     = "SET_PONG"
-	SetSession  = "SET_CHAT_SESSION"
+	SetMessage         = "SET_CHAT_MESSAGE"
+	InitMessage        = "INIT_CHAT_MESSAGE"
+	InitPing           = "INIT_PING"
+	SetPong            = "SET_PONG"
+	SetSession         = "SET_CHAT_SESSION"
+	InitGlobalMessages = "INIT_CHAT_GLOBAL_MESSAGES"
+	SetGlobalMessages  = "SET_CHAT_GLOBAL_MESSAGES"
 )
 
 //easyjson:json

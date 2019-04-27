@@ -18,3 +18,7 @@ type MessageInteractor struct {
 func (i *MessageInteractor) Create(message *chat.Message) (*chat.Message, error) {
 	return i.repo.Create(message)
 }
+
+func (i *MessageInteractor) GetGlobal(data *chat.Query) (*[]chat.Message, error) {
+	return i.repo.GetGlobal(data)
+}
