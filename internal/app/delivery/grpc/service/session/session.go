@@ -20,7 +20,11 @@ type Service struct {
 func (s *Service) Get(ctx context.Context, in *SessionId) (*ProfileId, error) {
 	profileId, err := s.interactor.Get(in.Id)
 	id := &ProfileId{Id: profileId}
-	return id, err
+	if err != nil {
+		return &ProfileId{}, err
+	}
+
+	return id, nil
 }
 
 func (s *Service) Set(ctx context.Context, in *Create) (*SessionId, error) {
