@@ -25,7 +25,3 @@ type ActionRaw struct {
 	Type    string `json:"type"`
 	Payload string `json:"payload,omitempty"`
 }
-
-//{"type": "INIT_CHAT_MESSAGE_UPDATE", "payload": "{\"messageId\":24, \"data\":{\"text\":\"Fedya Pidor\"}}"}
-
-{"type": "INIT_CHAT_PRINTING"}
