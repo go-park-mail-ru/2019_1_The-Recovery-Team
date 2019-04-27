@@ -28,7 +28,7 @@ services:
     command: /bin/sh -c "/app/wait-for-it.sh db:5432 && /app/profile"
     container_name: profile
     links:
-      - db
+      - db_profile
       - consul
     ports:
       - 50051:50051
@@ -57,15 +57,34 @@ services:
       - consul
     ports:
       - 8081:8081
+  chat:
+    build:
+      context: .
+      dockerfile: build/docker/service/chat/Dockerfile
+    command: /bin/sh -c "/app/wait-for-it.sh db:5433 && /app/chat"
+    container_name: chat
+    links:
+      - db_chat
+      - consul
+    ports:
+      - 8082:8082
 
-  db:
+  db_profile:
     image: postgres
-    container_name: db
+    container_name: db_profile
     environment:
       POSTGRES_USER: recoveryteam
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: sadislands
-  
+
+  db_chat:
+    image: postgres
+    container_name: db_chat
+    environment:
+      POSTGRES_USER: recoveryteam
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: sadislandschat
+
   redis:
     image: redis
     container_name: redis

@@ -27,5 +27,16 @@
   "redis": {
     "address": "localhost",
     "port": 6379
+  },
+  "chat": {
+    "address": "localhost",
+    "port": 8082,
+    "database": {
+      "address": "localhost",
+      "port": 5433,
+      "migrations": {
+        "file": "build/schema/1_chat.sql"
+      }
+    }
   }
 }

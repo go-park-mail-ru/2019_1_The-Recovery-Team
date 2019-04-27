@@ -23,6 +23,13 @@ const (
 	serviceId = "SProfile_"
 )
 
+func pgxClose(conn *pgx.Conn) {
+	err := conn.Close()
+	if err != nil {
+		log.Println("pgx connection close failed", err)
+	}
+}
+
 func main() {
 	port := flag.Int("port", 50051, "service port")
 	dev := flag.Bool("local", false, "local config flag")
@@ -54,7 +61,7 @@ func main() {
 	psqlConfig := pgx.ConnConfig{
 		Host:     postgresqlAddr,
 		Port:     uint16(postgresqlPort),
-		Database: "sadislands",
+		Database: "sadislands", // sadislandschat
 		User:     "recoveryteam",
 		Password: "123456",
 	}
@@ -68,14 +75,14 @@ func main() {
 	if err := postgresql.MakeMigrations(psqlConn, migrationsFile); err != nil {
 		log.Fatal("Database migrations failed", err)
 	}
-	psqlConn.Close()
+	pgxClose(psqlConn)
 
 	// Create new connection to database with updated OIDs
 	psqlConn, err = pgx.Connect(psqlConfig)
 	if err != nil {
 		log.Fatal("Postgresql connection refused")
 	}
-	defer psqlConn.Close()
+	defer pgxClose(psqlConn)
 
 	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(psqlConn))
 	service := profile.NewService(interactor)
