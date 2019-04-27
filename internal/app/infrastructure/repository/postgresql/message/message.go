@@ -24,6 +24,9 @@ const (
 		WHERE id > $1
 		ORDER BY created DESC
 		LIMIT $2`
+
+	QueryUpdateMessage = `UPDATE message SET text = $1, isEdited = true WHERE id = $2
+		RETURNING id, author, receiver, created, edited`
 )
 
 // NewRepo creates new instance of chat repository
@@ -71,4 +74,13 @@ func (r *Repo) GetGlobal(data *chat.Query) (*[]chat.Message, error) {
 		messages = append(messages, message)
 	}
 	return &messages, nil
+}
+
+// Update text of message
+func (r *Repo) Update(message *chat.Message) (*chat.Message, error) {
+	if err := r.conn.QueryRow(QueryUpdateMessage, message.Data.Text, message.ID).
+		Scan(&message.ID, &message.Author, &message.Receiver, &message.Created, &message.Edited); err != nil {
+		return nil, err
+	}
+	return message, nil
 }

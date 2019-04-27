@@ -98,8 +98,6 @@ func main() {
 	chatInteractor := usecase.NewChatInteractor(chat.NewRepo(logger, messageInteractor))
 	sessionManager := session.NewSessionClient(sessionConn)
 
-	//go chatManager.Run()
-
 	api := chatApi.NewApi(chatInteractor, &sessionManager, logger)
 	log.Print(http.ListenAndServe(":"+strconv.Itoa(port), api.Router))
 }

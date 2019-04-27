@@ -22,3 +22,7 @@ func (i *MessageInteractor) Create(message *chat.Message) (*chat.Message, error)
 func (i *MessageInteractor) GetGlobal(data *chat.Query) (*[]chat.Message, error) {
 	return i.repo.GetGlobal(data)
 }
+
+func (i *MessageInteractor) Update(message *chat.Message) (*chat.Message, error) {
+	return i.repo.Update(message)
+}

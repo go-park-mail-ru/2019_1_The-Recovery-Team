@@ -8,6 +8,7 @@ const (
 	SetSession         = "SET_CHAT_SESSION"
 	InitGlobalMessages = "INIT_CHAT_GLOBAL_MESSAGES"
 	SetGlobalMessages  = "SET_CHAT_GLOBAL_MESSAGES"
+	UpdateMessage = "SET_CHAT_MESSAGE_UPDATE"
 )
 
 //easyjson:json
