@@ -15,6 +15,10 @@ type ChatInteractor struct {
 	repo repository.ChatRepo
 }
 
-func (i *ChatInteractor) Create(message *chat.Message) (*chat.Message, error) {
-	return i.repo.Create(message)
+func (i *ChatInteractor) Run() {
+	i.repo.Run()
+}
+
+func (i *ChatInteractor) Connection() chan *chat.User {
+	return i.repo.Connection()
 }
