@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/memory/chat"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql/message"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
 	chatApi "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/chat"
@@ -28,7 +30,7 @@ func pgxClose(conn *pgx.Conn) {
 	}
 }
 
-func main() {
+func init() {
 	dev := flag.Bool("local", false, "local config flag")
 	flag.Parse()
 	if *dev {
@@ -41,6 +43,13 @@ func main() {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Can't read config files:", err)
 	}
+
+	addr := viper.GetString("consul.address")
+	port := viper.GetInt("consul.port")
+	resolver.RegisterDefault(addr, port, 5*time.Second)
+}
+
+func main() {
 	port := viper.GetInt("chat.port")
 	chatDbAddr := viper.GetString("chat.database.address")
 	chatDbPort := viper.GetInt("chat.database.port")
