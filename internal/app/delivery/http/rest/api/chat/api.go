@@ -16,16 +16,17 @@ type Api struct {
 func NewApi(
 	chatManager *usecase.ChatInteractor,
 	sessionManager *session.SessionClient,
+	loggerManager *zap.Logger,
 	logger *zap.Logger,
 ) *Api {
 	router := httprouter.New()
 
 	//Chat routes
-	router.GET("/api/v1/chat.ws",
+	router.GET("/api/v1/message.ws",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
 				logger, middleware.Authentication(
-					sessionManager, middleware.CORSMiddleware(handler.Connect(chatManager))))))
+					sessionManager, middleware.CORSMiddleware(handler.Connect(chatManager, loggerManager))))))
 
 	return &Api{
 		Router: router,
