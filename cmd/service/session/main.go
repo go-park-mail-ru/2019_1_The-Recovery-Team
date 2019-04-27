@@ -24,8 +24,18 @@ const (
 )
 
 func main() {
+	port := flag.Int("port", 50052, "service port")
+	dev := flag.Bool("local", false, "local config flag")
+	flag.Parse()
+
+	if *dev {
+		fmt.Println(*dev)
+		viper.SetConfigName("local")
+	} else {
+		fmt.Println(*dev)
+		viper.SetConfigName("config")
+	}
 	viper.SetConfigType("json")
-	viper.SetConfigName("config")
 	viper.AddConfigPath("build/config/")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Can't read config files:", err)
@@ -37,9 +47,6 @@ func main() {
 	sessionAddr := viper.GetString("session.address")
 	redisAddr := viper.GetString("redis.address")
 	redisPort := viper.GetInt("redis.port")
-
-	port := flag.Int("port", 50052, "service port")
-	flag.Parse()
 
 	lis, err := net.Listen("tcp", ":"+strconv.Itoa(*port))
 	if err != nil {
