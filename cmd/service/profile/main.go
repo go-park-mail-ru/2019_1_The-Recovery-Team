@@ -54,7 +54,7 @@ func main() {
 	psqlConfig := pgx.ConnConfig{
 		Host:     postgresqlAddr,
 		Port:     uint16(postgresqlPort),
-		Database: "sadislands",
+		Database: "sadislands", // sadislandschat
 		User:     "recoveryteam",
 		Password: "123456",
 	}
