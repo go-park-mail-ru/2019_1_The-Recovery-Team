@@ -12,6 +12,7 @@ import (
 func NewRepo(log *zap.Logger, messageManager *usecase.MessageInteractor) *Chat {
 	return &Chat{
 		Users:      &sync.Map{},
+		Sessions:   &sync.Map{},
 		Connect:    make(chan *chat.User, 10),
 		Disconnect: make(chan *chat.User, 10),
 		Actions:    make(chan *chat.Action, 100),
@@ -23,6 +24,7 @@ func NewRepo(log *zap.Logger, messageManager *usecase.MessageInteractor) *Chat {
 
 type Chat struct {
 	Users      *sync.Map
+	Sessions   *sync.Map
 	Connect    chan *chat.User
 	Disconnect chan *chat.User
 	Actions    chan *chat.Action
@@ -53,6 +55,23 @@ func (c *Chat) processAction() {
 					continue
 				}
 
+				if created.Receiver != nil {
+					c.Log.Info("Private message",
+						zap.Uint64("user_id", *created.Receiver))
+					session, ok := c.Sessions.Load(*created.Receiver)
+					if ok {
+						c.Log.Info("Private message receiver is online",
+							zap.Uint64("user_id", *created.Receiver))
+						if user, ok := c.Users.Load(session); ok {
+							user.(*chat.User).Messages <- &chat.Action{
+								Type:    chat.SetMessage,
+								Payload: created,
+							}
+						}
+					}
+					continue
+				}
+
 				c.Users.Range(func(key, value interface{}) bool {
 					user := value.(*chat.User)
 					user.Messages <- &chat.Action{
@@ -76,11 +95,17 @@ func (c *Chat) Run() {
 				user.Actions = c.Actions
 				user.Disconnect = c.Disconnect
 				c.Users.Store(user.SessionID, user)
+				if user.Id != nil {
+					c.Sessions.Store(*user.Id, user.SessionID)
+				}
 				go user.ListenAndSend(c.Log)
 			}
 		case user := <-c.Disconnect:
 			{
 				close(user.Messages)
+				if user.Id != nil {
+					c.Sessions.Delete(*user.Id)
+				}
 				c.Users.Delete(user.SessionID)
 			}
 		}
