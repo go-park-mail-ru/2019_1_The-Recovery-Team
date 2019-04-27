@@ -17,15 +17,15 @@ const (
 )
 
 var allowedOrigins = map[string]interface{}{
-	"http://127.0.0.1:5000":          struct{}{},
-	"http://127.0.0.1:8080":          struct{}{},
-	"http://localhost:5000":          struct{}{},
-	"http://localhost:8080":          struct{}{},
-	"http://104.248.28.45":           struct{}{},
-	"https://104.248.28.45":          struct{}{},
-	"https://sadislands.now.sh":      struct{}{},
-	"http://sadislands.ru":           struct{}{},
-	"https://sadislands.ru":          struct{}{},
+	"http://127.0.0.1:5000":           struct{}{},
+	"http://127.0.0.1:8080":           struct{}{},
+	"http://localhost:5000":           struct{}{},
+	"http://localhost:8080":           struct{}{},
+	"http://104.248.28.45":            struct{}{},
+	"https://104.248.28.45":           struct{}{},
+	"https://sadislands.now.sh":       struct{}{},
+	"http://sadislands.ru":            struct{}{},
+	"https://sadislands.ru":           struct{}{},
 	"https://hackathon.sadislands.ru": struct{}{},
 }
 
@@ -51,7 +51,7 @@ func Authentication(sessionManager *session.SessionClient, next httprouter.Handl
 		if err != nil {
 			cookie := http.Cookie{
 				Name:     "session_id",
-				Path:     "/",
+				Path:     "./",
 				MaxAge:   -1,
 				HttpOnly: true,
 			}

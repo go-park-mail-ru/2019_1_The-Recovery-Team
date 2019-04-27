@@ -114,7 +114,7 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_id",
 			Value:    sessionId.Id,
-			Path:     "/",
+			Path:     "./",
 			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
 			HttpOnly: true,
 		})
