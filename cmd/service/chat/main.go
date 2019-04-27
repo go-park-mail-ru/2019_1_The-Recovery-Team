@@ -3,19 +3,22 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/memory/chat"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql/message"
+
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
-	chat2 "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/chat"
+	chatApi "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/chat"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql/chat"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
 	"github.com/jackc/pgx"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer/roundrobin"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 func pgxClose(conn *pgx.Conn) {
@@ -82,11 +85,12 @@ func main() {
 	}
 	defer logger.Sync()
 
-	chatManager := usecase.NewChatInteractor(chat.NewRepo(chatConn))
+	messageInteractor := usecase.NewMessageInteractor(message.NewRepo(chatConn))
+	chatInteractor := usecase.NewChatInteractor(chat.NewRepo(logger, messageInteractor))
 	sessionManager := session.NewSessionClient(sessionConn)
 
 	//go chatManager.Run()
 
-	api := chat2.NewApi(chatManager, &sessionManager, logger)
+	api := chatApi.NewApi(chatInteractor, &sessionManager, logger)
 	log.Print(http.ListenAndServe(":"+strconv.Itoa(port), api.Router))
 }

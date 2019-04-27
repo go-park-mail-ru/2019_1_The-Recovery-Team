@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(in *jlexer.Lexer, out *SetMessagePayload) {
+func easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(in *jlexer.Lexer, out *InitMessagePayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -36,10 +36,18 @@ func easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 			continue
 		}
 		switch key {
-		case "messageId":
-			out.ID = uint64(in.Uint64())
-		case "authorId":
-			out.Author = uint64(in.Uint64())
+		case "SessionID":
+			out.SessionID = string(in.String())
+		case "author":
+			if in.IsNull() {
+				in.Skip()
+				out.Author = nil
+			} else {
+				if out.Author == nil {
+					out.Author = new(uint64)
+				}
+				*out.Author = uint64(in.Uint64())
+			}
 		case "toId":
 			if in.IsNull() {
 				in.Skip()
@@ -50,14 +58,8 @@ func easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 				}
 				*out.Receiver = uint64(in.Uint64())
 			}
-		case "created":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.Created).UnmarshalJSON(data))
-			}
-		case "isEdited":
-			out.Edited = bool(in.Bool())
 		case "data":
-			easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat1(in, &out.Data)
+			(out.Data).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -68,29 +70,33 @@ func easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 		in.Consumed()
 	}
 }
-func easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(out *jwriter.Writer, in SetMessagePayload) {
+func easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(out *jwriter.Writer, in InitMessagePayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"messageId\":"
+		const prefix string = ",\"SessionID\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.Uint64(uint64(in.ID))
+		out.String(string(in.SessionID))
 	}
 	{
-		const prefix string = ",\"authorId\":"
+		const prefix string = ",\"author\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.Uint64(uint64(in.Author))
+		if in.Author == nil {
+			out.RawString("null")
+		} else {
+			out.Uint64(uint64(*in.Author))
+		}
 	}
 	{
 		const prefix string = ",\"toId\":"
@@ -107,26 +113,6 @@ func easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 		}
 	}
 	{
-		const prefix string = ",\"created\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Raw((in.Created).MarshalJSON())
-	}
-	{
-		const prefix string = ",\"isEdited\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Bool(bool(in.Edited))
-	}
-	{
 		const prefix string = ",\"data\":"
 		if first {
 			first = false
@@ -134,149 +120,7 @@ func easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 		} else {
 			out.RawString(prefix)
 		}
-		easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat1(out, in.Data)
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v SetMessagePayload) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v SetMessagePayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *SetMessagePayload) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *SetMessagePayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(l, v)
-}
-func easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat1(in *jlexer.Lexer, out *Data) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "text":
-			out.Text = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat1(out *jwriter.Writer, in Data) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"text\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Text))
-	}
-	out.RawByte('}')
-}
-func easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat2(in *jlexer.Lexer, out *InitMessagePayload) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "toId":
-			if in.IsNull() {
-				in.Skip()
-				out.Id = nil
-			} else {
-				if out.Id == nil {
-					out.Id = new(uint64)
-				}
-				*out.Id = uint64(in.Uint64())
-			}
-		case "data":
-			easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat1(in, &out.Data)
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat2(out *jwriter.Writer, in InitMessagePayload) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"toId\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		if in.Id == nil {
-			out.RawString("null")
-		} else {
-			out.Uint64(uint64(*in.Id))
-		}
-	}
-	{
-		const prefix string = ",\"data\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat1(out, in.Data)
+		(in.Data).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -284,23 +128,23 @@ func easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 // MarshalJSON supports json.Marshaler interface
 func (v InitMessagePayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat2(&w, v)
+	easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v InitMessagePayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat2(w, v)
+	easyjson9b8f5552EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *InitMessagePayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat2(&r, v)
+	easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *InitMessagePayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat2(l, v)
+	easyjson9b8f5552DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppDomainChat(l, v)
 }

@@ -18,7 +18,7 @@
     "port": 8081
   },
   "postgresql": {
-    "address": "db",
+    "address": "db_profile",
     "port": 5432,
     "migrations": {
       "file": "build/schema/0_initial.sql"
@@ -29,11 +29,10 @@
     "port": 6379
   },
   "chat": {
-    "address": "chat",
     "port": 8082,
     "database": {
-      "address": "sadislandschat",
-      "port": 5433,
+      "address": "db_chat",
+      "port": 5432,
       "migrations": {
         "file": "build/schema/1_chat.sql"
       }

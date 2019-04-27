@@ -1,9 +1,13 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/middleware"
+	uuid "github.com/satori/go.uuid"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
+
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/domain/chat"
 	"go.uber.org/zap"
 
@@ -13,11 +17,21 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func Connect(chatManager *usecase.ChatInteractor, log *zap.Logger) httprouter.Handle {
+func Connect(chatManager *usecase.ChatInteractor, sessionManager *session.SessionClient, log *zap.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// Get context data(sessionID, profileID)
-		sessionID := r.Context().Value(middleware.SessionID).(string)
-		profileID := r.Context().Value(middleware.ProfileID).(uint64)
+		cookie, err := r.Cookie("session_id")
+		var profileID *uint64
+
+		if err == nil {
+			sessionID := &session.SessionId{
+				Id: cookie.Value,
+			}
+
+			if response, err := (*sessionManager).Get(context.Background(), sessionID); err == nil {
+				profileID = &response.Id
+			}
+		}
 
 		// Upgrade connection
 		var upgrader = websocket.Upgrader{
@@ -30,10 +44,11 @@ func Connect(chatManager *usecase.ChatInteractor, log *zap.Logger) httprouter.Ha
 		}
 
 		user := &chat.User{
-			Id:        &profileID,
-			SessionID: sessionID,
+			Id:        profileID,
+			SessionID: uuid.NewV4().String(),
 			Conn:      conn,
 			Log:       log,
+			Messages:  make(chan interface{}, 10),
 		}
 
 		go chatManager.Run()

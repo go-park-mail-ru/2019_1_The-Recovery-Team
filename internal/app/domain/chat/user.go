@@ -43,6 +43,10 @@ func (u *User) listen() {
 
 		// Read json from connection
 		err := u.Conn.ReadJSON(raw)
+		if err != nil {
+			u.Log.Info("Incorrect json",
+				zap.String("error", err.Error()))
+		}
 
 		switch {
 		case websocket.IsCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseGoingAway, websocket.CloseNoStatusReceived):
@@ -58,7 +62,8 @@ func (u *User) listen() {
 			}
 		case err != nil:
 			{
-				u.Log.Info("Stop listening. User was disconnected")
+				u.Log.Info("Stop listening. User was disconnected.",
+					zap.String("error", err.Error()))
 				u.Disconnect <- u
 				return
 			}
@@ -72,11 +77,13 @@ func (u *User) listen() {
 		switch action.Type {
 		case InitMessage:
 			{
+				u.Log.Info("Receive message")
 				payload := &InitMessagePayload{}
 				if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
 					u.Log.Warn("Invalid message init payload")
 					continue
 				}
+
 				payload.Author = u.Id
 				payload.SessionID = u.SessionID
 				action.Payload = payload

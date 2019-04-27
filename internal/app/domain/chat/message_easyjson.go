@@ -39,7 +39,15 @@ func easyjson4086215fDecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 		case "messageId":
 			out.ID = uint64(in.Uint64())
 		case "authorId":
-			out.Author = uint64(in.Uint64())
+			if in.IsNull() {
+				in.Skip()
+				out.Author = nil
+			} else {
+				if out.Author == nil {
+					out.Author = new(uint64)
+				}
+				*out.Author = uint64(in.Uint64())
+			}
 		case "toId":
 			if in.IsNull() {
 				in.Skip()
@@ -90,7 +98,11 @@ func easyjson4086215fEncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 		} else {
 			out.RawString(prefix)
 		}
-		out.Uint64(uint64(in.Author))
+		if in.Author == nil {
+			out.RawString("null")
+		} else {
+			out.Uint64(uint64(*in.Author))
+		}
 	}
 	{
 		const prefix string = ",\"toId\":"

@@ -33,6 +33,7 @@ type Chat struct {
 
 func (c *Chat) processAction() {
 	for action := range c.Actions {
+		c.Log.Info("Receive message")
 		switch action.Type {
 		case chat.InitMessage:
 			{
@@ -44,8 +45,11 @@ func (c *Chat) processAction() {
 						Text: payload.Data.Text,
 					},
 				}
+
 				created, err := c.MessageManager.Create(message)
 				if err != nil {
+					c.Log.Error("Database error",
+						zap.String("error", err.Error()))
 					continue
 				}
 
@@ -76,6 +80,7 @@ func (c *Chat) Run() {
 			}
 		case user := <-c.Disconnect:
 			{
+				close(user.Messages)
 				c.Users.Delete(user.SessionID)
 			}
 		}
