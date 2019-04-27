@@ -12,6 +12,8 @@ const (
 	SetUpdateMessage   = "SET_CHAT_MESSAGE_UPDATE"
 	InitPrinting       = "INIT_CHAT_PRINTING"
 	SetPrinting        = "SET_CHAT_PRINTING"
+	InitDeleteMessage  = "INIT_CHAT_MESSAGE_DELETE"
+	SetDeleteMessage   = "INIT_CHAT_MESSAGE_DELETE"
 )
 
 //easyjson:json
@@ -25,3 +27,5 @@ type ActionRaw struct {
 	Type    string `json:"type"`
 	Payload string `json:"payload,omitempty"`
 }
+
+//{"type": "INIT_CHAT_MESSAGE_UPDATE", "payload": "{\"messageId\":24, \"data\":{\"text\":\"Fedya Pidor\"}}"}

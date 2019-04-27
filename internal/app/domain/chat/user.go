@@ -138,6 +138,23 @@ func (u *User) listen() {
 				payload.SessionID = u.SessionID
 				action.Payload = payload
 			}
+		case InitDeleteMessage:
+			{
+				if u.Id == nil {
+					continue
+				}
+
+				u.Log.Info("Receive message delete")
+				payload := &InitDeleteMessagePayload{}
+				if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+					u.Log.Warn("Invalid message init delete payload")
+					continue
+				}
+
+				payload.Author = u.Id
+				payload.SessionID = u.SessionID
+				action.Payload = payload
+			}
 		}
 		u.Actions <- action
 	}

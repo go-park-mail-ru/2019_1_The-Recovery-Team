@@ -47,3 +47,10 @@ type InitPrintingPayload struct {
 type SetPrintingPayload struct {
 	Id uint64 `json:"id"`
 }
+
+//easyjson:json
+type InitDeleteMessagePayload struct {
+	Id        uint64  `json:"messageId"`
+	SessionID string  `json:"-"`
+	Author    *uint64 `json:"authorId"`
+}

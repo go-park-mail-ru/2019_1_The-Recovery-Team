@@ -169,6 +169,30 @@ func (c *Chat) processAction() {
 				}
 				return true
 			})
+		case chat.InitDeleteMessage:
+			{
+				payload := action.Payload.(*chat.InitDeleteMessagePayload)
+				message := &chat.Message{
+					ID:     payload.Id,
+					Author: payload.Author,
+				}
+
+				err := c.MessageManager.Delete(message)
+				if err != nil {
+					c.Log.Error("Database error",
+						zap.String("error", err.Error()))
+					continue
+				}
+
+				c.Users.Range(func(key, value interface{}) bool {
+					user := value.(*chat.User)
+					user.Messages <- &chat.Action{
+						Type:    chat.SetDeleteMessage,
+						Payload: message,
+					}
+					return true
+				})
+			}
 		}
 	}
 }
