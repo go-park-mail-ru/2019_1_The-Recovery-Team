@@ -101,7 +101,7 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 			ProfileId: &session.ProfileId{
 				Id: prof.Info.Id,
 			},
-			Expires: ptypes.DurationProto(24 * time.Hour),
+			Expires: ptypes.DurationProto(24 * 3600 * time.Second),
 		}
 		sessionId, err := (*sessionManager).Set(context.Background(), create)
 		if err != nil {
@@ -115,7 +115,7 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 			Name:     "session_id",
 			Value:    sessionId.Id,
 			Path:     "/",
-			Domain:   ".sadislands",
+			Domain:   ".sadislands.ru",
 			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
 			HttpOnly: true,
 		})
@@ -161,7 +161,7 @@ func DeleteSession(sessionManager *session.SessionClient) httprouter.Handle {
 		cookie := http.Cookie{
 			Name:     "session_id",
 			Path:     "/",
-			Domain:   ".sadislands",
+			Domain:   ".sadislands.ru",
 			MaxAge:   -1,
 			HttpOnly: true,
 		}

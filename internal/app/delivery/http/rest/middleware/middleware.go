@@ -52,7 +52,7 @@ func Authentication(sessionManager *session.SessionClient, next httprouter.Handl
 			cookie := http.Cookie{
 				Name:     "session_id",
 				Path:     "/",
-				Domain:   ".sadislands",
+				Domain:   ".sadislands.ru",
 				MaxAge:   -1,
 				HttpOnly: true,
 			}

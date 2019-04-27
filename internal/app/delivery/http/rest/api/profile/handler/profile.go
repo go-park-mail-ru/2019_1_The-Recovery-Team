@@ -447,7 +447,7 @@ func PostProfile(profileManager *profileService.ProfileClient, sessionManager *s
 			Name:     "session_id",
 			Value:    sessionId.Id,
 			Path:     "/",
-			Domain:   ".sadislands",
+			Domain:   ".sadislands.ru",
 			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
 			HttpOnly: true,
 		})
