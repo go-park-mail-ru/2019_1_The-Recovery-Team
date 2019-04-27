@@ -92,7 +92,7 @@ func (r *Repo) Update(message *chat.Message) (*chat.Message, error) {
 	defer tx.Rollback()
 
 	var realAuthor uint64
-	if err := r.conn.QueryRow(QueryGetMesssageAuthor, message.ID).Scan(&realAuthor); err != nil {
+	if err := tx.QueryRow(QueryGetMesssageAuthor, message.ID).Scan(&realAuthor); err != nil {
 		return nil, err
 	}
 
@@ -100,7 +100,7 @@ func (r *Repo) Update(message *chat.Message) (*chat.Message, error) {
 		return nil, errors.New("permission denied")
 	}
 
-	if err := r.conn.QueryRow(QueryUpdateMessage, message.Data.Text, message.ID).
+	if err := tx.QueryRow(QueryUpdateMessage, message.Data.Text, message.ID).
 		Scan(&message.ID, &message.Author, &message.Receiver, &message.Created, &message.Edited); err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (r *Repo) Delete(message *chat.Message) error {
 	defer tx.Rollback()
 
 	var realAuthor uint64
-	if err := r.conn.QueryRow(QueryGetMesssageAuthor, message.ID).Scan(&realAuthor); err != nil {
+	if err := tx.QueryRow(QueryGetMesssageAuthor, message.ID).Scan(&realAuthor); err != nil {
 		return err
 	}
 
@@ -124,7 +124,11 @@ func (r *Repo) Delete(message *chat.Message) error {
 		return errors.New("permission denied")
 	}
 
-	r.conn.QueryRow(QueryDeleteMessage, message.ID)
+	tx.QueryRow(QueryDeleteMessage, message.ID)
 
-	return tx.Commit()
+	tx.Commit()
+	return nil
 }
+
+//{"type": "INIT_CHAT_MESSAGE_DELETE", "payload": "{\"messageId\":27}"}
+//{"type": "INIT_CHAT_MESSAGE_UPDATE", "payload": "{\"messageId\":24, \"data\":{\"text\":\"Fedya Pidor\"}}"}
