@@ -53,10 +53,6 @@ func main() {
 	postgresqlAddr := viper.GetString("postgresql.address")
 	migrationsFile := viper.GetString("postgresql.migrations.file")
 
-	chatDbAddr := viper.GetString("chat.database.address")
-	chatDbPort := viper.GetInt("chat.database.port")
-	chatDbMigrationsFile := viper.GetString("chat.database.migrations.file")
-
 	lis, err := net.Listen("tcp", ":"+strconv.Itoa(*port))
 	if err != nil {
 		log.Fatal("Failed to listen port", port)
@@ -70,23 +66,10 @@ func main() {
 		Password: "123456",
 	}
 
-	chatConfig := pgx.ConnConfig{
-		Host:     chatDbAddr,
-		Port:     uint16(chatDbPort),
-		Database: "sadislandschat",
-		User:     "recoveryteam",
-		Password: "123456",
-	}
-
 	// Create connection for migrations
 	psqlConn, err := pgx.Connect(psqlConfig)
 	if err != nil {
 		log.Fatal("Postgresql connection refused")
-	}
-
-	chatConn, err := pgx.Connect(chatConfig)
-	if err != nil {
-		log.Fatal("Chat postresql connection refused")
 	}
 
 	if err := postgresql.MakeMigrations(psqlConn, migrationsFile); err != nil {
@@ -94,23 +77,12 @@ func main() {
 	}
 	pgxClose(psqlConn)
 
-	if err := postgresql.MakeMigrations(chatConn, chatDbMigrationsFile); err != nil {
-		log.Fatal("Database migrations failed", err)
-	}
-	pgxClose(chatConn)
-
 	// Create new connection to database with updated OIDs
 	psqlConn, err = pgx.Connect(psqlConfig)
 	if err != nil {
 		log.Fatal("Postgresql connection refused")
 	}
 	defer pgxClose(psqlConn)
-
-	chatConn, err = pgx.Connect(chatConfig)
-	if err != nil {
-		log.Fatal("Chat postresql connection refused")
-	}
-	defer pgxClose(chatConn)
 
 	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(psqlConn))
 	service := profile.NewService(interactor)
