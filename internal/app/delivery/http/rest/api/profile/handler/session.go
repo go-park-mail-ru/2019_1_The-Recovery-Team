@@ -114,7 +114,8 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_id",
 			Value:    sessionId.Id,
-			Path:     ".",
+			Path:     "/",
+			Domain:   ".sadislands",
 			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
 			HttpOnly: true,
 		})
@@ -160,6 +161,7 @@ func DeleteSession(sessionManager *session.SessionClient) httprouter.Handle {
 		cookie := http.Cookie{
 			Name:     "session_id",
 			Path:     "/",
+			Domain:   ".sadislands",
 			MaxAge:   -1,
 			HttpOnly: true,
 		}
