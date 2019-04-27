@@ -177,10 +177,27 @@ func (c *Chat) processAction() {
 					Author: payload.Author,
 				}
 
-				err := c.MessageManager.Delete(message)
+				deleted, err := c.MessageManager.Delete(message)
 				if err != nil {
 					c.Log.Error("Database error",
 						zap.String("error", err.Error()))
+					continue
+				}
+
+				if deleted.Receiver != nil {
+					c.Log.Info("Private message update",
+						zap.Uint64("user_id", *deleted.Receiver))
+					session, ok := c.Sessions.Load(*deleted.Receiver)
+					if ok {
+						c.Log.Info("Private message update receiver is online",
+							zap.Uint64("user_id", *deleted.Receiver))
+						if user, ok := c.Users.Load(session); ok {
+							user.(*chat.User).Messages <- &chat.Action{
+								Type:    chat.SetDeleteMessage,
+								Payload: deleted,
+							}
+						}
+					}
 					continue
 				}
 
@@ -188,7 +205,7 @@ func (c *Chat) processAction() {
 					user := value.(*chat.User)
 					user.Messages <- &chat.Action{
 						Type:    chat.SetDeleteMessage,
-						Payload: message,
+						Payload: deleted,
 					}
 					return true
 				})

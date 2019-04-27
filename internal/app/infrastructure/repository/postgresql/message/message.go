@@ -11,6 +11,9 @@ const (
 	QueryGetMesssageAuthor = `SELECT author FROM message
 		WHERE id = $1`
 
+	QueryGetMesssage = `SELECT id, author, receiver, created, edited, text FROM message
+		WHERE id = $1`
+
 	QueryCreateMessage = `INSERT INTO message (author, receiver, text)
 		VALUES ($1, $2, $3)
 		RETURNING id, created, edited`
@@ -108,27 +111,24 @@ func (r *Repo) Update(message *chat.Message) (*chat.Message, error) {
 	return message, nil
 }
 
-func (r *Repo) Delete(message *chat.Message) error {
+func (r *Repo) Delete(message *chat.Message) (*chat.Message, error) {
 	tx, err := r.conn.Begin()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer tx.Rollback()
 
 	var realAuthor uint64
-	if err := tx.QueryRow(QueryGetMesssageAuthor, message.ID).Scan(&realAuthor); err != nil {
-		return err
+	if err := tx.QueryRow(QueryGetMesssage, message.ID).Scan(&message.ID, &realAuthor, &message.Receiver, &message.Created, &message.Edited, &message.Data.Text); err != nil {
+		return nil, err
 	}
 
 	if *message.Author != realAuthor {
-		return errors.New("permission denied")
+		return nil, errors.New("permission denied")
 	}
 
 	tx.QueryRow(QueryDeleteMessage, message.ID)
 
 	tx.Commit()
-	return nil
+	return message, nil
 }
-
-//{"type": "INIT_CHAT_MESSAGE_DELETE", "payload": "{\"messageId\":27}"}
-//{"type": "INIT_CHAT_MESSAGE_UPDATE", "payload": "{\"messageId\":24, \"data\":{\"text\":\"Fedya Pidor\"}}"}

@@ -27,6 +27,6 @@ func (i *MessageInteractor) Update(message *chat.Message) (*chat.Message, error)
 	return i.repo.Update(message)
 }
 
-func (i *MessageInteractor) Delete(message *chat.Message) error {
+func (i *MessageInteractor) Delete(message *chat.Message) (*chat.Message, error) {
 	return i.repo.Delete(message)
 }
