@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	uuid "github.com/satori/go.uuid"
@@ -33,8 +32,6 @@ func Connect(chatManager *usecase.ChatInteractor, sessionManager *session.Sessio
 
 			if response, err := (*sessionManager).Get(context.Background(), sessionID); err == nil {
 				profileID = &response.Id
-			} else {
-				fmt.Println(err)
 			}
 		}
 

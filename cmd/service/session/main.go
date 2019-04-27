@@ -29,10 +29,8 @@ func main() {
 	flag.Parse()
 
 	if *dev {
-		fmt.Println(*dev)
 		viper.SetConfigName("local")
 	} else {
-		fmt.Println(*dev)
 		viper.SetConfigName("config")
 	}
 	viper.SetConfigType("json")
