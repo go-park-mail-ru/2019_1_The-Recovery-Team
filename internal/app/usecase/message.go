@@ -18,3 +18,7 @@ type MessageInteractor struct {
 func (i *MessageInteractor) Create(message *chat.Message) (*chat.Message, error) {
 	return i.repo.Create(message)
 }
+
+func (i *MessageInteractor) Update(message *chat.Message) (*chat.Message, error) {
+	return i.repo.Update(message)
+}

@@ -81,6 +81,32 @@ func (c *Chat) processAction() {
 					return true
 				})
 			}
+		case chat.UpdateMessage:
+			{
+				payload := action.Payload.(*chat.UpdateMessagePayload)
+				message := &chat.Message{
+					ID: *payload.MessageId,
+					Data: chat.Data{
+						Text: payload.Data.Text,
+					},
+				}
+
+				updated, err := c.MessageManager.Update(message)
+				if err != nil {
+					c.Log.Error("Database error",
+						zap.String("error", err.Error()))
+					continue
+				}
+
+				c.Users.Range(func(key, value interface{}) bool {
+					user := value.(*chat.User)
+					user.Messages <- &chat.Action{
+						Type:    chat.UpdateMessage,
+						Payload: updated,
+					}
+					return true
+				})
+			}
 		}
 	}
 }

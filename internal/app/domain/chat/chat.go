@@ -11,3 +11,8 @@ type InitMessagePayload struct {
 type SetSessionPayload struct {
 	SessionID string `json:"sessionId"`
 }
+
+type UpdateMessagePayload struct {
+	MessageId *uint64
+	Data      Data `json:"data"`
+}
