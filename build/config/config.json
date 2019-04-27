@@ -30,8 +30,10 @@
   },
   "chat": {
     "address": "chat",
-    "port": 4444,
+    "port": 8082,
     "database": {
+      "address": "sadislandschat",
+      "port": 5433,
       "migrations": {
         "file": "build/schema/1_chat.sql"
       }
