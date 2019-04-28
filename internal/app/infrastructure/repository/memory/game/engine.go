@@ -39,9 +39,9 @@ type Engine struct {
 	ProcessActions []*game.Action
 	ProcessM       *sync.Mutex
 
-	RoundRunning *atomic.Value
-	GameOver     *atomic.Value
-	Stopped      *atomic.Value
+	GameStart *atomic.Value
+	GameOver  *atomic.Value
+	Stopped   *atomic.Value
 
 	ReceivedActions chan *game.Action
 
@@ -138,11 +138,6 @@ func (e *Engine) setRoundTime() {
 
 // setRoundStop stops round, resets round timer and player ready state
 func (e *Engine) setRoundStop() {
-	for idStr, player := range e.State.Players {
-		player.Ready = false
-		e.State.Players[idStr] = player
-	}
-
 	e.StateDiff.RoundTimer = new(uint64)
 	atomic.StoreUint64(e.State.RoundTimer, 0)
 	atomic.StoreUint64(e.StateDiff.RoundTimer, atomic.LoadUint64(e.State.RoundTimer))
@@ -382,7 +377,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 			}
 		case game.InitPlayerMove:
 			{
-				if !e.RoundRunning.Load().(bool) || e.GameOver.Load().(bool) {
+				if e.GameOver.Load().(bool) {
 					continue
 				}
 
@@ -403,39 +398,17 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 					}
 				}
 			}
-		case game.SetRoundStart:
-			{
-				e.setRoundStart()
-				e.RoundRunning.Store(true)
-			}
 		case game.SetRoundTime:
 			{
 				e.setRoundTime()
 			}
+		case game.SetRoundStart:
+			{
+				e.setRoundStart()
+			}
 		case game.SetRoundStop:
 			{
-				e.RoundRunning.Store(false)
-				e.setRoundStop()
-				go func() {
-					e.Transport.SendOut(&game.Action{
-						Type:    game.SetStateDiff,
-						Payload: e.StateDiff,
-					})
-					e.Transport.SendOut(&game.Action{Type: game.SetRoundStop})
-				}()
-
-				e.ReceivedActions <- &game.Action{
-					Type: game.SetFieldRound,
-				}
-			}
-		case game.SetFieldRound:
-			{
 				e.updateFieldRound()
-				e.Transport.SendOut(&game.Action{
-					Type:    game.SetState,
-					Payload: *e.copyState(),
-				})
-
 				// Check game end
 				if e.GameOver.Load().(bool) {
 					e.Transport.SendOut(&game.Action{
@@ -444,6 +417,10 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 					e.ReceivedActions <- &game.Action{
 						Type: game.InitEngineStop,
 					}
+				}
+
+				e.ReceivedActions <- &game.Action{
+					Type: game.SetRoundStart,
 				}
 			}
 		case game.InitEngineStop:
@@ -524,19 +501,19 @@ func InitEngine(callback func(action *game.Action)) func(action interface{}) {
 		ProcessM:        &sync.Mutex{},
 		ReceivedActions: make(chan *game.Action, 100),
 		ProcessActions:  make([]*game.Action, 0, 10),
-		RoundRunning:    &atomic.Value{},
+		GameStart:       &atomic.Value{},
 		GameOver:        &atomic.Value{},
 		Stopped:         &atomic.Value{},
 	}
 
 	// Initialize atomic values with bools inside
-	engine.RoundRunning.Store(false)
+	engine.GameStart.Store(false)
 	engine.GameOver.Store(false)
 	engine.Stopped.Store(false)
 
 	// Initialize innerReceiver logic
 	engine.Transport.InnerReceiver = func(action interface{}) {
-		if isRoundRunning := engine.RoundRunning.Load().(bool); isRoundRunning {
+		if isGameStart := engine.GameStart.Load().(bool); isGameStart {
 			switch action.(*game.Action).Type {
 			case game.InitPlayers, game.InitPlayerReady:
 				{
@@ -584,19 +561,19 @@ func InitEngineJS(callback func(actionType, payload string)) func(action interfa
 		ProcessM:        &sync.Mutex{},
 		ReceivedActions: make(chan *game.Action, 100),
 		ProcessActions:  make([]*game.Action, 0, 10),
-		RoundRunning:    &atomic.Value{},
+		GameStart:       &atomic.Value{},
 		GameOver:        &atomic.Value{},
 		Stopped:         &atomic.Value{},
 	}
 
 	// Initialize atomic values with bools inside
-	engine.RoundRunning.Store(false)
+	engine.GameStart.Store(false)
 	engine.GameOver.Store(false)
 	engine.Stopped.Store(false)
 
 	// Initialize innerReceiver logic
 	engine.Transport.InnerReceiver = func(action interface{}) {
-		isRoundRunning := engine.RoundRunning.Load().(bool)
+		isRoundRunning := engine.GameStart.Load().(bool)
 
 		raw := game.ActionRaw{}
 		json.Unmarshal([]byte(action.(string)), &raw)

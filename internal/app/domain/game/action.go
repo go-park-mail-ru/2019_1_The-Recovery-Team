@@ -1,7 +1,6 @@
 package game
 
 const (
-	SetGameStart        = "SET_GAME_START"
 	InitPlayers         = "INIT_PLAYERS"
 	InitPlayerMove      = "INIT_PLAYER_MOVE"
 	SetRoundStart       = "SET_ROUND_START"
@@ -10,7 +9,6 @@ const (
 	SetStateDiff        = "SET_STATE_DIFF"
 	SetRoundStop        = "SET_ROUND_STOP"
 	InitPlayerReady     = "INIT_PLAYER_READY"
-	SetFieldRound       = "SET_FIELD_ROUND"
 	SetGameOver         = "SET_GAME_OVER"
 	SetUserDisconnected = "SET_USER_DISCONNECTED"
 	SetOpponentLeave    = "SET_OPPONENT_LEAVE"
