@@ -111,11 +111,16 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 			return
 		}
 
+		domain := ""
+		host := r.Header.Get("Host")
+		if host == "sadislands.ru" || host == "hackathon.sadislands.ru" {
+			domain = ".sadislands.ru"
+		}
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_id",
 			Value:    sessionId.Id,
 			Path:     "/",
-			Domain:   ".sadislands.ru",
+			Domain:   domain,
 			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
 			HttpOnly: true,
 		})
@@ -158,10 +163,15 @@ func DeleteSession(sessionManager *session.SessionClient) httprouter.Handle {
 			return
 		}
 
+		domain := ""
+		host := r.Header.Get("Host")
+		if host == "sadislands.ru" || host == "hackathon.sadislands.ru" {
+			domain = ".sadislands.ru"
+		}
 		cookie := http.Cookie{
 			Name:     "session_id",
 			Path:     "/",
-			Domain:   ".sadislands.ru",
+			Domain:   domain,
 			MaxAge:   -1,
 			HttpOnly: true,
 		}
