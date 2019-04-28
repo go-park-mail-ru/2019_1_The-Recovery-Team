@@ -48,10 +48,10 @@ func Authentication(sessionManager *session.SessionClient, next httprouter.Handl
 
 		profileId, err := (*sessionManager).Get(context.Background(), sessionId)
 
-		domain := ""
+		domain := ".sadislands.ru"
 		host := r.Header.Get("Host")
-		if host == "sadislands.ru" || host == "hackathon.sadislands.ru" {
-			domain = ".sadislands.ru"
+		if host == "localhost" {
+			domain = ""
 		}
 		if err != nil {
 			cookie := http.Cookie{
