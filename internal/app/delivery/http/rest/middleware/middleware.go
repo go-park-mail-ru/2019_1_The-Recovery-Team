@@ -67,6 +67,33 @@ func Authentication(sessionManager *session.SessionClient, next httprouter.Handl
 	}
 }
 
+// Session middleware passes session and profile id if they exists
+func SessionMiddleware(sessionManager *session.SessionClient, next httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		ctx := r.Context()
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			next(w, r.WithContext(ctx), ps)
+			return
+		}
+
+		sessionId := &session.SessionId{
+			Id: cookie.Value,
+		}
+
+		profileId, err := (*sessionManager).Get(context.Background(), sessionId)
+
+		if err != nil {
+			next(w, r.WithContext(ctx), ps)
+			return
+		}
+
+		ctx = context.WithValue(ctx, ProfileID, profileId.Id)
+		ctx = context.WithValue(ctx, SessionID, cookie.Value)
+		next(w, r.WithContext(ctx), ps)
+	}
+}
+
 // CORSMiddleware implements CORS mechanism
 func CORSMiddleware(next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
