@@ -64,14 +64,14 @@ const (
 )
 
 // NewRepo creates new instance of profile repository
-func NewRepo(conn *pgx.Conn) *Repo {
+func NewRepo(conn *pgx.ConnPool) *Repo {
 	return &Repo{
 		conn: conn,
 	}
 }
 
 type Repo struct {
-	conn *pgx.Conn
+	conn *pgx.ConnPool
 }
 
 // Get gets profile data by id

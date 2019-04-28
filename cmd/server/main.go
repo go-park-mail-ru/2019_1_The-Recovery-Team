@@ -63,14 +63,14 @@ func main() {
 	defer logger.Sync()
 
 	profileConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, profileName),
-		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name), grpc.WithBlock())
 	if err != nil {
 		log.Fatal("Can't connect to profile service:", err)
 	}
 	defer profileConn.Close()
 
 	sessionConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, sessionName),
-		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name), grpc.WithBlock())
 	if err != nil {
 		log.Fatal("Authentication service connection refused:", err)
 	}

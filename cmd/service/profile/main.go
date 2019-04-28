@@ -66,6 +66,11 @@ func main() {
 		Password: "123456",
 	}
 
+	psqlConfigPool := pgx.ConnPoolConfig{
+		ConnConfig:     psqlConfig,
+		MaxConnections: 50,
+	}
+
 	// Create connection for migrations
 	psqlConn, err := pgx.Connect(psqlConfig)
 	if err != nil {
@@ -78,13 +83,13 @@ func main() {
 	pgxClose(psqlConn)
 
 	// Create new connection to database with updated OIDs
-	psqlConn, err = pgx.Connect(psqlConfig)
+	psqlConnPool, err := pgx.NewConnPool(psqlConfigPool)
 	if err != nil {
 		log.Fatal("Postgresql connection refused")
 	}
-	defer pgxClose(psqlConn)
+	defer psqlConnPool.Close()
 
-	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(psqlConn))
+	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(psqlConnPool))
 	service := profile.NewService(interactor)
 	server := grpc.NewServer()
 
