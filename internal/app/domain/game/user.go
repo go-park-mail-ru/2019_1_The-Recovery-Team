@@ -158,6 +158,23 @@ func (u *User) listen() {
 
 				action.Payload = payload
 			}
+		case InitItemUse:
+			{
+				payload := &InitItemUsePayload{}
+				if err := easyjson.Unmarshal([]byte(raw.Payload), payload); err != nil {
+					u.Log.Warn("Invalid item use payload")
+					continue
+				}
+
+				if payload.PlayerId != u.Info.ID {
+					u.Log.Warn("Player trying to use opponent item")
+					continue
+				}
+
+				action.Payload = payload
+			}
+		default:
+			continue
 		}
 
 		u.Room.Actions <- action

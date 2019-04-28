@@ -20,6 +20,9 @@ const (
 	SetOpponent         = "SET_OPPONENT"
 	InitPing            = "INIT_PING"
 	SetPong             = "SET_PONG"
+	InitItemUse         = "INIT_ITEM_USE"
+	SetItemTime         = "SET_ITEM_TIME"
+	SetItemStop         = "SET_ITEM_STOP"
 )
 
 //easyjson:json

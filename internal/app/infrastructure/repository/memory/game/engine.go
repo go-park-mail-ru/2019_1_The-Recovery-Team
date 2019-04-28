@@ -25,6 +25,9 @@ const (
 	Down                    = "DOWN"
 	Left                    = "LEFT"
 	Right                   = "RIGHT"
+	Lifebuoy                = "LIFEBUOY"
+	Bomb                    = "BOMB"
+	ItemDuration     uint64 = 5
 	RoundDuration    uint64 = 5
 	TickerDuration          = 1000 / 60
 )
@@ -54,7 +57,7 @@ func initState() *game.State {
 	return &game.State{
 		Field:       initField(),
 		Players:     make(map[string]game.Player),
-		ActiveItems: sync.Map{},
+		ActiveItems: make(map[uint64]game.Item),
 		RoundNumber: 0,
 	}
 }
@@ -107,6 +110,110 @@ func initField() *game.Field {
 // setGameState sets up game state
 func (e *Engine) setGameState() {
 	e.State = initState()
+}
+
+// Item action handlers
+
+func (e *Engine) initItemUse(action *game.Action) {
+	payload := action.Payload.(*game.InitItemUsePayload)
+
+	idStr := strconv.FormatUint(payload.PlayerId, 10)
+	player, exists := e.State.Players[idStr]
+
+	// Player exists or already lost
+	if !exists || player.LoseRound != nil {
+		return
+	}
+
+	if n, exists := player.Items[payload.ItemType]; !exists || n == 0 {
+		return
+	}
+
+	if _, exists := e.State.ActiveItems[payload.PlayerId]; exists {
+		return
+	}
+
+	player.Items[payload.ItemType]--
+	e.setItemStart(payload.PlayerId, payload.ItemType)
+}
+
+func (e *Engine) controlRemainingItemTime(playerId uint64, itemType string) {
+	remaining := ItemDuration
+	action := &game.Action{
+		Type: game.SetItemTime,
+		Payload: game.SetItemPayload{
+			PlayerId: playerId,
+			ItemType: itemType,
+		},
+	}
+
+	t := time.NewTicker(1 * time.Second)
+	for {
+		<-t.C
+		if e.GameOver.Load().(bool) {
+			return
+		}
+
+		// Remaining time will become 1 second
+		if remaining == 2 {
+			e.ReceivedActions <- action
+			t.Stop()
+			return
+		}
+
+		remaining--
+		e.ReceivedActions <- action
+	}
+}
+
+func (e *Engine) setItemStart(playerId uint64, itemType string) {
+	e.State.ActiveItems[playerId] = game.Item{
+		Type:     itemType,
+		PlayerId: playerId,
+		Duration: ItemDuration,
+	}
+	for key, value := range e.State.ActiveItems {
+		e.StateDiff.ActiveItems[key] = value
+	}
+
+	time.AfterFunc(time.Duration(ItemDuration)*time.Second, e.stopItem(playerId, itemType))
+	go e.controlRemainingItemTime(playerId, itemType)
+}
+
+func (e *Engine) setItemTime(action *game.Action) {
+	payload := action.Payload.(game.SetItemPayload)
+	item := e.State.ActiveItems[payload.PlayerId]
+	item.Duration--
+	e.State.ActiveItems[payload.PlayerId] = item
+
+	for key, value := range e.State.ActiveItems {
+		e.StateDiff.ActiveItems[key] = value
+	}
+}
+
+func (e *Engine) setItemStop(action *game.Action) {
+	payload := action.Payload.(game.SetItemPayload)
+	delete(e.State.ActiveItems, payload.PlayerId)
+
+	for key, value := range e.State.ActiveItems {
+		e.StateDiff.ActiveItems[key] = value
+	}
+}
+
+func (e *Engine) stopItem(playerId uint64, itemType string) func() {
+	return func() {
+		if e.GameOver.Load().(bool) {
+			return
+		}
+
+		e.ReceivedActions <- &game.Action{
+			Type: game.SetItemStop,
+			Payload: game.SetItemPayload{
+				PlayerId: playerId,
+				ItemType: itemType,
+			},
+		}
+	}
 }
 
 // Round action handlers
@@ -191,10 +298,15 @@ func (e *Engine) initPlayers(action *game.Action) {
 	for _, id := range payload.PlayersId {
 		idStr := strconv.FormatUint(id, 10)
 
-		e.State.Players[idStr] = game.Player{
+		player := game.Player{
 			Id:    id,
 			Items: make(map[string]uint64),
 		}
+		player.Items[Lifebuoy] = 3
+		player.Items[Bomb] = 0
+		player.Items[Sand] = 3
+
+		e.State.Players[idStr] = player
 	}
 }
 
@@ -219,6 +331,8 @@ func (e *Engine) initPlayerReady(action *game.Action) {
 			return
 		}
 	}
+
+	e.GameStart.Store(true)
 
 	e.ReceivedActions <- &game.Action{
 		Type: game.SetRoundStart,
@@ -278,9 +392,20 @@ func (e *Engine) movePlayer(action *game.Action) {
 	}
 
 	e.State.Players[idStr] = player
+	if item, exists := e.State.ActiveItems[player.Id]; exists && item.Type == Sand {
+		e.State.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*e.State.Field.Width].Type = Sand
+		if e.StateDiff.Field == nil {
+			e.StateDiff.Field = &game.Field{}
 
-	// Checks player for death
-	if e.isPlayerDead(idStr) {
+			e.StateDiff.Field.Cells = make([]game.Cell, len(e.State.Field.Cells))
+			copy(e.StateDiff.Field.Cells, e.State.Field.Cells)
+			e.StateDiff.Field.Height = e.State.Field.Height
+			e.StateDiff.Field.Width = e.State.Field.Width
+
+		} else {
+			e.StateDiff.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*e.State.Field.Width].Type = Sand
+		}
+	} else if e.isPlayerDead(idStr) {
 		player.LoseRound = &e.State.RoundNumber
 		e.GameOver.Store(true)
 	}
@@ -291,13 +416,18 @@ func (e *Engine) movePlayer(action *game.Action) {
 // isPlayerDead checks player for death
 func (e *Engine) isPlayerDead(id string) bool {
 	player := e.State.Players[id]
+	if item, exists := e.State.ActiveItems[player.Id]; exists && item.Type == Lifebuoy {
+		return false
+	}
+
 	return e.State.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*e.State.Field.Width].Type == Water
 }
 
 // initStateDiff creates instance of empty state
 func initStateDiff() *game.State {
 	return &game.State{
-		Players: make(map[string]game.Player),
+		Players:     make(map[string]game.Player),
+		ActiveItems: make(map[uint64]game.Item),
 	}
 }
 
@@ -305,16 +435,23 @@ func initStateDiff() *game.State {
 func (e *Engine) copyState() *game.State {
 	state := &game.State{
 		Field:       &game.Field{},
-		Players:     e.State.Players,
+		Players:     make(map[string]game.Player),
 		RoundNumber: e.State.RoundNumber,
 		RoundTimer:  new(uint64),
+		ActiveItems: make(map[uint64]game.Item),
 	}
-	e.State.ActiveItems.Range(func(key, value interface{}) bool {
-		state.ActiveItems.Store(key, value)
-		return true
-	})
 
-	*state.Field = *e.State.Field
+	for key, value := range e.State.Players {
+		state.Players[key] = value
+	}
+	for key, value := range e.State.ActiveItems {
+		state.ActiveItems[key] = value
+	}
+
+	state.Field.Cells = make([]game.Cell, len(e.State.Field.Cells))
+	copy(state.Field.Cells, e.State.Field.Cells)
+	state.Field.Height = e.State.Field.Height
+	state.Field.Width = e.State.Field.Width
 	if e.State.RoundTimer != nil {
 		atomic.StoreUint64(state.RoundTimer, atomic.LoadUint64(e.State.RoundTimer))
 	}
@@ -396,6 +533,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 					e.ReceivedActions <- &game.Action{
 						Type: game.InitEngineStop,
 					}
+					return
 				}
 			}
 		case game.SetRoundTime:
@@ -417,11 +555,15 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 					e.ReceivedActions <- &game.Action{
 						Type: game.InitEngineStop,
 					}
+					return
 				}
+				e.setRoundStart()
+				e.Transport.SendOut(&game.Action{
+					Type:    game.SetStateDiff,
+					Payload: *e.copyState(),
+				})
 
-				e.ReceivedActions <- &game.Action{
-					Type: game.SetRoundStart,
-				}
+				e.StateDiff = initStateDiff()
 			}
 		case game.InitEngineStop:
 			{
@@ -432,6 +574,18 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 				e.GameOver.Store(true)
 				close(e.ReceivedActions)
 				return
+			}
+		case game.InitItemUse:
+			{
+				e.initItemUse(action)
+			}
+		case game.SetItemTime:
+			{
+				e.setItemTime(action)
+			}
+		case game.SetItemStop:
+			{
+				e.setItemStop(action)
 			}
 		}
 	}
@@ -522,7 +676,7 @@ func InitEngine(callback func(action *game.Action)) func(action interface{}) {
 			}
 		} else {
 			switch action.(*game.Action).Type {
-			case game.InitPlayerMove:
+			case game.InitPlayerMove, game.InitItemUse:
 				{
 					return
 				}

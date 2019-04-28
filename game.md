@@ -236,6 +236,7 @@ interface Payload {
 
 ```typescript
 interface Payload {
+    PlayerId: number;
     ItemType: ItemType;
 }
 ```
