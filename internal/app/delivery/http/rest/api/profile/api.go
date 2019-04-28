@@ -34,7 +34,7 @@ func NewApi(
 	router.GET("/api/v1/profiles/:id",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.Authentication(
+				logger, middleware.SessionMiddleware(
 					sessionManager, middleware.CORSMiddleware(handler.GetProfile(profileManager))))),
 	)
 	router.PUT("/api/v1/profiles/:id",
