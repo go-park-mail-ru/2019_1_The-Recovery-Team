@@ -18,21 +18,21 @@
     "port": 8081
   },
   "postgresql": {
-    "address": "localhost",
+    "address": "0.0.0.0",
     "port": 5432,
     "migrations": {
       "file": "build/schema/0_initial.sql"
     }
   },
   "redis": {
-    "address": "localhost",
+    "address": "0.0.0.0",
     "port": 6379
   },
   "chat": {
-    "address": "localhost",
+    "address": "0.0.0.0",
     "port": 8082,
     "database": {
-      "address": "localhost",
+      "address": "0.0.0.0",
       "port": 5432,
       "migrations": {
         "file": "build/schema/1_chat.sql"
