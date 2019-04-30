@@ -27,62 +27,72 @@ func NewApi(
 	router.GET("/api/v1/profiles",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.CORSMiddleware(handler.GetProfiles(profileManager)))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.CORSMiddleware(handler.GetProfiles(profileManager))))),
 	)
 	router.POST("/api/v1/profiles",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.CORSMiddleware(handler.PostProfile(profileManager, sessionManager)))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.CORSMiddleware(handler.PostProfile(profileManager, sessionManager))))),
 	)
 	router.GET("/api/v1/profiles/:id",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.SessionMiddleware(
-					sessionManager, middleware.CORSMiddleware(handler.GetProfile(profileManager))))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.SessionMiddleware(sessionManager,
+						middleware.CORSMiddleware(handler.GetProfile(profileManager)))))),
 	)
 	router.PUT("/api/v1/profiles/:id",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.Authentication(
-					sessionManager, middleware.CORSMiddleware(handler.PutProfile(profileManager))))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.Authentication(sessionManager,
+						middleware.CORSMiddleware(handler.PutProfile(profileManager)))))),
 	)
 	router.PUT("/api/v1/profiles/:id/password",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.Authentication(
-					sessionManager, middleware.CORSMiddleware(handler.PutProfilePassword(profileManager))))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.Authentication(sessionManager,
+						middleware.CORSMiddleware(handler.PutProfilePassword(profileManager)))))),
 	)
 	router.PUT("/api/v1/avatars",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.Authentication(
-					sessionManager, middleware.CORSMiddleware(handler.PutAvatar(profileManager))))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.Authentication(sessionManager,
+						middleware.CORSMiddleware(handler.PutAvatar(profileManager)))))),
 	)
 
 	//Session routes
 	router.GET("/api/v1/sessions",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.Authentication(
-					sessionManager, middleware.CORSMiddleware(handler.GetSession())))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.Authentication(sessionManager,
+						middleware.CORSMiddleware(handler.GetSession()))))),
 	)
 	router.POST("/api/v1/sessions",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.CORSMiddleware(handler.PostSession(profileManager, sessionManager)))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.CORSMiddleware(handler.PostSession(profileManager, sessionManager))))),
 	)
 	router.DELETE("/api/v1/sessions",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.Authentication(
-					sessionManager, middleware.CORSMiddleware(handler.DeleteSession(sessionManager))))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.Authentication(sessionManager,
+						middleware.CORSMiddleware(handler.DeleteSession(sessionManager)))))),
 	)
 
 	//Scoreboard routes
 	router.GET("/api/v1/scores",
 		middleware.LoggerMiddleware(
 			logger, middleware.RecoverMiddleware(
-				logger, middleware.CORSMiddleware(handler.GetScoreboard(profileManager)))),
+				logger, middleware.AccessHitsMiddleware(
+					middleware.CORSMiddleware(handler.GetScoreboard(profileManager))))),
 	)
 
 	//Metrics routes
