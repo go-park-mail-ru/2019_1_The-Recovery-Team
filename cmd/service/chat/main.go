@@ -51,35 +51,42 @@ func init() {
 
 func main() {
 	port := viper.GetInt("chat.port")
-	chatDbAddr := viper.GetString("chat.database.address")
-	chatDbPort := viper.GetInt("chat.database.port")
-	chatDbMigrationsFile := viper.GetString("chat.database.migrations.file")
+	postgresqlAddr := viper.GetString("chat.database.address")
+	postgresqlPort := viper.GetInt("chat.database.port")
+	migrationsFile := viper.GetString("chat.database.migrations.file")
 	consulAddr := viper.Get("consul.address")
 	sessionName := viper.Get("session.name")
 
-	chatConfig := pgx.ConnConfig{
-		Host:     chatDbAddr,
-		Port:     uint16(chatDbPort),
+	psqlConfig := pgx.ConnConfig{
+		Host:     postgresqlAddr,
+		Port:     uint16(postgresqlPort),
 		Database: "sadislandschat",
 		User:     "recoveryteam",
 		Password: "123456",
 	}
 
-	chatConn, err := pgx.Connect(chatConfig)
-	if err != nil {
-		log.Fatal("Chat postresql connection refused")
+	psqlConfigPool := pgx.ConnPoolConfig{
+		ConnConfig:     psqlConfig,
+		MaxConnections: 50,
 	}
 
-	if err := postgresql.MakeMigrations(chatConn, chatDbMigrationsFile); err != nil {
+	// Create connection for migrations
+	psqlConn, err := pgx.Connect(psqlConfig)
+	if err != nil {
+		log.Fatal("Postresql connection refused")
+	}
+
+	if err := postgresql.MakeMigrations(psqlConn, migrationsFile); err != nil {
 		log.Fatal("Database migrations failed", err)
 	}
-	pgxClose(chatConn)
+	pgxClose(psqlConn)
 
-	chatConn, err = pgx.Connect(chatConfig)
+	// Create new connection to database with updated OIDs
+	psqlConnPool, err := pgx.NewConnPool(psqlConfigPool)
 	if err != nil {
-		log.Fatal("Chat postresql connection refused")
+		log.Fatal("Postresql connection refused")
 	}
-	defer pgxClose(chatConn)
+	defer psqlConnPool.Close()
 
 	sessionConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, sessionName),
 		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
@@ -94,7 +101,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	messageInteractor := usecase.NewMessageInteractor(message.NewRepo(chatConn))
+	messageInteractor := usecase.NewMessageInteractor(message.NewRepo(psqlConnPool))
 	chatInteractor := usecase.NewChatInteractor(chat.NewRepo(logger, messageInteractor))
 	sessionManager := session.NewSessionClient(sessionConn)
 

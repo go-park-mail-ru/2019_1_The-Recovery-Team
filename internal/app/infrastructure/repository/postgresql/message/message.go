@@ -18,11 +18,6 @@ const (
 		VALUES ($1, $2, $3)
 		RETURNING id, created, edited`
 
-	QueryGetMessages = `SELECT * FROM message
-		WHERE ((author = $1 AND receiver = $2) OR (author = $2 AND receiver = $1)) AND id > $3
-		ORDER BY created DESC
-		LIMIT $4`
-
 	QueryGetGlobalMessagesFrom = `SELECT id, author, receiver, created, edited, text FROM message
 		WHERE id < $1
 		ORDER BY created DESC
@@ -40,14 +35,14 @@ const (
 )
 
 // NewRepo creates new instance of chat repository
-func NewRepo(conn *pgx.Conn) *Repo {
+func NewRepo(conn *pgx.ConnPool) *Repo {
 	return &Repo{
 		conn: conn,
 	}
 }
 
 type Repo struct {
-	conn *pgx.Conn
+	conn *pgx.ConnPool
 }
 
 // Create adds new massage
@@ -86,7 +81,7 @@ func (r *Repo) GetGlobal(data *chat.Query) (*[]chat.Message, error) {
 	return &messages, nil
 }
 
-// Update text of message
+// Update updates text of message
 func (r *Repo) Update(message *chat.Message) (*chat.Message, error) {
 	tx, err := r.conn.Begin()
 	if err != nil {
@@ -111,6 +106,7 @@ func (r *Repo) Update(message *chat.Message) (*chat.Message, error) {
 	return message, nil
 }
 
+// Delete deletes message
 func (r *Repo) Delete(message *chat.Message) (*chat.Message, error) {
 	tx, err := r.conn.Begin()
 	if err != nil {
