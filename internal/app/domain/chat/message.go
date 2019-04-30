@@ -3,6 +3,12 @@ package chat
 import "time"
 
 //easyjson:json
+type MessageInfo struct {
+	SessionID string  `json:"-"`
+	Author    *uint64 `json:"authorId"`
+}
+
+//easyjson:json
 type Message struct {
 	ID       uint64    `json:"messageId" example:"1"`
 	Author   *uint64   `json:"authorId" example:"2"`

@@ -9,19 +9,17 @@ type Query struct {
 
 //easyjson:json
 type InitMessagePayload struct {
-	SessionID string  `json:"sessionId"`
-	Author    *uint64 `json:"author"`
-	Receiver  *uint64 `json:"toId"`
-	Data      Data    `json:"data"`
+	MessageInfo
+	Receiver *uint64 `json:"toId"`
+	Data     Data    `json:"data"`
 }
 
 //easyjson:json
 type InitGlobalMessagesPayload struct {
-	Start     int     `json:"start"`
-	Limit     int     `json:"limit"`
-	SessionID string  `json:"-"`
-	Author    *uint64 `json:"authorId"`
-	Receiver  *uint64 `json:"toId"`
+	MessageInfo
+	Start    int     `json:"start"`
+	Limit    int     `json:"limit"`
+	Receiver *uint64 `json:"toId"`
 }
 
 //easyjson:json
@@ -31,16 +29,14 @@ type SetSessionPayload struct {
 
 //easyjson:json
 type InitUpdateMessagePayload struct {
-	Id        uint64  `json:"messageId"`
-	SessionID string  `json:"-"`
-	Author    *uint64 `json:"authorId"`
-	Data      Data    `json:"data"`
+	MessageInfo
+	Id   uint64 `json:"messageId"`
+	Data Data   `json:"data"`
 }
 
 //easyjson:json
 type InitPrintingPayload struct {
-	SessionID string `json:"-"`
-	Author    uint64 `json:"authorId"`
+	MessageInfo
 }
 
 //easyjson:json
@@ -50,7 +46,6 @@ type SetPrintingPayload struct {
 
 //easyjson:json
 type InitDeleteMessagePayload struct {
-	Id        uint64  `json:"messageId"`
-	SessionID string  `json:"-"`
-	Author    *uint64 `json:"authorId"`
+	MessageInfo
+	Id uint64 `json:"messageId"`
 }

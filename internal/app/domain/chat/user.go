@@ -134,7 +134,7 @@ func (u *User) listen() {
 
 				u.Log.Info("Receive message printing")
 				payload := &InitPrintingPayload{}
-				payload.Author = *u.Id
+				payload.Author = u.Id
 				payload.SessionID = u.SessionID
 				action.Payload = payload
 			}

@@ -33,6 +33,34 @@ type Chat struct {
 	Log            *zap.Logger
 }
 
+func (c *Chat) broadcast(receiver *uint64, actionType string, payload interface{}) {
+	if receiver != nil {
+		c.Log.Info("Private message",
+			zap.Uint64("user_id", *receiver))
+		session, ok := c.Sessions.Load(*receiver)
+		if ok {
+			c.Log.Info("Private message receiver is online",
+				zap.Uint64("user_id", *receiver))
+			if user, ok := c.Users.Load(session); ok {
+				user.(*chat.User).Messages <- &chat.Action{
+					Type:    actionType,
+					Payload: payload,
+				}
+			}
+		}
+		return
+	}
+
+	c.Users.Range(func(key, value interface{}) bool {
+		user := value.(*chat.User)
+		user.Messages <- &chat.Action{
+			Type:    actionType,
+			Payload: payload,
+		}
+		return true
+	})
+}
+
 func (c *Chat) processAction() {
 	for action := range c.Actions {
 		c.Log.Info("Receive message")
@@ -85,31 +113,7 @@ func (c *Chat) processAction() {
 					continue
 				}
 
-				if created.Receiver != nil {
-					c.Log.Info("Private message",
-						zap.Uint64("user_id", *created.Receiver))
-					session, ok := c.Sessions.Load(*created.Receiver)
-					if ok {
-						c.Log.Info("Private message receiver is online",
-							zap.Uint64("user_id", *created.Receiver))
-						if user, ok := c.Users.Load(session); ok {
-							user.(*chat.User).Messages <- &chat.Action{
-								Type:    chat.SetMessage,
-								Payload: created,
-							}
-						}
-					}
-					continue
-				}
-
-				c.Users.Range(func(key, value interface{}) bool {
-					user := value.(*chat.User)
-					user.Messages <- &chat.Action{
-						Type:    chat.SetMessage,
-						Payload: created,
-					}
-					return true
-				})
+				c.broadcast(created.Receiver, chat.SetMessage, created)
 			}
 		case chat.InitUpdateMessage:
 			{
@@ -129,31 +133,7 @@ func (c *Chat) processAction() {
 					continue
 				}
 
-				if updated.Receiver != nil {
-					c.Log.Info("Private message update",
-						zap.Uint64("user_id", *updated.Receiver))
-					session, ok := c.Sessions.Load(*updated.Receiver)
-					if ok {
-						c.Log.Info("Private message update receiver is online",
-							zap.Uint64("user_id", *updated.Receiver))
-						if user, ok := c.Users.Load(session); ok {
-							user.(*chat.User).Messages <- &chat.Action{
-								Type:    chat.SetUpdateMessage,
-								Payload: updated,
-							}
-						}
-					}
-					continue
-				}
-
-				c.Users.Range(func(key, value interface{}) bool {
-					user := value.(*chat.User)
-					user.Messages <- &chat.Action{
-						Type:    chat.SetUpdateMessage,
-						Payload: updated,
-					}
-					return true
-				})
+				c.broadcast(updated.Receiver, chat.SetUpdateMessage, updated)
 			}
 		case chat.InitPrinting:
 			payload := action.Payload.(*chat.InitPrintingPayload)
@@ -184,31 +164,7 @@ func (c *Chat) processAction() {
 					continue
 				}
 
-				if deleted.Receiver != nil {
-					c.Log.Info("Private message update",
-						zap.Uint64("user_id", *deleted.Receiver))
-					session, ok := c.Sessions.Load(*deleted.Receiver)
-					if ok {
-						c.Log.Info("Private message update receiver is online",
-							zap.Uint64("user_id", *deleted.Receiver))
-						if user, ok := c.Users.Load(session); ok {
-							user.(*chat.User).Messages <- &chat.Action{
-								Type:    chat.SetDeleteMessage,
-								Payload: deleted,
-							}
-						}
-					}
-					continue
-				}
-
-				c.Users.Range(func(key, value interface{}) bool {
-					user := value.(*chat.User)
-					user.Messages <- &chat.Action{
-						Type:    chat.SetDeleteMessage,
-						Payload: deleted,
-					}
-					return true
-				})
+				c.broadcast(deleted.Receiver, chat.SetDeleteMessage, deleted)
 			}
 		}
 	}
