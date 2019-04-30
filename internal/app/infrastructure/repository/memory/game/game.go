@@ -3,6 +3,8 @@ package game
 import (
 	"sync"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
+
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/domain/game"
 
 	"go.uber.org/atomic"
@@ -55,12 +57,14 @@ func (r *Repo) Run() {
 					r.Playing.Delete(key)
 					r.Log.Info("User can already playing",
 						zap.Uint64("user_id", key.(uint64)))
+					metric.TotalPlayers.Dec()
 					return true
 				})
 
 				// Remove room, update statistics
 				r.Rooms.Delete(room.ID)
 				r.Total.Sub(1)
+				metric.TotalRooms.Dec()
 				r.Log.Info("Room closed",
 					zap.String("room_id", room.ID),
 				)
@@ -90,6 +94,8 @@ func (r *Repo) addUser(player *game.User) {
 
 	// Add user for already playing user
 	r.Playing.Store(player.Info.ID, nil)
+
+	metric.TotalPlayers.Inc()
 
 	message := &game.Action{
 		Type: game.SetOpponentSearch,
@@ -166,6 +172,7 @@ func (r *Repo) findRoom(player *game.User) error {
 	)
 
 	r.Total.Add(1)
+	metric.TotalRooms.Inc()
 
 	result.Users.Store(player.Info.ID, player)
 	result.Total.Add(1)

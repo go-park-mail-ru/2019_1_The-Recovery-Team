@@ -46,7 +46,9 @@ func init() {
 
 	// Register prometheus metrics
 	metric.RegisterAccessHitsMetric("game_service")
-	prometheus.MustRegister(metric.AccessHits)
+	metric.RegisterTotalRoomsMetric("game_service")
+	metric.RegisterTotalPlayersMetric("game_service")
+	prometheus.MustRegister(metric.AccessHits, metric.TotalRooms, metric.TotalPlayers)
 }
 
 func main() {

@@ -2,7 +2,11 @@ package metric
 
 import "github.com/prometheus/client_golang/prometheus"
 
-var AccessHits *prometheus.CounterVec
+var (
+	AccessHits   *prometheus.CounterVec
+	TotalRooms   prometheus.Gauge
+	TotalPlayers prometheus.Gauge
+)
 
 // RegisterAccessHitsMetric registers new access metric
 func RegisterAccessHitsMetric(namespace string) {
@@ -13,4 +17,22 @@ func RegisterAccessHitsMetric(namespace string) {
 	},
 		[]string{"status_code", "path", "method"},
 	)
+}
+
+// RegisterTotalRoomsMetric registers new total rooms metric
+func RegisterTotalRoomsMetric(namespace string) {
+	TotalRooms = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Name:      "total_rooms",
+		Help:      "Total number of rooms",
+	})
+}
+
+// RegisterTotalPlayersMetric registers new total players metric
+func RegisterTotalPlayersMetric(namespace string) {
+	TotalPlayers = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Name:      "total_players",
+		Help:      "Total number of players",
+	})
 }
