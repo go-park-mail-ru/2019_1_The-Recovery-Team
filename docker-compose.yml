@@ -16,6 +16,7 @@ services:
       - profile
       - session
       - consul
+      - prometheus
     volumes:
       - ./upload/img:/app/upload/img
     ports:
@@ -55,6 +56,7 @@ services:
       - session
       - profile
       - consul
+      - prometheus
     ports:
       - 8081:8081
   chat:
@@ -66,6 +68,7 @@ services:
     links:
       - db_chat
       - consul
+      - prometheus
     ports:
       - 8082:8082
 
@@ -88,3 +91,15 @@ services:
   redis:
     image: redis
     container_name: redis
+
+  prometheus:
+    image: quay.io/prometheus/prometheus
+    container_name: prometheus
+    volumes:
+      - ./build/config:/etc/prometheus
+      - .:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - 9090:9090

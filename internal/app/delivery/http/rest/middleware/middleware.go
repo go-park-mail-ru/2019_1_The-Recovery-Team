@@ -3,7 +3,12 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
 
@@ -147,5 +152,14 @@ func LoggerMiddleware(logger *zap.Logger, next httprouter.Handle) httprouter.Han
 		log.Info("Finish",
 			zap.Duration("work_time", time.Since(start)),
 			zap.Int("status_code", lrw.statusCode))
+
+		// Write hits metric
+		if metric.AccessHits != nil {
+			metric.AccessHits.With(prometheus.Labels{
+				"path":        r.URL.Path,
+				"method":      r.Method,
+				"status_code": strconv.Itoa(lrw.statusCode),
+			}).Inc()
+		}
 	}
 }

@@ -31,6 +31,7 @@ require (
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/pascaldekloe/goe v0.1.0 // indirect
+	github.com/prometheus/client_golang v0.9.2
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.3.0

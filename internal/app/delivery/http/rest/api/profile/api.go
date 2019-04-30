@@ -1,11 +1,14 @@
 package profile
 
 import (
+	"net/http"
+
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/profile/handler"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/middleware"
 	"github.com/julienschmidt/httprouter"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
 
@@ -81,6 +84,11 @@ func NewApi(
 			logger, middleware.RecoverMiddleware(
 				logger, middleware.CORSMiddleware(handler.GetScoreboard(profileManager)))),
 	)
+
+	//Metrics routes
+	router.GET("/metrics", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		promhttp.Handler().ServeHTTP(w, r)
+	})
 
 	return &Api{
 		Router: router,

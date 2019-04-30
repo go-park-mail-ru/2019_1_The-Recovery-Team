@@ -8,7 +8,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/spf13/viper"
 
@@ -41,6 +43,10 @@ func init() {
 	addr := viper.GetString("consul.address")
 	port := viper.GetInt("consul.port")
 	resolver.RegisterDefault(addr, port, 5*time.Second)
+
+	// Register prometheus metrics
+	metric.RegisterAccessHitsMetric("game_service")
+	prometheus.MustRegister(metric.AccessHits)
 }
 
 func main() {
