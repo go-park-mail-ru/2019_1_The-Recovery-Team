@@ -141,17 +141,23 @@ func RecoverMiddleware(logger *zap.Logger, next httprouter.Handle) httprouter.Ha
 // LoggerMiddleware write logs
 func LoggerMiddleware(logger *zap.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		lrw := NewLoggingResponseWriter(w)
 		start := time.Now()
 		log := logger.With(zap.String("method", r.Method),
 			zap.String("remote_address", r.RemoteAddr),
 			zap.String("url", r.URL.Path))
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, "logger", log)
-		next(lrw, r.WithContext(ctx), ps)
+		next(w, r.WithContext(ctx), ps)
 		log.Info("Finish",
 			zap.Duration("work_time", time.Since(start)),
-			zap.Int("status_code", lrw.statusCode))
+		)
+	}
+}
+
+func AccessHitsMiddleware(next httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		lrw := NewLoggingResponseWriter(w)
+		next(lrw, r, ps)
 
 		// Write hits metric
 		if metric.AccessHits != nil {
