@@ -97,9 +97,12 @@ services:
     container_name: prometheus
     volumes:
       - ./build/config:/etc/prometheus
-      - .:/prometheus
+      - ./prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     ports:
       - 9090:9090
+
+volumes:
+  prometheus_data:
