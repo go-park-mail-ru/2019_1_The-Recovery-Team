@@ -51,9 +51,8 @@ const (
 	FROM profile 
 	ORDER BY record LIMIT $1 OFFSET $2`
 
-	QueryProfileCount = `SELECT reltuples::bigint AS number
-	FROM   pg_class
-	WHERE  oid = 'public.profile'::regclass`
+	QueryProfileCount = `SELECT COUNT(*) 
+	FROM profile`
 
 	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	EmailAlreadyExists       = "EmailAlreadyExists"
