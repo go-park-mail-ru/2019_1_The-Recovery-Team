@@ -144,7 +144,7 @@ func (c *Chat) processAction() {
 				value.(*chat.User).Messages <- &chat.Action{
 					Type: chat.SetPrinting,
 					Payload: chat.SetPrintingPayload{
-						Id: payload.Author,
+						Id: *payload.Author,
 					},
 				}
 				return true
