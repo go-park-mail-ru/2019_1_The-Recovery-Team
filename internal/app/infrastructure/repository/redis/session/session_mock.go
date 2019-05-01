@@ -13,9 +13,9 @@ const (
 	IncorrectData              = "INCORRECT_DATA"
 )
 
-type SessionRepoMock struct{}
+type RepoMock struct{}
 
-func (r *SessionRepoMock) Get(token string) (uint64, error) {
+func (r *RepoMock) Get(token string) (uint64, error) {
 	switch token {
 	case Authorized:
 		{
@@ -28,7 +28,7 @@ func (r *SessionRepoMock) Get(token string) (uint64, error) {
 	}
 }
 
-func (r *SessionRepoMock) Set(profileID uint64, expires time.Duration) (string, error) {
+func (r *RepoMock) Set(profileID uint64, expires time.Duration) (string, error) {
 	switch profileID {
 	case DefaultProfileId:
 		{
@@ -41,7 +41,7 @@ func (r *SessionRepoMock) Set(profileID uint64, expires time.Duration) (string, 
 	}
 }
 
-func (r *SessionRepoMock) Delete(token string) error {
+func (r *RepoMock) Delete(token string) error {
 	if token != Authorized {
 		return errors.New(Unauthorized)
 	}

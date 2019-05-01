@@ -21,6 +21,7 @@ const (
 	ExistingProfilePassword = "1234"
 
 	NotExistingProfileIdStr    = "101"
+	NotExistingProfileId       = 101
 	NotExistingProfileEmail    = "notExist@mail.ru"
 	NotExistingProfileNickname = "notExist"
 	NotExistingProfilePassword = "notExist"
