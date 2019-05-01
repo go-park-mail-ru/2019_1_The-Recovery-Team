@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewProfileRepo(t *testing.T) {
-	conn := &pgx.Conn{}
+	conn := &pgx.ConnPool{}
 	assert.NotEmpty(t, NewRepo(conn),
 		"Doesn't create profile repository instance")
 }

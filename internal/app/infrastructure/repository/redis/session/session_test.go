@@ -4,21 +4,27 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-redis/redis"
+
 	"github.com/alicebob/miniredis"
-	"github.com/gomodule/redigo/redis"
 	"github.com/stretchr/testify/assert"
 )
 
-func newMockRedis() *redis.Conn {
+func newMockRedis() *redis.Client {
 	s, err := miniredis.Run()
 	if err != nil {
 		panic(err)
 	}
-	conn, err := redis.Dial("tcp", s.Addr())
-	if err != nil {
+
+	client := redis.NewClient(&redis.Options{
+		Addr: s.Addr(),
+	})
+
+	if _, err := client.Ping().Result(); err != nil {
 		panic(err)
 	}
-	return &conn
+
+	return client
 }
 
 func TestNewSessionRepo(t *testing.T) {
