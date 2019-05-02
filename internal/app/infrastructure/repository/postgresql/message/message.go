@@ -3,6 +3,8 @@ package message
 import (
 	"errors"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql"
+
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/domain/chat"
 	"github.com/jackc/pgx"
 )
@@ -37,12 +39,12 @@ const (
 // NewRepo creates new instance of chat repository
 func NewRepo(conn *pgx.ConnPool) *Repo {
 	return &Repo{
-		conn: conn,
+		conn: postgresql.NewConnPool(conn),
 	}
 }
 
 type Repo struct {
-	conn *pgx.ConnPool
+	conn postgresql.Conn
 }
 
 // Create adds new massage

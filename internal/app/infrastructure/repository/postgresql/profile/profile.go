@@ -65,12 +65,12 @@ const (
 // NewRepo creates new instance of profile repository
 func NewRepo(conn *pgx.ConnPool) *Repo {
 	return &Repo{
-		conn: conn,
+		conn: postgresql.NewConnPool(conn),
 	}
 }
 
 type Repo struct {
-	conn *pgx.ConnPool
+	conn postgresql.Conn
 }
 
 // Get gets profile data by id
