@@ -12,12 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//easyjson:json
-type Message struct {
-	Status  int         `json:"status"`
-	Payload interface{} `json:"payload,omitempty"`
-}
-
 type Room struct {
 	ID            string
 	Users         *sync.Map
