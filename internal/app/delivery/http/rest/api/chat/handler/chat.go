@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	uuid "github.com/satori/go.uuid"
@@ -20,6 +21,8 @@ import (
 func Connect(chatManager *usecase.ChatInteractor, sessionManager *session.SessionClient, log *zap.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// Get context data(sessionID, profileID)
+		cookies := r.Cookies()
+		fmt.Println(cookies)
 		cookie, err := r.Cookie("session_id")
 		var profileID *uint64
 
@@ -53,7 +56,6 @@ func Connect(chatManager *usecase.ChatInteractor, sessionManager *session.Sessio
 			Messages:  make(chan interface{}, 10),
 		}
 
-		go chatManager.Run()
 		chatManager.Connection() <- user
 	}
 }
