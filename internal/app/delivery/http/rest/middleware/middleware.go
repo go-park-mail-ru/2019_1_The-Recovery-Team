@@ -53,16 +53,11 @@ func Authentication(sessionManager *session.SessionClient, next httprouter.Handl
 
 		profileId, err := (*sessionManager).Get(context.Background(), sessionId)
 
-		domain := ".sadislands.ru"
-		host := r.Header.Get("Host")
-		if host == "localhost" {
-			domain = ""
-		}
 		if err != nil {
 			cookie := http.Cookie{
 				Name:     "session_id",
 				Path:     "/",
-				Domain:   domain,
+				Domain:   ".sadislands.ru",
 				MaxAge:   -1,
 				HttpOnly: true,
 			}
