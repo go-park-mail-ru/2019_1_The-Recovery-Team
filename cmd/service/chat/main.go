@@ -8,14 +8,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/memory/chat"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql/message"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
-
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
 	chatApi "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/chat"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/memory/chat"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql/message"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
 	"github.com/jackc/pgx"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -30,7 +29,7 @@ func pgxClose(conn *pgx.Conn) {
 	}
 }
 
-func init() {
+func main() {
 	dev := flag.Bool("local", false, "local config flag")
 	flag.Parse()
 	if *dev {
@@ -44,17 +43,14 @@ func init() {
 		log.Fatal("Can't read config files:", err)
 	}
 
-	addr := viper.GetString("consul.address")
-	port := viper.GetInt("consul.port")
-	resolver.RegisterDefault(addr, port, 5*time.Second)
-}
+	consulAddr := viper.GetString("consul.address")
+	consulPort := viper.GetInt("consul.port")
+	resolver.RegisterDefault(consulAddr, consulPort, 5*time.Second)
 
-func main() {
 	port := viper.GetInt("chat.port")
 	postgresqlAddr := viper.GetString("chat.database.address")
 	postgresqlPort := viper.GetInt("chat.database.port")
 	migrationsFile := viper.GetString("chat.database.migrations.file")
-	consulAddr := viper.Get("consul.address")
 	sessionName := viper.Get("session.name")
 
 	psqlConfig := pgx.ConnConfig{
@@ -104,6 +100,8 @@ func main() {
 	messageInteractor := usecase.NewMessageInteractor(message.NewRepo(psqlConnPool))
 	chatInteractor := usecase.NewChatInteractor(chat.NewRepo(logger, messageInteractor))
 	sessionManager := session.NewSessionClient(sessionConn)
+
+	go chatInteractor.Run()
 
 	api := chatApi.NewApi(chatInteractor, &sessionManager, logger)
 	log.Print(http.ListenAndServe(":"+strconv.Itoa(port), api.Router))

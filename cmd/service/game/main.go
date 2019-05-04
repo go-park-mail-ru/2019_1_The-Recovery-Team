@@ -11,7 +11,6 @@ import (
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
 	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/spf13/viper"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
@@ -26,7 +25,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func init() {
+func main() {
 	dev := flag.Bool("local", false, "local config flag")
 	flag.Parse()
 	if *dev {
@@ -40,21 +39,18 @@ func init() {
 		log.Fatal("Can't read config files:", err)
 	}
 
-	addr := viper.GetString("consul.address")
-	port := viper.GetInt("consul.port")
-	resolver.RegisterDefault(addr, port, 5*time.Second)
+	consulAddr := viper.GetString("consul.address")
+	consulPort := viper.GetInt("consul.port")
+	resolver.RegisterDefault(consulAddr, consulPort, 5*time.Second)
 
 	// Register prometheus metrics
 	metric.RegisterTotalRoomsMetric("game_service")
 	metric.RegisterTotalPlayersMetric("game_service")
 	prometheus.MustRegister(metric.TotalRooms, metric.TotalPlayers)
-}
 
-func main() {
 	port := viper.GetInt("game.port")
 	profileName := viper.Get("profile.name")
 	sessionName := viper.Get("session.name")
-	consulAddr := viper.Get("consul.address")
 
 	logger, err := zap.NewProduction()
 	if err != nil {
