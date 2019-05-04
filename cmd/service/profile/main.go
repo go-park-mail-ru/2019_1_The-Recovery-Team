@@ -33,12 +33,16 @@ func pgxClose(conn *pgx.Conn) {
 func main() {
 	port := flag.Int("port", 50051, "service port")
 	dev := flag.Bool("local", false, "local config flag")
+	dbUser := flag.String("db_user", "recoveryteam", "database username")
+	dbPassword := flag.String("db_password", "123456", "database password")
+	dbName := flag.String("db_name", "sadislands", "database name")
 	flag.Parse()
 	if *dev {
 		viper.SetConfigName("local")
 	} else {
 		viper.SetConfigName("config")
 	}
+
 	viper.SetConfigType("json")
 	viper.AddConfigPath("build/config/")
 	if err := viper.ReadInConfig(); err != nil {
@@ -61,9 +65,9 @@ func main() {
 	psqlConfig := pgx.ConnConfig{
 		Host:     postgresqlAddr,
 		Port:     uint16(postgresqlPort),
-		Database: "sadislands",
-		User:     "recoveryteam",
-		Password: "123456",
+		Database: *dbName,
+		User:     *dbUser,
+		Password: *dbPassword,
 	}
 
 	psqlConfigPool := pgx.ConnPoolConfig{
@@ -98,6 +102,10 @@ func main() {
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
 	consul, err := consulapi.NewClient(config)
+	if err != nil {
+		log.Println("Can't connect to consul:", err)
+		return
+	}
 
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
 		ID:      serviceId + strconv.Itoa(*port),

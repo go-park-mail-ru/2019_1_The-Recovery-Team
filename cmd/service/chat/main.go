@@ -31,6 +31,10 @@ func pgxClose(conn *pgx.Conn) {
 
 func main() {
 	dev := flag.Bool("local", false, "local config flag")
+	dbUser := flag.String("db_user", "recoveryteam", "database username")
+	dbPassword := flag.String("db_password", "123456", "database password")
+	dbName := flag.String("db_name", "sadislandschat", "database name")
+
 	flag.Parse()
 	if *dev {
 		viper.SetConfigName("local")
@@ -56,9 +60,9 @@ func main() {
 	psqlConfig := pgx.ConnConfig{
 		Host:     postgresqlAddr,
 		Port:     uint16(postgresqlPort),
-		Database: "sadislandschat",
-		User:     "recoveryteam",
-		Password: "123456",
+		Database: *dbName,
+		User:     *dbUser,
+		Password: *dbPassword,
 	}
 
 	psqlConfigPool := pgx.ConnPoolConfig{
