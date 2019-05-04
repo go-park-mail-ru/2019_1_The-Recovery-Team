@@ -527,9 +527,6 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 						Payload: e.StateDiff,
 					})
 
-					e.Transport.SendOut(&game.Action{
-						Type: game.SetGameOver,
-					})
 					e.ReceivedActions <- &game.Action{
 						Type: game.InitEngineStop,
 					}
@@ -547,22 +544,21 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 		case game.SetRoundStop:
 			{
 				e.updateFieldRound()
-				// Check game end
-				if e.GameOver.Load().(bool) {
-					e.Transport.SendOut(&game.Action{
-						Type: game.SetGameOver,
-					})
-					e.ReceivedActions <- &game.Action{
-						Type: game.InitEngineStop,
-					}
-					return
+				isGameOver := e.GameOver.Load().(bool)
+				if !isGameOver {
+					e.setRoundStart()
 				}
-				e.setRoundStart()
 				e.Transport.SendOut(&game.Action{
 					Type:    game.SetStateDiff,
 					Payload: *e.copyState(),
 				})
 
+				if isGameOver {
+					e.ReceivedActions <- &game.Action{
+						Type: game.InitEngineStop,
+					}
+					return
+				}
 				e.StateDiff = initStateDiff()
 			}
 		case game.InitEngineStop:
@@ -758,6 +754,13 @@ func InitEngineJS(callback func(actionType, payload string)) func(action interfa
 					return
 				}
 				payload = &game.InitPlayerReadyPayload{}
+			}
+		case game.InitItemUse:
+			{
+				if !isRoundRunning {
+					return
+				}
+				payload = &game.InitItemUsePayload{}
 			}
 		default:
 			return
