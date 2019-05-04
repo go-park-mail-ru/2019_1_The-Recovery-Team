@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx"
 
-	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql/profile"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
