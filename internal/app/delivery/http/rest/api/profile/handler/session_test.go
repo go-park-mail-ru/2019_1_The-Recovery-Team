@@ -24,7 +24,6 @@ import (
 
 const (
 	ProfileID = 0
-	SessionID = 1
 )
 
 const (

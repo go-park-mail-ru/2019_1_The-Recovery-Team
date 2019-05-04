@@ -141,7 +141,7 @@ func (e *Engine) controlRemainingItemTime(playerId uint64, itemType string) {
 	remaining := ItemDuration
 	action := &game.Action{
 		Type: game.SetItemTime,
-		Payload: game.SetItemPayload{
+		Payload: &game.SetItemPayload{
 			PlayerId: playerId,
 			ItemType: itemType,
 		},
@@ -181,7 +181,7 @@ func (e *Engine) setItemStart(playerId uint64, itemType string) {
 }
 
 func (e *Engine) setItemTime(action *game.Action) {
-	payload := action.Payload.(game.SetItemPayload)
+	payload := action.Payload.(*game.SetItemPayload)
 	item := e.State.ActiveItems[payload.PlayerId]
 	item.Duration--
 	e.State.ActiveItems[payload.PlayerId] = item
@@ -192,7 +192,7 @@ func (e *Engine) setItemTime(action *game.Action) {
 }
 
 func (e *Engine) setItemStop(action *game.Action) {
-	payload := action.Payload.(game.SetItemPayload)
+	payload := action.Payload.(*game.SetItemPayload)
 	delete(e.State.ActiveItems, payload.PlayerId)
 
 	for key, value := range e.State.ActiveItems {
@@ -208,7 +208,7 @@ func (e *Engine) stopItem(playerId uint64, itemType string) func() {
 
 		e.ReceivedActions <- &game.Action{
 			Type: game.SetItemStop,
-			Payload: game.SetItemPayload{
+			Payload: &game.SetItemPayload{
 				PlayerId: playerId,
 				ItemType: itemType,
 			},
@@ -240,13 +240,6 @@ func (e *Engine) setRoundStart() {
 func (e *Engine) setRoundTime() {
 	e.StateDiff.RoundTimer = new(uint64)
 	atomic.StoreUint64(e.State.RoundTimer, atomic.LoadUint64(e.State.RoundTimer)-1)
-	atomic.StoreUint64(e.StateDiff.RoundTimer, atomic.LoadUint64(e.State.RoundTimer))
-}
-
-// setRoundStop stops round, resets round timer and player ready state
-func (e *Engine) setRoundStop() {
-	e.StateDiff.RoundTimer = new(uint64)
-	atomic.StoreUint64(e.State.RoundTimer, 0)
 	atomic.StoreUint64(e.StateDiff.RoundTimer, atomic.LoadUint64(e.State.RoundTimer))
 }
 

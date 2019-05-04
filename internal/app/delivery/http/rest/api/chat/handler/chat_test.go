@@ -38,7 +38,7 @@ func TestConnect(t *testing.T) {
 	router := httprouter.New()
 	router.GET("/", Connect(chatManager, &sessionManager, log))
 	go http.ListenAndServe(":8080", router)
-	time.Sleep(3)
+	time.Sleep(1 * time.Second)
 
 	cookies := []*http.Cookie{{Name: "session_id", Value: "AUTHORIZED", Path: "/"}}
 	dialer := websocket.DefaultDialer

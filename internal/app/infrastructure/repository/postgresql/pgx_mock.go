@@ -115,9 +115,7 @@ type ConnMock struct {
 	Tx TxMock
 }
 
-func (c *ConnMock) Close() {
-	return
-}
+func (c *ConnMock) Close() {}
 
 func (c *ConnMock) Exec(sql string, arguments ...interface{}) (commandTag pgx.CommandTag, err error) {
 	return "", nil
@@ -484,10 +482,7 @@ type RowsMock struct {
 }
 
 func (r *RowsMock) Next() bool {
-	if len(r.values) == r.current {
-		return false
-	}
-	return true
+	return len(r.values) == r.current
 }
 
 func (r *RowsMock) Scan(dest ...interface{}) (err error) {

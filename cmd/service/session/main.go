@@ -70,6 +70,10 @@ func main() {
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
 	consul, err := consulapi.NewClient(config)
+	if err != nil {
+		log.Println("Can't connect to consul:", err)
+		return
+	}
 
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
 		ID:      serviceId + strconv.Itoa(*port),
