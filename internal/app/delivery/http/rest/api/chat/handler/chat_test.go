@@ -34,6 +34,7 @@ func TestConnect(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	go chatManager.Run()
 
 	router := httprouter.New()
 	router.GET("/", Connect(chatManager, &sessionManager, log))
