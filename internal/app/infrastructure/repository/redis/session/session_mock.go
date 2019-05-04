@@ -6,11 +6,13 @@ import (
 )
 
 const (
-	Authorized                 = "AUTHORIZED"
-	Unauthorized               = "UNAUTHORIZED"
-	AuthorizedProfileId        = 1
-	DefaultProfileId    uint64 = 1
-	IncorrectData              = "INCORRECT_DATA"
+	Authorized                       = "AUTHORIZED"
+	AuthorizedMirror                 = "AUTHORIZED_MIRROR"
+	Unauthorized                     = "UNAUTHORIZED"
+	AuthorizedProfileId              = 1
+	AuthorizedProfileIdMirror        = 2
+	DefaultProfileId          uint64 = 1
+	IncorrectData                    = "INCORRECT_DATA"
 )
 
 type RepoMock struct{}
@@ -20,6 +22,10 @@ func (r *RepoMock) Get(token string) (uint64, error) {
 	case Authorized:
 		{
 			return AuthorizedProfileId, nil
+		}
+	case AuthorizedMirror:
+		{
+			return AuthorizedProfileIdMirror, nil
 		}
 	default:
 		{

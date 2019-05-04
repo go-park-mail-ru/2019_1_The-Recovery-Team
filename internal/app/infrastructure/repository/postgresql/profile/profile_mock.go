@@ -55,7 +55,7 @@ func (r *RepoMock) Get(id interface{}) (*profile.Profile, error) {
 	}
 
 	switch profileId {
-	case ExistingProfileId:
+	case ExistingProfileId, DefaultProfileId:
 		{
 			prof := &profile.Profile{
 				Info: profile.Info{
