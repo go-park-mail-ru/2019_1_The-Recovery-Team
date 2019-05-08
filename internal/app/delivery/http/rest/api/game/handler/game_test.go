@@ -68,6 +68,8 @@ func TestSearch(t *testing.T) {
 	}
 	defer connFirst.Close()
 
+	time.Sleep(3 * time.Second)
+
 	cookies = []*http.Cookie{{Name: "session_id", Value: "AUTHORIZED_MIRROR", Path: "/"}}
 	dialer = websocket.DefaultDialer
 	jar, _ = cookiejar.New(nil)
@@ -102,13 +104,49 @@ func TestSearch(t *testing.T) {
 	err = connSecond.WriteJSON(message)
 	assert.Empty(t, err, "Doesn't init player2 ready")
 
+	payload, _ = gameDomain.InitPlayerMovePayload{
+		PlayerId: 2,
+		Move:     "LEFT",
+	}.MarshalJSON()
+	message = gameDomain.ActionRaw{
+		Type:    gameDomain.InitPlayerMove,
+		Payload: string(payload),
+	}
+
+	err = connSecond.WriteJSON(message)
+	assert.Empty(t, err, "Doesn't move player2 ready")
+
+	time.Sleep(time.Second)
+
+	payload, _ = gameDomain.InitItemUsePayload{
+		PlayerId: 2,
+		ItemType: "LIFEBUOY",
+	}.MarshalJSON()
+	message = gameDomain.ActionRaw{
+		Type:    gameDomain.InitItemUse,
+		Payload: string(payload),
+	}
+
+	err = connSecond.WriteJSON(message)
+	assert.Empty(t, err, "Doesn't use item player2")
+
+	timeout := time.After(6 * time.Second)
 	for {
-		action := &gameDomain.Action{}
-		err := connFirst.ReadJSON(action)
-		assert.Empty(t, err, "Return error on correct reading")
-		fmt.Println(action)
-		if action.Type == gameDomain.SetGameOver {
-			break
+		select {
+		case <-timeout:
+			{
+				return
+			}
+		default:
+			{
+				action := &gameDomain.Action{}
+				err := connFirst.ReadJSON(action)
+				assert.Empty(t, err, "Return error on correct reading")
+				fmt.Println(action)
+				if action.Type == gameDomain.SetGameOver {
+					return
+				}
+			}
 		}
 	}
 }
