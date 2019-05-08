@@ -497,7 +497,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 				e.initPlayers(action)
 				go e.Transport.SendOut(&game.Action{
 					Type:    game.SetState,
-					Payload: *e.copyState(),
+					Payload: e.copyState(),
 				})
 				continue
 			}
@@ -543,7 +543,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 				}
 				e.Transport.SendOut(&game.Action{
 					Type:    game.SetStateDiff,
-					Payload: *e.copyState(),
+					Payload: e.copyState(),
 				})
 
 				if isGameOver {
@@ -694,6 +694,29 @@ func InitEngineJS(callback func(actionType, payload string)) func(action interfa
 				if action.Payload == nil {
 					callback(action.Type, "")
 					return
+				}
+
+				if action.Type == game.SetStateDiff && len(action.Payload.(*game.State).ActiveItems) != 0 {
+					payload := action.Payload.(*game.State)
+					activeItems := payload.ActiveItems
+					items := make(map[string]game.Item)
+					for key, value := range activeItems {
+						items[strconv.Itoa(int(key))] = value
+					}
+
+					action.Payload = struct {
+						Field       *game.Field            `json:"field,omitempty"`
+						Players     map[string]game.Player `json:"players,omitempty"`
+						ActiveItems map[string]game.Item   `json:"activeItems,omitempty"`
+						RoundNumber int                    `json:"roundNumber,omitempty"`
+						RoundTimer  *uint64                `json:"roundTimer,omitempty"`
+					}{
+						Field:       payload.Field,
+						Players:     payload.Players,
+						ActiveItems: items,
+						RoundNumber: payload.RoundNumber,
+						RoundTimer:  payload.RoundTimer,
+					}
 				}
 
 				payload, _ := json.Marshal(action.Payload)
