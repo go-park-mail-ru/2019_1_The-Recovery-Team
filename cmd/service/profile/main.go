@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	serviceId = "SProfile_"
+	serviceIdPrefix = "SProfile"
 )
 
 func pgxClose(conn *pgx.Conn) {
@@ -108,7 +108,7 @@ func main() {
 	}
 
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
-		ID:      serviceId + strconv.Itoa(*port),
+		ID:      serviceIdPrefix + strconv.Itoa(*port),
 		Name:    profileName,
 		Port:    *port,
 		Address: profileAddr,
@@ -117,14 +117,14 @@ func main() {
 		log.Fatal("Can't add profile service to resolver:", err)
 		return
 	}
-	log.Println("Registered in resolver", serviceId, port)
+	log.Println("Registered in resolver", serviceIdPrefix, port)
 
 	defer func() {
-		err := consul.Agent().ServiceDeregister(serviceId + strconv.Itoa(*port))
+		err := consul.Agent().ServiceDeregister(serviceIdPrefix + strconv.Itoa(*port))
 		if err != nil {
 			log.Fatal("Can't remove service from resolver:", err)
 		}
-		log.Println("Deregistered in resolver", serviceId, port)
+		log.Println("Deregistered in resolver", serviceIdPrefix, port)
 	}()
 
 	log.Print(server.Serve(lis))

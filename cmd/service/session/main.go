@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	serviceId = "SSession_127.0.0.1:"
+	serviceIdPrefix = "SSession"
 )
 
 func main() {
@@ -75,7 +75,7 @@ func main() {
 	}
 
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
-		ID:      serviceId + strconv.Itoa(*port),
+		ID:      serviceIdPrefix + strconv.Itoa(*port),
 		Name:    sessionName,
 		Port:    *port,
 		Address: sessionAddr,
@@ -83,14 +83,14 @@ func main() {
 	if err != nil {
 		log.Fatal("Can't add session service to resolver:", err)
 	}
-	log.Println("Registered in consul", serviceId, port)
+	log.Println("Registered in consul", serviceIdPrefix, port)
 
 	defer func() {
-		err := consul.Agent().ServiceDeregister(serviceId + strconv.Itoa(*port))
+		err := consul.Agent().ServiceDeregister(serviceIdPrefix + strconv.Itoa(*port))
 		if err != nil {
 			log.Fatal("Can't remove service from resolver:", err)
 		}
-		log.Println("Deregistered in resolver", serviceId, port)
+		log.Println("Deregistered in resolver", serviceIdPrefix, port)
 	}()
 
 	log.Print(server.Serve(lis))
