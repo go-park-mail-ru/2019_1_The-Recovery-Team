@@ -56,7 +56,7 @@ func (s *Service) Create(ctx context.Context, in *CreateRequest) (*CreateRespons
 		Nickname: created.Nickname,
 		Avatar:   created.Avatar,
 	}
-	return response, err
+	return response, nil
 }
 
 func (s *Service) Update(ctx context.Context, in *UpdateRequest) (*Nothing, error) {
@@ -101,7 +101,7 @@ func (s *Service) GetByEmail(ctx context.Context, in *GetByEmailRequest) (*GetRe
 		},
 		Email: prof.Email,
 	}
-	return response, err
+	return response, nil
 }
 
 func (s *Service) GetByNickname(ctx context.Context, in *GetByNicknameRequest) (*GetResponse, error) {
@@ -123,7 +123,7 @@ func (s *Service) GetByNickname(ctx context.Context, in *GetByNicknameRequest) (
 		},
 		Email: prof.Email,
 	}
-	return response, err
+	return response, nil
 }
 
 func (s *Service) GetByEmailAndPassword(ctx context.Context, in *GetByEmailAndPasswordRequest) (*GetResponse, error) {
@@ -149,7 +149,7 @@ func (s *Service) GetByEmailAndPassword(ctx context.Context, in *GetByEmailAndPa
 		},
 		Email: prof.Email,
 	}
-	return response, err
+	return response, nil
 }
 
 func (s *Service) List(ctx context.Context, in *ListRequest) (*ListResponse, error) {
@@ -174,7 +174,7 @@ func (s *Service) List(ctx context.Context, in *ListRequest) (*ListResponse, err
 				},
 			})
 	}
-	return response, err
+	return response, nil
 }
 
 func (s *Service) Count(ctx context.Context, in *Nothing) (*CountResponse, error) {
@@ -186,5 +186,5 @@ func (s *Service) Count(ctx context.Context, in *Nothing) (*CountResponse, error
 	response := &CountResponse{
 		Count: count,
 	}
-	return response, err
+	return response, nil
 }

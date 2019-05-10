@@ -35,8 +35,11 @@ func (s *Service) Set(ctx context.Context, in *Create) (*SessionId, error) {
 	}
 
 	id, err := s.interactor.Set(in.ProfileId.Id, duration)
+	if err != nil {
+		return &SessionId{}, err
+	}
 	session := &SessionId{Id: id}
-	return session, err
+	return session, nil
 }
 
 func (s *Service) Delete(ctx context.Context, in *SessionId) (*Nothing, error) {
