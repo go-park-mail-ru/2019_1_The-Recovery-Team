@@ -108,5 +108,6 @@ func main() {
 	go chatInteractor.Run()
 
 	api := chatApi.NewApi(chatInteractor, &sessionManager, logger)
-	log.Print(http.ListenAndServe(":"+strconv.Itoa(port), api.Router))
+	logger.Info("Chat exit",
+		zap.Error(http.ListenAndServe(":"+strconv.Itoa(port), api.Router)))
 }

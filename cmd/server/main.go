@@ -85,5 +85,6 @@ func main() {
 	profileApi.Router.Handler("GET", "/swagger/:file", httpSwagger.WrapHandler)
 	profileApi.Router.ServeFiles("/upload/*filepath", http.Dir("upload"))
 
-	log.Print(http.ListenAndServe(":"+port, profileApi.Router))
+	logger.Info("Server exit",
+		zap.Error(http.ListenAndServe(":"+port, profileApi.Router)))
 }

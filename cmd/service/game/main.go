@@ -80,5 +80,6 @@ func main() {
 
 	api := gameApi.NewApi(&profileManager, &sessionManager, gameManager, logger)
 
-	log.Print(http.ListenAndServe(":"+strconv.Itoa(port), api.Router))
+	logger.Info("Game exit",
+		zap.Error(http.ListenAndServe(":"+strconv.Itoa(port), api.Router)))
 }
