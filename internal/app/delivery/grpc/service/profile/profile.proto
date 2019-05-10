@@ -94,9 +94,4 @@ message Score {
     int64 loss = 3;
 }
 
-message Nothing {
-    bool dummy = 1;
-}
-
-
-
+message Nothing {}
