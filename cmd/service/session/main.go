@@ -71,8 +71,7 @@ func main() {
 	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
 	consul, err := consulapi.NewClient(config)
 	if err != nil {
-		log.Println("Can't connect to consul:", err)
-		return
+		log.Fatal("Can't connect to consul:", err)
 	}
 
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
@@ -82,15 +81,14 @@ func main() {
 		Address: sessionAddr,
 	})
 	if err != nil {
-		log.Println("Can't add session service to resolver:", err)
-		return
+		log.Fatal("Can't add session service to resolver:", err)
 	}
 	log.Println("Registered in consul", serviceId, port)
 
 	defer func() {
 		err := consul.Agent().ServiceDeregister(serviceId + strconv.Itoa(*port))
 		if err != nil {
-			log.Println("Can't remove service from resolver:", err)
+			log.Fatal("Can't remove service from resolver:", err)
 		}
 		log.Println("Deregistered in resolver", serviceId, port)
 	}()

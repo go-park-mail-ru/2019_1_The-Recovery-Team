@@ -26,7 +26,7 @@ const (
 func pgxClose(conn *pgx.Conn) {
 	err := conn.Close()
 	if err != nil {
-		log.Println("pgx connection close failed", err)
+		log.Fatal("pgx connection close failed", err)
 	}
 }
 
@@ -103,7 +103,7 @@ func main() {
 	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
 	consul, err := consulapi.NewClient(config)
 	if err != nil {
-		log.Println("Can't connect to consul:", err)
+		log.Fatal("Can't connect to consul:", err)
 		return
 	}
 
@@ -114,7 +114,7 @@ func main() {
 		Address: profileAddr,
 	})
 	if err != nil {
-		log.Println("Can't add profile service to resolver:", err)
+		log.Fatal("Can't add profile service to resolver:", err)
 		return
 	}
 	log.Println("Registered in resolver", serviceId, port)
@@ -122,7 +122,7 @@ func main() {
 	defer func() {
 		err := consul.Agent().ServiceDeregister(serviceId + strconv.Itoa(*port))
 		if err != nil {
-			log.Println("Can't remove service from resolver:", err)
+			log.Fatal("Can't remove service from resolver:", err)
 		}
 		log.Println("Deregistered in resolver", serviceId, port)
 	}()

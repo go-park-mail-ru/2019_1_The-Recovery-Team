@@ -25,7 +25,7 @@ import (
 func pgxClose(conn *pgx.Conn) {
 	err := conn.Close()
 	if err != nil {
-		log.Println("pgx connection close failed", err)
+		log.Fatal("pgx connection close failed", err)
 	}
 }
 
