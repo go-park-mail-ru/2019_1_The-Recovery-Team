@@ -17,6 +17,7 @@ func RegisterAccessHitsMetric(namespace string) {
 	},
 		[]string{"status_code", "path", "method"},
 	)
+	prometheus.MustRegister(AccessHits)
 }
 
 // RegisterTotalRoomsMetric registers new total rooms metric
@@ -26,6 +27,7 @@ func RegisterTotalRoomsMetric(namespace string) {
 		Name:      "total_rooms",
 		Help:      "Total number of rooms",
 	})
+	prometheus.MustRegister(TotalRooms)
 }
 
 // RegisterTotalPlayersMetric registers new total players metric
@@ -35,4 +37,5 @@ func RegisterTotalPlayersMetric(namespace string) {
 		Name:      "total_players",
 		Help:      "Total number of players",
 	})
+	prometheus.MustRegister(TotalPlayers)
 }

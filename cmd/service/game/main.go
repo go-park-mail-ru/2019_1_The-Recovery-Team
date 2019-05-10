@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
@@ -46,7 +45,6 @@ func main() {
 	// Register prometheus metrics
 	metric.RegisterTotalRoomsMetric("game_service")
 	metric.RegisterTotalPlayersMetric("game_service")
-	prometheus.MustRegister(metric.TotalRooms, metric.TotalPlayers)
 
 	port := viper.GetInt("game.port")
 	profileName := viper.Get("profile.name")

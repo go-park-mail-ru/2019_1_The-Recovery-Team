@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 
 	profileApi "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/profile"
@@ -52,7 +51,6 @@ func main() {
 
 	// Register prometheus metrics
 	metric.RegisterAccessHitsMetric("api_service")
-	prometheus.MustRegister(metric.AccessHits)
 
 	port := viper.GetString("server.port")
 	profileName := viper.Get("profile.name")
