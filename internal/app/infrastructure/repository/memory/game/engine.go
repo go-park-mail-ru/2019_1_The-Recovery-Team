@@ -417,10 +417,16 @@ func (e *Engine) isPlayerDead(id string) bool {
 }
 
 // initStateDiff creates instance of empty state
-func initStateDiff() *game.State {
-	return &game.State{
+func (e *Engine) initStateDiff() {
+	e.StateDiff = &game.State{
 		Players:     make(map[string]game.Player),
 		ActiveItems: make(map[uint64]game.Item),
+	}
+
+	if e.State != nil {
+		for key, value := range e.State.ActiveItems {
+			e.StateDiff.ActiveItems[key] = value
+		}
 	}
 }
 
@@ -487,7 +493,10 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 	defer e.UpdateM.Unlock()
 
 	// Initialize state diff
-	e.StateDiff = initStateDiff()
+	e.initStateDiff()
+
+	// Flag for sending empty state
+	var forceStateSend bool
 
 	for _, action := range *actions {
 		switch action.Type {
@@ -552,7 +561,7 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 					}
 					return
 				}
-				e.StateDiff = initStateDiff()
+				e.initStateDiff()
 			}
 		case game.InitEngineStop:
 			{
@@ -575,11 +584,12 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 		case game.SetItemStop:
 			{
 				e.setItemStop(action)
+				forceStateSend = true
 			}
 		}
 	}
 
-	if !e.StateDiff.Empty() {
+	if forceStateSend || !e.StateDiff.Empty() {
 		go e.Transport.SendOut(&game.Action{
 			Type:    game.SetStateDiff,
 			Payload: e.StateDiff,
@@ -696,7 +706,7 @@ func InitEngineJS(callback func(actionType, payload string)) func(action interfa
 					return
 				}
 
-				if action.Type == game.SetStateDiff && len(action.Payload.(*game.State).ActiveItems) != 0 {
+				if action.Type == game.SetStateDiff || action.Type == game.SetState {
 					payload := action.Payload.(*game.State)
 					activeItems := payload.ActiveItems
 					items := make(map[string]game.Item)
@@ -707,7 +717,7 @@ func InitEngineJS(callback func(actionType, payload string)) func(action interfa
 					action.Payload = struct {
 						Field       *game.Field            `json:"field,omitempty"`
 						Players     map[string]game.Player `json:"players,omitempty"`
-						ActiveItems map[string]game.Item   `json:"activeItems,omitempty"`
+						ActiveItems map[string]game.Item   `json:"activeItems"`
 						RoundNumber int                    `json:"roundNumber,omitempty"`
 						RoundTimer  *uint64                `json:"roundTimer,omitempty"`
 					}{

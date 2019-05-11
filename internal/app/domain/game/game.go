@@ -3,7 +3,7 @@ package game
 type State struct {
 	Field       *Field            `json:"field,omitempty"`
 	Players     map[string]Player `json:"players,omitempty"`
-	ActiveItems map[uint64]Item   `json:"activeItems,omitempty"`
+	ActiveItems map[uint64]Item   `json:"activeItems"`
 	RoundNumber int               `json:"roundNumber,omitempty"`
 	RoundTimer  *uint64           `json:"roundTimer,omitempty"`
 }
