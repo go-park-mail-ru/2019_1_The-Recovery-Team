@@ -194,9 +194,15 @@ func (e *Engine) setItemTime(action *game.Action) {
 func (e *Engine) setItemStop(action *game.Action) {
 	payload := action.Payload.(*game.SetItemPayload)
 	delete(e.State.ActiveItems, payload.PlayerId)
+	delete(e.StateDiff.ActiveItems, payload.PlayerId)
 
-	for key, value := range e.State.ActiveItems {
-		e.StateDiff.ActiveItems[key] = value
+	// Check player death
+	idStr := strconv.Itoa(int(payload.PlayerId))
+	if payload.ItemType == Lifebuoy && e.isPlayerDead(idStr) {
+		player := e.State.Players[idStr]
+		player.LoseRound = &e.State.RoundNumber
+		e.GameOver.Store(true)
+		e.StateDiff.Players[idStr] = player
 	}
 }
 
@@ -585,6 +591,19 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 			{
 				e.setItemStop(action)
 				forceStateSend = true
+
+				// Check game end
+				if e.GameOver.Load().(bool) {
+					e.Transport.SendOut(&game.Action{
+						Type:    game.SetStateDiff,
+						Payload: e.StateDiff,
+					})
+
+					e.ReceivedActions <- &game.Action{
+						Type: game.InitEngineStop,
+					}
+					return
+				}
 			}
 		}
 	}
