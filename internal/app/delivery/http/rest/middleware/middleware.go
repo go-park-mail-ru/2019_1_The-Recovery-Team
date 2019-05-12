@@ -21,17 +21,17 @@ const (
 	SessionID = 1
 )
 
-var allowedOrigins = map[string]interface{}{
-	"http://127.0.0.1:5000":           struct{}{},
-	"http://127.0.0.1:8080":           struct{}{},
-	"http://localhost:5000":           struct{}{},
-	"http://localhost:8080":           struct{}{},
-	"http://104.248.28.45":            struct{}{},
-	"https://104.248.28.45":           struct{}{},
-	"https://sadislands.now.sh":       struct{}{},
-	"http://sadislands.ru":            struct{}{},
-	"https://sadislands.ru":           struct{}{},
-	"https://hackathon.sadislands.ru": struct{}{},
+var allowedOrigins = map[string]bool{
+	"http://127.0.0.1:5000":           true,
+	"http://127.0.0.1:8080":           true,
+	"http://localhost:5000":           true,
+	"http://localhost:8080":           true,
+	"http://104.248.28.45":            true,
+	"https://104.248.28.45":           true,
+	"https://sadislands.now.sh":       true,
+	"http://sadislands.ru":            true,
+	"https://sadislands.ru":           true,
+	"https://hackathon.sadislands.ru": true,
 }
 
 // Authentication middleware to check session.
@@ -102,10 +102,10 @@ func SessionMiddleware(sessionManager *session.SessionClient, next httprouter.Ha
 // CORSMiddleware implements CORS mechanism
 func CORSMiddleware(next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		o := r.Header.Get("Origin")
-		if _, ok := allowedOrigins[o]; ok {
+		domain := r.Header.Get("Origin")
+		if allowedOrigins[domain] {
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Origin", o)
+			w.Header().Set("Access-Control-Allow-Origin", domain)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Max-Age", "86400")
 			w.Header().Set("Access-Control-Allow-Headers",
