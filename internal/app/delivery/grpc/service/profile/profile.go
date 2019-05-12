@@ -23,7 +23,7 @@ func (s *Service) Get(ctx context.Context, in *GetRequest) (*GetResponse, error)
 		return &GetResponse{}, err
 	}
 
-	response := &GetResponse{
+	r := &GetResponse{
 		Info: &Info{
 			Id:       prof.ID,
 			Nickname: prof.Nickname,
@@ -36,7 +36,7 @@ func (s *Service) Get(ctx context.Context, in *GetRequest) (*GetResponse, error)
 		},
 		Email: prof.Email,
 	}
-	return response, nil
+	return r, nil
 }
 
 func (s *Service) Create(ctx context.Context, in *CreateRequest) (*CreateResponse, error) {
@@ -50,13 +50,13 @@ func (s *Service) Create(ctx context.Context, in *CreateRequest) (*CreateRespons
 		return &CreateResponse{}, err
 	}
 
-	response := &CreateResponse{
+	r := &CreateResponse{
 		Id:       created.ID,
 		Email:    created.Email,
 		Nickname: created.Nickname,
 		Avatar:   created.Avatar,
 	}
-	return response, nil
+	return r, nil
 }
 
 func (s *Service) Update(ctx context.Context, in *UpdateRequest) (*Nothing, error) {
@@ -88,7 +88,7 @@ func (s *Service) GetByEmail(ctx context.Context, in *GetByEmailRequest) (*GetRe
 		return &GetResponse{}, err
 	}
 
-	response := &GetResponse{
+	r := &GetResponse{
 		Info: &Info{
 			Id:       prof.ID,
 			Nickname: prof.Nickname,
@@ -101,7 +101,7 @@ func (s *Service) GetByEmail(ctx context.Context, in *GetByEmailRequest) (*GetRe
 		},
 		Email: prof.Email,
 	}
-	return response, nil
+	return r, nil
 }
 
 func (s *Service) GetByNickname(ctx context.Context, in *GetByNicknameRequest) (*GetResponse, error) {
@@ -110,7 +110,7 @@ func (s *Service) GetByNickname(ctx context.Context, in *GetByNicknameRequest) (
 		return &GetResponse{}, err
 	}
 
-	response := &GetResponse{
+	r := &GetResponse{
 		Info: &Info{
 			Id:       prof.ID,
 			Nickname: prof.Nickname,
@@ -123,7 +123,7 @@ func (s *Service) GetByNickname(ctx context.Context, in *GetByNicknameRequest) (
 		},
 		Email: prof.Email,
 	}
-	return response, nil
+	return r, nil
 }
 
 func (s *Service) GetByEmailAndPassword(ctx context.Context, in *GetByEmailAndPasswordRequest) (*GetResponse, error) {
@@ -136,7 +136,7 @@ func (s *Service) GetByEmailAndPassword(ctx context.Context, in *GetByEmailAndPa
 		return &GetResponse{}, err
 	}
 
-	response := &GetResponse{
+	r := &GetResponse{
 		Info: &Info{
 			Id:       prof.ID,
 			Nickname: prof.Nickname,
@@ -149,7 +149,7 @@ func (s *Service) GetByEmailAndPassword(ctx context.Context, in *GetByEmailAndPa
 		},
 		Email: prof.Email,
 	}
-	return response, nil
+	return r, nil
 }
 
 func (s *Service) List(ctx context.Context, in *ListRequest) (*ListResponse, error) {
@@ -158,11 +158,11 @@ func (s *Service) List(ctx context.Context, in *ListRequest) (*ListResponse, err
 		return &ListResponse{}, err
 	}
 
-	response := &ListResponse{
+	r := &ListResponse{
 		List: make([]*Info, 0, len(list)),
 	}
 	for _, info := range list {
-		response.List = append(response.List,
+		r.List = append(r.List,
 			&Info{
 				Id:       info.ID,
 				Nickname: info.Nickname,
@@ -174,7 +174,7 @@ func (s *Service) List(ctx context.Context, in *ListRequest) (*ListResponse, err
 				},
 			})
 	}
-	return response, nil
+	return r, nil
 }
 
 func (s *Service) Count(ctx context.Context, in *Nothing) (*CountResponse, error) {
@@ -183,8 +183,8 @@ func (s *Service) Count(ctx context.Context, in *Nothing) (*CountResponse, error
 		return &CountResponse{}, err
 	}
 
-	response := &CountResponse{
+	r := &CountResponse{
 		Count: count,
 	}
-	return response, nil
+	return r, nil
 }
