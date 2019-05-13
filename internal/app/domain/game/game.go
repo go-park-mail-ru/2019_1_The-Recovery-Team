@@ -50,6 +50,11 @@ type Player struct {
 //easyjson:json
 type Players []Player
 
+type UpdateRating struct {
+	Winner uint64
+	Loser  uint64
+}
+
 //easyjson:json
 type SetGameStartPayload struct {
 	Field   *Field

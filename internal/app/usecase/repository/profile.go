@@ -15,4 +15,5 @@ type ProfileRepo interface {
 	GetByEmailAndPassword(data *profile.Login) (*profile.Profile, error)
 	List(limit, offset int64) ([]profile.Info, error)
 	Count() (count int64, err error)
+	UpdateRating(winner, loser uint64) error
 }

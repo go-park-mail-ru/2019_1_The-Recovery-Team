@@ -22,3 +22,7 @@ func (i *GameInteractor) Run() {
 func (i *GameInteractor) Players() chan *game.User {
 	return i.repo.PlayersChan()
 }
+
+func (i *GameInteractor) UpdateRatingChan() chan *game.UpdateRating {
+	return i.repo.UpdateRatingChan()
+}

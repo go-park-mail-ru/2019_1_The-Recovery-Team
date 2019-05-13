@@ -1,7 +1,12 @@
 package game
 
 import (
+	"context"
 	"net/http"
+
+	"google.golang.org/grpc/status"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/domain/game"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
@@ -15,6 +20,19 @@ import (
 
 type Api struct {
 	Router *httprouter.Router
+}
+
+func startUpdatingRating(profileManager *profile.ProfileClient, in chan *game.UpdateRating) {
+	for update := range in {
+		r := &profile.UpdateRatingRequest{
+			Winner: update.Winner,
+			Loser:  update.Loser,
+		}
+		_, err := (*profileManager).UpdateRating(context.Background(), r)
+		if err != nil {
+
+		}
+	}
 }
 
 func NewApi(
@@ -37,6 +55,24 @@ func NewApi(
 	router.GET("/metrics", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		promhttp.Handler().ServeHTTP(w, r)
 	})
+
+	in := gameInteractor.UpdateRatingChan()
+	go func() {
+		for update := range in {
+			r := &profile.UpdateRatingRequest{
+				Winner: update.Winner,
+				Loser:  update.Loser,
+			}
+			_, err := (*profileManager).UpdateRating(context.Background(), r)
+			if err != nil {
+				message := status.Convert(err).Message()
+				logger.Error(message,
+					zap.Uint64("winner_id", update.Winner),
+					zap.Uint64("loser_id", update.Loser))
+			}
+		}
+	}()
+	go gameInteractor.Run()
 
 	return &Api{
 		Router: router,

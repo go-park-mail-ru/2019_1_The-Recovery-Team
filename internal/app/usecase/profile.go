@@ -54,3 +54,7 @@ func (i *ProfileInteractor) List(limit, offset int64) ([]profile.Info, error) {
 func (i *ProfileInteractor) Count() (count int64, err error) {
 	return i.repo.Count()
 }
+
+func (i *ProfileInteractor) UpdateRating(winner, loser uint64) error {
+	return i.repo.UpdateRating(winner, loser)
+}

@@ -7,4 +7,5 @@ import (
 type GameRepo interface {
 	Run()
 	PlayersChan() chan *game.User
+	UpdateRatingChan() chan *game.UpdateRating
 }

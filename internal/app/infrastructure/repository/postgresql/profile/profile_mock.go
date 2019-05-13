@@ -217,3 +217,7 @@ func (r *RepoMock) Count() (count int64, err error) {
 	err = nil
 	return
 }
+
+func (r *RepoMock) UpdateRating(winner, loser uint64) error {
+	return nil
+}

@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
@@ -157,6 +158,9 @@ func (r *Room) Close(action *Action) {
 
 					r.Log.Info("User disconnected from game",
 						zap.Uint64("user_id", user.Info.ID))
+
+					user.Loser = true
+					r.Users.Store(key, user)
 				}
 
 				return true
@@ -169,6 +173,7 @@ func (r *Room) Close(action *Action) {
 		}
 	case SetGameOver:
 		{
+			winnerId := action.Payload.(uint64)
 			// Close player connections
 			r.Users.Range(func(key, value interface{}) bool {
 				user := value.(*User)
@@ -180,6 +185,16 @@ func (r *Room) Close(action *Action) {
 					websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 				time.Sleep(1 * time.Second)
 				user.Conn.Close()
+
+				if user.Info.ID == winnerId {
+					r.Log.Info("Winner",
+						zap.Uint64("winner_id", winnerId))
+				} else {
+					user.Loser = true
+					r.Users.Store(key, user)
+					r.Log.Info("Loser",
+						zap.Uint64("loser_id", user.Info.ID))
+				}
 
 				r.Log.Info("User disconnected from game",
 					zap.Uint64("user_id", user.Info.ID))
@@ -214,9 +229,15 @@ func (r *Room) ActionCallback(action *Action) {
 		{
 			r.Broadcast(action)
 			if !r.Closing.Load() {
+				winnerId, err := strconv.Atoi(action.Payload.(string))
+				if err != nil {
+					r.Log.Error("Incorrect winner_id",
+						zap.String("winner_id", action.Payload.(string)))
+				}
 				r.Closing.Store(true)
 				go r.Close(&Action{
-					Type: SetGameOver,
+					Type:    SetGameOver,
+					Payload: uint64(winnerId),
 				})
 			}
 			return

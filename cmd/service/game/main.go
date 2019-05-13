@@ -74,8 +74,6 @@ func main() {
 	profileManager := profile.NewProfileClient(profileConn)
 	gameManager := usecase.NewGameInteractor(game.NewGameRepo(logger))
 
-	go gameManager.Run()
-
 	api := gameApi.NewApi(&profileManager, &sessionManager, gameManager, logger)
 
 	logger.Info("Game exit",

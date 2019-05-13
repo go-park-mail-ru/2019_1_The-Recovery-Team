@@ -57,3 +57,7 @@ func (c *ClientMock) List(ctx context.Context, in *ListRequest, opts ...grpc.Cal
 func (c *ClientMock) Count(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*CountResponse, error) {
 	return c.service.Count(ctx, in)
 }
+
+func (c *ClientMock) UpdateRating(ctx context.Context, in *UpdateRatingRequest, opts ...grpc.CallOption) (*Nothing, error) {
+	return c.service.UpdateRating(ctx, in)
+}

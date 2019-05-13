@@ -49,10 +49,24 @@ const (
 
 	QueryProfilesWithLimitAndOffset = `SELECT id, nickname, avatar, record, win, loss 
 	FROM profile 
-	ORDER BY record LIMIT $1 OFFSET $2`
+	ORDER BY record DESC LIMIT $1 OFFSET $2`
 
 	QueryProfileCount = `SELECT COUNT(*) 
 	FROM profile`
+
+	QueryProfileRatingById = `SELECT record 
+	FROM profile 
+	WHERE id = $1`
+
+	QueryUpdateProfileRatingWinner = `UPDATE profile 
+	SET record = record + $1, 
+	win = win + 1
+	WHERE id = $2`
+
+	QueryUpdateProfileRatingLoser = `UPDATE profile 
+	SET record = record - $1, 
+	loss = loss + 1
+	WHERE id = $2`
 
 	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	EmailAlreadyExists       = "EmailAlreadyExists"
@@ -60,6 +74,10 @@ const (
 
 	ProfileEmailKey    = "profile_email_key"
 	ProfileNicknameKey = "profile_nickname_key"
+
+	RatingStep            = 60
+	DefaultRatingIncrease = 25
+	MinRatingIncrease     = 1
 )
 
 // NewRepo creates new instance of profile repository
@@ -216,4 +234,43 @@ func (r *Repo) List(limit, offset int64) ([]profile.Info, error) {
 func (r *Repo) Count() (count int64, err error) {
 	err = r.conn.QueryRow(QueryProfileCount).Scan(&count)
 	return
+}
+
+// UpdateRating updates players rating
+func (r *Repo) UpdateRating(winner, loser uint64) error {
+	tx, err := r.conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Getting players rating
+	var winnerRating, loserRating int64
+	if err := tx.QueryRow(QueryProfileRatingById, winner).Scan(&winnerRating); err != nil {
+		return err
+	}
+	if err := tx.QueryRow(QueryProfileRatingById, loser).Scan(&loserRating); err != nil {
+		return err
+	}
+
+	// Calculating rating increase
+	increase := DefaultRatingIncrease + (loserRating-winnerRating)/RatingStep
+	decrease := increase
+	if increase <= 0 {
+		increase = MinRatingIncrease
+	}
+
+	// Updating rating
+	if loserRating < decrease {
+		decrease = loserRating
+	}
+	if _, err := tx.Exec(QueryUpdateProfileRatingLoser, increase, loser); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(QueryUpdateProfileRatingWinner, increase, winner); err != nil {
+		return err
+	}
+
+	tx.Commit()
+	return nil
 }

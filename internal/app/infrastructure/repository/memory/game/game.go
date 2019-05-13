@@ -15,12 +15,13 @@ import (
 // NewGameRepo creates new instance of game repository
 func NewGameRepo(log *zap.Logger) *Repo {
 	repo := &Repo{
-		Rooms:   &sync.Map{},
-		Total:   &atomic.Uint64{},
-		Playing: &sync.Map{},
-		Players: make(chan *game.User, 100),
-		Closed:  make(chan *game.Room, 100),
-		Log:     log,
+		Rooms:        &sync.Map{},
+		Total:        &atomic.Uint64{},
+		Playing:      &sync.Map{},
+		Players:      make(chan *game.User, 100),
+		Closed:       make(chan *game.Room, 100),
+		UpdateRating: make(chan *game.UpdateRating, 100),
+		Log:          log,
 	}
 	repo.Total.Store(0)
 	return repo
@@ -30,9 +31,10 @@ type Repo struct {
 	Rooms *sync.Map
 	Total *atomic.Uint64
 
-	Playing *sync.Map
-	Players chan *game.User
-	Closed  chan *game.Room
+	Playing      *sync.Map
+	Players      chan *game.User
+	Closed       chan *game.Room
+	UpdateRating chan *game.UpdateRating
 
 	Log *zap.Logger
 }
@@ -52,14 +54,30 @@ func (r *Repo) Run() {
 			}
 		case room := <-r.Closed:
 			{
+				var winner, loser uint64
 				// Remove users from already playing users
 				room.Users.Range(func(key, value interface{}) bool {
+					player := value.(*game.User)
+					if !player.Loser {
+						winner = player.Info.ID
+					} else {
+						loser = player.Info.ID
+					}
+
 					r.Playing.Delete(key)
 					r.Log.Info("User can already playing",
 						zap.Uint64("user_id", key.(uint64)))
 					metric.TotalPlayers.Dec()
 					return true
 				})
+
+				// Update rating
+				if winner != 0 && loser != 0 {
+					r.UpdateRating <- &game.UpdateRating{
+						Winner: winner,
+						Loser:  loser,
+					}
+				}
 
 				// Remove room, update statistics
 				r.Rooms.Delete(room.ID)
@@ -190,4 +208,9 @@ func (r *Repo) findRoom(player *game.User) error {
 // PlayersChan returns players searching queue
 func (r *Repo) PlayersChan() chan *game.User {
 	return r.Players
+}
+
+// UpdateRatingChan returns update players rating queue
+func (r *Repo) UpdateRatingChan() chan *game.UpdateRating {
+	return r.UpdateRating
 }

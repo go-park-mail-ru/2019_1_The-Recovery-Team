@@ -188,3 +188,8 @@ func (s *Service) Count(ctx context.Context, in *Nothing) (*CountResponse, error
 	}
 	return r, nil
 }
+
+func (s *Service) UpdateRating(ctx context.Context, in *UpdateRatingRequest) (*Nothing, error) {
+	err := s.interactor.UpdateRating(in.Winner, in.Loser)
+	return &Nothing{}, err
+}

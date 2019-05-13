@@ -16,6 +16,7 @@ type User struct {
 	Room           *Room
 	Messages       chan interface{}
 	Info           Info
+	Loser          bool
 	StoppedSending chan interface{}
 }
 
