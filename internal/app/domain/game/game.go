@@ -45,6 +45,7 @@ type Player struct {
 	Items     map[string]uint64 `json:"items"`
 	LoseRound *int              `json:"loseRound,omitempty"`
 	Ready     bool              `json:"-"`
+	Moving    uint              `json:"-"`
 }
 
 //easyjson:json

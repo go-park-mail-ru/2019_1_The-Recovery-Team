@@ -30,6 +30,7 @@ const (
 	ItemDuration     uint64 = 5
 	RoundDuration    uint64 = 5
 	TickerDuration          = 1000 / 60
+	TicksForMoving          = 5
 )
 
 type Engine struct {
@@ -346,7 +347,7 @@ func (e *Engine) movePlayer(action *game.Action) {
 	player, exists := e.State.Players[idStr]
 
 	// Player exists or already lost
-	if !exists || player.LoseRound != nil {
+	if !exists || player.LoseRound != nil || player.Moving != 0 {
 		return
 	}
 
@@ -390,6 +391,7 @@ func (e *Engine) movePlayer(action *game.Action) {
 		}
 	}
 
+	player.Moving = 1
 	e.State.Players[idStr] = player
 	if item, exists := e.State.ActiveItems[player.Id]; exists && item.Type == Sand {
 		e.State.Field.Cells[(player.X/CellSize)+(player.Y/CellSize)*e.State.Field.Width].Type = Sand
@@ -493,10 +495,30 @@ func (e *Engine) updateFieldRound() {
 	}
 }
 
+func (e *Engine) updatePlayersMoving() {
+	if e.State != nil {
+		for id, player := range e.State.Players {
+			if player.Moving == 0 {
+				continue
+			}
+
+			if player.Moving > TicksForMoving {
+				player.Moving = 0
+				e.State.Players[id] = player
+				return
+			}
+			player.Moving++
+			e.State.Players[id] = player
+		}
+	}
+}
+
 // updateState processes actions and updates state
 func (e *Engine) updateState(actions *[]*game.Action) {
 	e.UpdateM.Lock()
 	defer e.UpdateM.Unlock()
+
+	e.updatePlayersMoving()
 
 	// Initialize state diff
 	e.initStateDiff()
@@ -629,10 +651,10 @@ func (e *Engine) run() {
 
 		// Start processing actions
 		e.ProcessM.Lock()
-		if len(e.ProcessActions) == 0 {
-			e.ProcessM.Unlock()
-			continue
-		}
+		//if len(e.ProcessActions) == 0 {
+		//	e.ProcessM.Unlock()
+		//	continue
+		//}
 		actions := make([]*game.Action, len(e.ProcessActions))
 		copy(actions, e.ProcessActions)
 		go e.updateState(&actions)
