@@ -61,3 +61,11 @@ func (c *ClientMock) Count(ctx context.Context, in *Nothing, opts ...grpc.CallOp
 func (c *ClientMock) UpdateRating(ctx context.Context, in *UpdateRatingRequest, opts ...grpc.CallOption) (*Nothing, error) {
 	return c.service.UpdateRating(ctx, in)
 }
+
+func (c *ClientMock) PutProfileOauth(ctx context.Context, in *PutProfileOauthRequest, opts ...grpc.CallOption) (*ProfileId, error) {
+	return c.service.PutProfileOauth(ctx, in)
+}
+
+func (c *ClientMock) CreateProfileOauth(ctx context.Context, in *CreateProfileOauthRequest, opts ...grpc.CallOption) (*ProfileId, error) {
+	return c.service.CreateProfileOauth(ctx, in)
+}

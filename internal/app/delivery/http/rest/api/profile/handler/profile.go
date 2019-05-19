@@ -3,10 +3,13 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/prometheus/common/log"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/middleware"
@@ -34,6 +37,9 @@ const (
 	EmailAlreadyExists       = "EmailAlreadyExists"
 	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	IncorrectProfilePassword = "IncorrectProfilePassword"
+	vkOauthUrl               = "https://oauth.vk.com/access_token?client_id=%s&client_secret=%s&redirect_uri=%s&code=%s"
+	redirectUri              = "http://127.0.0.1:8000/api/v1/oauth/redirect"
+	vkUserInfoUrl            = "https://api.vk.com/method/users.get?user_id=%s&v=5.95&fields=photo_100&access_token=%s"
 )
 
 func saveAvatar(profileManager *profileService.ProfileClient, avatar multipart.File, filename, dir string, id uint64) (string, error) {
@@ -177,6 +183,8 @@ func GetProfile(profileManager *profileService.ProfileClient) httprouter.Handle 
 				ID:       prof.Info.Id,
 				Nickname: prof.Info.Nickname,
 				Avatar:   prof.Info.Avatar,
+				Oauth:    prof.Info.Oauth,
+				OauthId:  prof.Info.OauthId,
 				Score: profile.Score{
 					Record: prof.Info.Score.Record,
 					Win:    prof.Info.Score.Win,
@@ -227,11 +235,9 @@ func PutProfile(profileManager *profileService.ProfileClient) httprouter.Handle 
 		}
 		r.Body.Close()
 
-		if isValid, err := govalidator.ValidateStruct(data); !isValid && err != nil {
-			resp := response.Error{
-				Description: err.Error(),
-			}
-			writer.WriteResponseJSON(w, http.StatusUnprocessableEntity, resp)
+		if (data.Email != "" && !govalidator.IsEmail(data.Email)) ||
+			(data.Nickname != "" && !govalidator.StringLength(data.Nickname, "4", "20")) {
+			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
 
@@ -576,4 +582,153 @@ func GetScoreboard(profileManager *profileService.ProfileClient) httprouter.Hand
 
 		writer.WriteResponseJSON(w, http.StatusOK, profiles)
 	}
+}
+
+func PostProfileOauth(profileManager *profileService.ProfileClient, sessionManager *session.SessionClient) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		log := r.Context().Value("logger").(*zap.Logger)
+		clientId := r.Context().Value("clientId").(string)
+		clientSecret := r.Context().Value("clientSecret").(string)
+		if clientId == "" || clientSecret == "" {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		code := r.FormValue("code")
+
+		reqURL := fmt.Sprintf(vkOauthUrl, clientId, clientSecret, redirectUri, code)
+		req, err := http.NewRequest(http.MethodPost, reqURL, nil)
+		if err != nil {
+			log.Warn("Request creation error",
+				zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		req.Header.Set("accept", "application/json")
+		client := http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Warn("Request to Oauth api error",
+				zap.Error(err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		defer res.Body.Close()
+
+		var raw profile.OauthAccessTokenRaw
+		if err := easyjson.UnmarshalFromReader(res.Body, &raw); err != nil {
+			log.Warn("Doesn't receive access token",
+				zap.Error(err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		data := profile.OauthAccessToken{
+			Token:  raw.Token,
+			UserId: strconv.Itoa(int(raw.UserId)),
+		}
+
+		p := &profileService.PutProfileOauthRequest{Id: data.UserId}
+		resp, err := (*profileManager).PutProfileOauth(context.Background(), p)
+
+		var isNew bool
+		var profileId uint64
+		if err != nil {
+			if status.Convert(err).Message() != "ProfileDoesNotExist" {
+				log.Error(status.Convert(err).Message())
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			isNew = true
+			avatar, err := GetAvatarOauth(data.UserId, data.Token)
+			if err != nil {
+				log.Error(status.Convert(err).Message())
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			create := &profileService.CreateProfileOauthRequest{
+				UserId: data.UserId,
+				Token:  data.Token,
+				Avatar: avatar,
+				Oauth:  "vk",
+			}
+			created, err := (*profileManager).CreateProfileOauth(context.Background(), create)
+			if err != nil {
+				log.Error(status.Convert(err).Message())
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			profileId = created.Id
+		} else {
+			profileId = resp.Id
+		}
+
+		// Create session
+		s := &session.Create{
+			ProfileId: &session.ProfileId{
+				Id: profileId,
+			},
+			Expires: ptypes.DurationProto(24 * time.Hour),
+		}
+
+		sessionId, err := (*sessionManager).Set(context.Background(), s)
+		if err != nil {
+			log.Error(status.Convert(err).Message(),
+				zap.Uint64("created_id", profileId))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_id",
+			Value:    sessionId.Id,
+			Path:     "/",
+			Domain:   ".sadislands.ru",
+			Expires:  time.Now().Add(24*time.Hour - 10*time.Minute),
+			HttpOnly: true,
+		})
+
+		if isNew {
+			w.Header().Set("Location", "/profile?mode=new")
+			w.WriteHeader(http.StatusFound)
+			return
+		}
+
+		w.Header().Set("Location", "/profile")
+		w.WriteHeader(http.StatusFound)
+	}
+}
+
+func GetAvatarOauth(id string, token string) (string, error) {
+	reqURL := fmt.Sprintf(vkUserInfoUrl, id, token)
+	req, err := http.NewRequest(http.MethodGet, reqURL, nil)
+	if err != nil {
+		log.Warn("Request creation error",
+			zap.Error(err))
+		return "", err
+	}
+
+	req.Header.Set("accept", "application/json")
+	client := http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		log.Warn("Request to Oauth api error",
+			zap.Error(err))
+		return "", err
+	}
+	defer res.Body.Close()
+
+	var data profile.OauthResponse
+	if err := easyjson.UnmarshalFromReader(res.Body, &data); err != nil {
+		return "", err
+	}
+
+	if len(data.Response) == 0 {
+		return "", errors.New("doesn't receive avatar")
+	}
+
+	return data.Response[0].Avatar, nil
 }

@@ -28,6 +28,8 @@ func (s *Service) Get(ctx context.Context, in *GetRequest) (*GetResponse, error)
 			Id:       prof.ID,
 			Nickname: prof.Nickname,
 			Avatar:   prof.Avatar,
+			Oauth:    prof.Oauth,
+			OauthId:  prof.OauthId,
 			Score: &Score{
 				Record: prof.Score.Record,
 				Win:    prof.Score.Win,
@@ -192,4 +194,30 @@ func (s *Service) Count(ctx context.Context, in *Nothing) (*CountResponse, error
 func (s *Service) UpdateRating(ctx context.Context, in *UpdateRatingRequest) (*Nothing, error) {
 	err := s.interactor.UpdateRating(in.Winner, in.Loser)
 	return &Nothing{}, err
+}
+
+func (s *Service) PutProfileOauth(ctx context.Context, in *PutProfileOauthRequest) (*ProfileId, error) {
+	p, err := s.interactor.PutProfileOauth(in.Id, in.Token)
+	if err != nil {
+		return &ProfileId{}, err
+	}
+
+	return &ProfileId{Id: p.Id}, nil
+}
+
+func (s *Service) CreateProfileOauth(ctx context.Context, in *CreateProfileOauthRequest) (*ProfileId, error) {
+	c := &profile.CreateOauth{
+		UserId: in.UserId,
+		Token:  in.Token,
+		Avatar: profile.Avatar{
+			Path: in.Avatar,
+		},
+		Oauth: in.Oauth,
+	}
+	p, err := s.interactor.CreateProfileOauth(c)
+	if err != nil {
+		return &ProfileId{}, err
+	}
+
+	return &ProfileId{Id: p.Id}, nil
 }

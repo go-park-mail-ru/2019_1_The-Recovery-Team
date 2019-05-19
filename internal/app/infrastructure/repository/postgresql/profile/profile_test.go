@@ -52,7 +52,6 @@ func TestGet(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			prof, err := repo.Get(testCase.id)
 			assert.Equal(t, testCase.err, err, "Return incorrect error value")
-			fmt.Println(prof)
 		})
 	}
 }

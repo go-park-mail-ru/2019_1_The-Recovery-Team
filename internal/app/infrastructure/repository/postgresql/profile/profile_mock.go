@@ -221,3 +221,11 @@ func (r *RepoMock) Count() (count int64, err error) {
 func (r *RepoMock) UpdateRating(winner, loser uint64) error {
 	return nil
 }
+
+func (r *RepoMock) PutProfileOauth(id string, token string) (*profile.ID, error) {
+	return &profile.ID{}, nil
+}
+
+func (r *RepoMock) CreateProfileOauth(create *profile.CreateOauth) (*profile.ID, error) {
+	return &profile.ID{}, nil
+}

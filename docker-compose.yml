@@ -10,7 +10,7 @@ services:
     build:
       context: .
       dockerfile: build/docker/server/Dockerfile
-    command: ["/app/api"]
+    command: /bin/sh -c "/app/api -client_id ${VK_CLIENT_ID:-recoveryteam} -client_secret ${VK_CLIENT_SECRET:-recoveryteam}"
     container_name: api
     links:
       - profile

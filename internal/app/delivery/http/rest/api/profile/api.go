@@ -20,6 +20,8 @@ func NewApi(
 	profileManager *profile.ProfileClient,
 	sessionManager *session.SessionClient,
 	logger *zap.Logger,
+	clientId string,
+	clienSecret string,
 ) *Api {
 	router := httprouter.New()
 
@@ -93,6 +95,15 @@ func NewApi(
 			logger, middleware.RecoverMiddleware(
 				logger, middleware.AccessHitsMiddleware(
 					middleware.CORSMiddleware(handler.GetScoreboard(profileManager))))),
+	)
+
+	//Oauth routes
+	router.GET("/api/v1/oauth/redirect",
+		middleware.LoggerMiddleware(
+			logger, middleware.RecoverMiddleware(
+				logger, middleware.AccessHitsMiddleware(
+					middleware.OauthMiddleware(
+						clientId, clienSecret, handler.PostProfileOauth(profileManager, sessionManager))))),
 	)
 
 	//Metrics routes

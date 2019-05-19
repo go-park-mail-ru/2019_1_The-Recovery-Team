@@ -2,6 +2,7 @@ package profile
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/domain/profile"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql"
@@ -68,6 +69,25 @@ const (
 	loss = loss + 1
 	WHERE id = $2`
 
+	QueryProfileIdOauth = `SELECT profile_id
+	FROM token 
+	WHERE user_id = $1`
+
+	QueryCreateOauthToken = `INSERT INTO token (user_id, profile_id, token, oauth)
+	VALUES ($1, $2, $3, $4)`
+
+	QueryUpdateOauthToken = `UPDATE token 
+	SET token = $1 
+	WHERE user_id = $2`
+
+	QueryCreateProfileOAuth = `INSERT INTO profile (nickname, avatar) 
+	VALUES ($1, $2) 
+	RETURNING id`
+
+	QueryOauthByProfileId = `SELECT oauth, user_id 
+	FROM token 
+	WHERE profile_id = $1`
+
 	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	EmailAlreadyExists       = "EmailAlreadyExists"
 	IncorrectProfilePassword = "IncorrectProfilePassword"
@@ -94,8 +114,18 @@ type Repo struct {
 // Get gets profile data by id
 func (r *Repo) Get(id interface{}) (*profile.Profile, error) {
 	profile := &profile.Profile{}
-	if err := r.conn.QueryRow(QueryProfileById, id).Scan(&profile.ID, &profile.Nickname, &profile.Email,
+	var email *string
+	if err := r.conn.QueryRow(QueryProfileById, id).Scan(&profile.ID, &profile.Nickname, &email,
 		&profile.Avatar, &profile.Record, &profile.Win, &profile.Loss); err != nil {
+		return nil, err
+	}
+
+	if email != nil {
+		profile.Email = *email
+	}
+
+	err := r.conn.QueryRow(QueryOauthByProfileId, id).Scan(&profile.Oauth, &profile.OauthId)
+	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
 
@@ -186,14 +216,22 @@ func (r *Repo) UpdatePassword(id interface{}, data *profile.UpdatePassword) erro
 // GetByEmail gets profile by email
 func (r *Repo) GetByEmail(email interface{}) (*profile.Profile, error) {
 	received := &profile.Profile{}
-	err := r.conn.QueryRow(QueryProfileByEmail, email).Scan(&received.ID, &received.Email, &received.Nickname)
+	var emailReceive *string
+	err := r.conn.QueryRow(QueryProfileByEmail, email).Scan(&received.ID, &emailReceive, &received.Nickname)
+	if emailReceive != nil {
+		received.Email = *emailReceive
+	}
 	return received, err
 }
 
 // GetByNickname gets profile by nickname
 func (r *Repo) GetByNickname(nickname interface{}) (*profile.Profile, error) {
 	received := &profile.Profile{}
-	err := r.conn.QueryRow(QueryProfileByNickname, nickname).Scan(&received.ID, &received.Email, &received.Nickname)
+	var email *string
+	err := r.conn.QueryRow(QueryProfileByNickname, nickname).Scan(&received.ID, &email, &received.Nickname)
+	if email != nil {
+		received.Email = *email
+	}
 	return received, err
 }
 
@@ -273,4 +311,44 @@ func (r *Repo) UpdateRating(winner, loser uint64) error {
 
 	tx.Commit()
 	return nil
+}
+
+func (r *Repo) PutProfileOauth(id string, token string) (*profile.ID, error) {
+	tx, err := r.conn.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var profileId uint64
+	if err := tx.QueryRow(QueryProfileIdOauth, id).Scan(&profileId); err != nil {
+		return nil, errors.New("ProfileDoesNotExist")
+	}
+
+	if _, err := tx.Exec(QueryUpdateOauthToken, token, id); err != nil {
+		return nil, err
+	}
+
+	tx.Commit()
+	return &profile.ID{Id: profileId}, nil
+}
+
+func (r *Repo) CreateProfileOauth(create *profile.CreateOauth) (*profile.ID, error) {
+	tx, err := r.conn.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var profileId uint64
+	if err := tx.QueryRow(QueryCreateProfileOAuth, fmt.Sprintf("%s_%s", create.Oauth, create.UserId), create.Avatar.Path).Scan(&profileId); err != nil {
+		return nil, err
+	}
+
+	if _, err := tx.Exec(QueryCreateOauthToken, create.UserId, profileId, create.Token, create.Oauth); err != nil {
+		return nil, err
+	}
+
+	tx.Commit()
+	return &profile.ID{Id: profileId}, nil
 }

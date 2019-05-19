@@ -58,3 +58,11 @@ func (i *ProfileInteractor) Count() (count int64, err error) {
 func (i *ProfileInteractor) UpdateRating(winner, loser uint64) error {
 	return i.repo.UpdateRating(winner, loser)
 }
+
+func (i *ProfileInteractor) PutProfileOauth(id string, token string) (*profile.ID, error) {
+	return i.repo.PutProfileOauth(id, token)
+}
+
+func (i *ProfileInteractor) CreateProfileOauth(create *profile.CreateOauth) (*profile.ID, error) {
+	return i.repo.CreateProfileOauth(create)
+}

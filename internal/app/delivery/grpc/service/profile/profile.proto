@@ -14,9 +14,15 @@ service Profile {
     rpc List(ListRequest) returns (ListResponse) {}
     rpc Count(Nothing) returns (CountResponse) {}
     rpc UpdateRating(UpdateRatingRequest) returns (Nothing) {}
+    rpc PutProfileOauth(PutProfileOauthRequest) returns (ProfileId) {}
+    rpc CreateProfileOauth(CreateProfileOauthRequest) returns (ProfileId) {}
 }
 
 message GetRequest {
+    uint64 id = 1;
+}
+
+message ProfileId {
     uint64 id = 1;
 }
 
@@ -85,11 +91,13 @@ message Info {
     uint64 id = 1;
     string nickname = 2;
     string avatar = 3;
-    Score score = 4;
+    string oauth = 4;
+    string oauthId = 5;
+    Score score = 6;
 }
 
 message Score {
-    int64 Record = 1;
+    int64 record = 1;
     int64 win = 2;
     int64 loss = 3;
 }
@@ -100,3 +108,15 @@ message UpdateRatingRequest {
 }
 
 message Nothing {}
+
+message PutProfileOauthRequest {
+    string id = 1;
+    string token = 2;
+}
+
+message CreateProfileOauthRequest {
+    string userId = 1;
+    string token = 2;
+    string avatar = 3;
+    string oauth = 4;
+}

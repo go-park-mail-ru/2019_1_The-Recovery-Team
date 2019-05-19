@@ -12,6 +12,8 @@ type Info struct {
 	ID       uint64 `json:"id,omitempty" example:"1"`
 	Nickname string `json:"nickname,omitempty" example:"test" valid:"required~Nickname is required,stringlength(4|20)~Incorrect nickname length(4-20)"`
 	Avatar   string `json:"avatar,omitempty" example:"upload/img/1.png"`
+	Oauth    string `json:"oauth,omitempty"`
+	OauthId  string `json:"oauthId,omitempty"`
 	Score
 }
 
@@ -57,6 +59,13 @@ type Create struct {
 	Password string `json:"password,omitempty" example:"password" valid:"required~Password is required,stringlength(4|32)~Incorrect password length(4-32)"`
 }
 
+type CreateOauth struct {
+	UserId string `json:"user_id"`
+	Token  string `json:"token"`
+	Avatar Avatar `json:"avatar"`
+	Oauth  string `json:"oauth"`
+}
+
 //easyjson:json
 type Created struct {
 	ID       uint64 `json:"id,omitempty" example:"1"`
@@ -75,4 +84,26 @@ type UpdateInfo struct {
 type UpdatePassword struct {
 	Password    string `json:"password,omitempty" example:"password" valid:"required~Password is required,stringlength(4|32)~Incorrect password length(4-32)"`
 	PasswordOld string `json:"password_old" example:"password_old" valid:"required~Old password is required,stringlength(4|32)~Incorrect password length(4-32)"`
+}
+
+//easyjson:json
+type OauthAccessTokenRaw struct {
+	Token  string `json:"access_token"`
+	UserId uint64 `json:"user_id"`
+}
+
+//easyjson:json
+type OauthAccessToken struct {
+	Token  string `json:"access_token"`
+	UserId string `json:"user_id"`
+}
+
+//easyjson:json
+type OauthResponse struct {
+	Response []OauthAvatar `json:"response"`
+}
+
+//easyjson:json
+type OauthAvatar struct {
+	Avatar string `json:"photo_100"`
 }

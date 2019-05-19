@@ -16,4 +16,6 @@ type ProfileRepo interface {
 	List(limit, offset int64) ([]profile.Info, error)
 	Count() (count int64, err error)
 	UpdateRating(winner, loser uint64) error
+	PutProfileOauth(id string, token string) (*profile.ID, error)
+	CreateProfileOauth(create *profile.CreateOauth) (*profile.ID, error)
 }

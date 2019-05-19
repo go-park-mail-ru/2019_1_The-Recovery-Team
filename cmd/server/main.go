@@ -32,8 +32,11 @@ import (
 // @BasePath /api/v1
 
 func main() {
+	clientId := flag.String("client_id", "", "client id")
+	clientSecret := flag.String("client_secret", "", "client secret")
 	dev := flag.Bool("local", false, "local config flag")
 	flag.Parse()
+
 	if *dev {
 		viper.SetConfigName("local")
 	} else {
@@ -79,7 +82,7 @@ func main() {
 	sessionManager := session.NewSessionClient(sessionConn)
 	profileManager := profile.NewProfileClient(profileConn)
 
-	profileApi := profileApi.NewApi(&profileManager, &sessionManager, logger)
+	profileApi := profileApi.NewApi(&profileManager, &sessionManager, logger, *clientId, *clientSecret)
 	profileApi.Router.Handler("GET", "/swagger/:file", httpSwagger.WrapHandler)
 	profileApi.Router.ServeFiles("/upload/*filepath", http.Dir("upload"))
 

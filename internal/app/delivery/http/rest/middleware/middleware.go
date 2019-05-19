@@ -136,21 +136,23 @@ func RecoverMiddleware(logger *zap.Logger, next httprouter.Handle) httprouter.Ha
 // LoggerMiddleware write logs
 func LoggerMiddleware(logger *zap.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		start := time.Now()
+		//start := time.Now()
 		log := logger.With(zap.String("method", r.Method),
 			zap.String("remote_address", r.RemoteAddr),
 			zap.String("url", r.URL.Path))
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, "logger", log)
 		next(w, r.WithContext(ctx), ps)
-		log.Info("Finish",
-			zap.Duration("work_time", time.Since(start)),
-		)
+		//log.Info("Finish",
+		//	zap.Duration("work_time", time.Since(start)),
+		//)
 	}
 }
 
 func AccessHitsMiddleware(next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		start := time.Now()
+		log := r.Context().Value("logger").(*zap.Logger)
 		lrw := NewLoggingResponseWriter(w)
 		next(lrw, r, ps)
 
@@ -162,5 +164,18 @@ func AccessHitsMiddleware(next httprouter.Handle) httprouter.Handle {
 				"status_code": strconv.Itoa(lrw.statusCode),
 			}).Inc()
 		}
+
+		log.Info("Finish with status code",
+			zap.Int("status_code", lrw.statusCode),
+			zap.Duration("work_time", time.Since(start)))
+	}
+}
+
+func OauthMiddleware(clientId, clientSecret string, next httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "clientId", clientId)
+		ctx = context.WithValue(ctx, "clientSecret", clientSecret)
+		next(w, r.WithContext(ctx), ps)
 	}
 }
