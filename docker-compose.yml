@@ -21,6 +21,8 @@ services:
       - ./upload/img:/app/upload/img
     ports:
       - 8080:8080
+    env_file:
+      - ./.env
 
   profile:
     build:
@@ -33,6 +35,8 @@ services:
       - consul
     ports:
       - 50051:50051
+    env_file:
+      - ./.env
 
   session:
     build:
@@ -59,6 +63,7 @@ services:
       - prometheus
     ports:
       - 8081:8081
+
   chat:
     build:
       context: .
@@ -71,6 +76,8 @@ services:
       - prometheus
     ports:
       - 8082:8082
+    env_file:
+      - ./.env
 
   db_profile:
     image: postgres
@@ -79,6 +86,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-recoveryteam}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456}
       POSTGRES_DB: ${POSTGRES_DB:-sadislands}
+    volumes:
+      - db_profile:/var/lib/postgresql/data
+    env_file:
+      - ./.env
 
   db_chat:
     image: postgres
@@ -87,6 +98,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-recoveryteam}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456}
       POSTGRES_DB: ${POSTGRES_DB_CHAT:-sadislandschat}
+    volumes:
+      - db_chat:/var/lib/postgresql/data
+    env_file:
+      - ./.env
 
   redis:
     image: redis
@@ -117,7 +132,11 @@ services:
       - prometheus
     ports:
       - 3000:3000
+    env_file:
+      - ./.env
 
 volumes:
   prometheus_data:
   grafana_data:
+  db_profile:
+  db_chat:
