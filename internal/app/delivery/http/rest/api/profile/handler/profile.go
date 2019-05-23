@@ -38,7 +38,7 @@ const (
 	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	IncorrectProfilePassword = "IncorrectProfilePassword"
 	vkOauthUrl               = "https://oauth.vk.com/access_token?client_id=%s&client_secret=%s&redirect_uri=%s&code=%s"
-	redirectUri              = "http://127.0.0.1:8000/api/v1/oauth/redirect"
+	redirectUri              = "https://sadislands.ru/api/v1/oauth/redirect"
 	vkUserInfoUrl            = "https://api.vk.com/method/users.get?user_id=%s&v=5.95&fields=photo_100&access_token=%s"
 )
 
