@@ -77,7 +77,7 @@ func main() {
 	}
 
 	if err := postgresql.MakeMigrations(psqlConn, migrationsFile); err != nil {
-		log.Fatal("Database migrations failed", err)
+		log.Fatal("Database migrations failed:", err)
 	}
 	pgxClose(psqlConn)
 

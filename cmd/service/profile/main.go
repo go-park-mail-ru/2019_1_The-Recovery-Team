@@ -37,6 +37,7 @@ func main() {
 	dbPassword := flag.String("db_password", "123456", "database password")
 	dbName := flag.String("db_name", "sadislands", "database name")
 	flag.Parse()
+
 	if *dev {
 		viper.SetConfigName("local")
 	} else {
@@ -82,7 +83,7 @@ func main() {
 	}
 
 	if err := postgresql.MakeMigrations(psqlConn, migrationsFile); err != nil {
-		log.Fatal("Database migrations failed", err)
+		log.Fatal("Database migrations failed:", err)
 	}
 	pgxClose(psqlConn)
 
