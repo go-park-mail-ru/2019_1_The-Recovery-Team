@@ -1,0 +1,19 @@
+language: go
+go:
+  - 1.12.x
+
+branches:
+  only:
+    - development-microservices
+
+env:
+  - GO111MODULE=on
+
+before_install:
+- openssl aes-256-cbc -K $encrypted_5408d52059ff_key -iv $encrypted_5408d52059ff_iv
+  -in travis_id_rsa.enc -out ./travis_id_rsa -d
+- eval "$(ssh-agent -s)"
+- chmod 600 ./travis_id_rsa
+- echo -e "Host $DEPLOYMENT_IP_ADDRESS\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+- ssh-add ./travis_id_rsa
+- ssh -i ./travis_id_rsa root@$DEPLOYMENT_IP_ADDRESS pwd
