@@ -16,4 +16,4 @@ before_install:
 - chmod 600 ./travis_id_rsa
 - echo -e "Host $DEPLOYMENT_IP_ADDRESS\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 - ssh-add ./travis_id_rsa
-- ssh -i ./travis_id_rsa root@$DEPLOYMENT_IP_ADDRESS pwd
+- ssh -i ./travis_id_rsa root@$DEPLOYMENT_IP_ADDRESS
