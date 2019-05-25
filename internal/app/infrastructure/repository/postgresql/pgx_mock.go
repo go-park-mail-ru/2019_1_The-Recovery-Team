@@ -73,10 +73,14 @@ const (
 
 	QueryProfilesWithLimitAndOffset = `SELECT id, nickname, avatar, record, win, loss 
 	FROM profile 
-	ORDER BY record LIMIT $1 OFFSET $2`
+	ORDER BY record DESC LIMIT $1 OFFSET $2`
 
 	QueryProfileCount = `SELECT COUNT(*) 
 	FROM profile`
+
+	QueryOauthByProfileId = `SELECT oauth, user_id 
+	FROM token 
+	WHERE profile_id = $1`
 
 	ProfileEmailKey    = "profile_email_key"
 	ProfileNicknameKey = "profile_nickname_key"
@@ -96,6 +100,8 @@ var (
 	MessageId       uint64 = 1
 	MessageCreated         = time.Now()
 	MessageEdited          = false
+	Oauth                  = "vk"
+	OauthId                = "1"
 
 	ConflictProfileEmail    = "conflict"
 	ConflictProfileNickname = "conflict"
@@ -296,6 +302,16 @@ func (c *ConnMock) QueryRow(sql string, args ...interface{}) Row {
 					&MessageId,
 					&MessageCreated,
 					&MessageEdited,
+				},
+			}
+			return &row
+		}
+	case QueryOauthByProfileId:
+		{
+			row := RowMock{
+				values: []interface{}{
+					&Oauth,
+					&OauthId,
 				},
 			}
 			return &row

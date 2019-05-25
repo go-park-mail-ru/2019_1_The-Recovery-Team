@@ -50,7 +50,7 @@ func TestGet(t *testing.T) {
 
 	for _, testCase := range testCaseGet {
 		t.Run(testCase.name, func(t *testing.T) {
-			prof, err := repo.Get(testCase.id)
+			_, err := repo.Get(testCase.id)
 			assert.Equal(t, testCase.err, err, "Return incorrect error value")
 		})
 	}

@@ -259,11 +259,11 @@ func (r *Repo) List(limit, offset int64) ([]profile.Info, error) {
 	}
 
 	for rows.Next() {
-		profile := profile.Info{}
-		if err = rows.Scan(&profile.ID, &profile.Nickname, &profile.Avatar, &profile.Record, &profile.Win, &profile.Loss); err != nil {
+		prof := profile.Info{}
+		if err = rows.Scan(&prof.ID, &prof.Nickname, &prof.Avatar, &prof.Record, &prof.Win, &prof.Loss); err != nil {
 			return nil, err
 		}
-		profiles = append(profiles, profile)
+		profiles = append(profiles, prof)
 	}
 	return profiles, nil
 }

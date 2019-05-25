@@ -16,7 +16,7 @@ func TestNewRestApi(t *testing.T) {
 	profileManager := profileGrpc.NewClientMock()
 	sessionManager := sessionGrpc.NewClientMock()
 
-	api := NewApi(&profileManager, &sessionManager, log)
+	api := NewApi(&profileManager, &sessionManager, log, "", "")
 	assert.NotEmpty(t, api,
 		"Returns empty api router")
 }

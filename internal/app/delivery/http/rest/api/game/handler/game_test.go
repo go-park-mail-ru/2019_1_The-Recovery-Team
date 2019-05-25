@@ -11,10 +11,8 @@ import (
 	gameDomain "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/domain/game"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/middleware"
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
 
@@ -36,7 +34,6 @@ const (
 func TestSearch(t *testing.T) {
 	metric.RegisterTotalRoomsMetric("game_service")
 	metric.RegisterTotalPlayersMetric("game_service")
-	prometheus.MustRegister(metric.TotalRooms, metric.TotalPlayers)
 
 	log, err := zap.NewProduction()
 	sessionManager := session.NewClientMock()
@@ -50,7 +47,7 @@ func TestSearch(t *testing.T) {
 	router := httprouter.New()
 	router.GET("/", middleware.Authentication(&sessionManager, Search(&profileManager, gameManager)))
 	go http.ListenAndServe(":8080", router)
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	cookies := []*http.Cookie{{Name: "session_id", Value: "AUTHORIZED", Path: "/"}}
 	dialer := websocket.DefaultDialer

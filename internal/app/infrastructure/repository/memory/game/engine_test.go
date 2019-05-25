@@ -304,8 +304,8 @@ func TestMovePlayer(t *testing.T) {
 			Field:       field,
 			RoundNumber: 1,
 		},
-		StateDiff: initStateDiff(),
 	}
+	engine.initStateDiff()
 
 	for _, testCase := range testCaseMovePlayer {
 		t.Run(testCase.name, func(t *testing.T) {

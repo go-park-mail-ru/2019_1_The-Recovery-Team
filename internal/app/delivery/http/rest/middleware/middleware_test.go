@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -166,9 +167,14 @@ func TestLoggerMiddleware(t *testing.T) {
 func TestAccessHitsMiddleware(t *testing.T) {
 	req := httptest.NewRequest("GET", recoveryUrl, nil)
 	w := httptest.NewRecorder()
+	log, err := zap.NewProduction()
+	if err != nil {
+		panic(err)
+	}
+	ctx := context.WithValue(context.Background(), "logger", log)
 
 	metric.RegisterAccessHitsMetric("test")
-	AccessHitsMiddleware(fakeHandler)(w, req, nil)
+	AccessHitsMiddleware(fakeHandler)(w, req.WithContext(ctx), nil)
 
 	assert.Equal(t, http.StatusOK, w.Code,
 		"Wrong status code")
