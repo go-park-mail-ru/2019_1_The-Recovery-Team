@@ -38,7 +38,8 @@ script:
   - docker-compose --f docker-compose.build.yml build --pull
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker-compose --f docker-compose.build.yml push
-  - scp -i ./travis_id_rsa -r ./docker-compose.yml sadislands@$DEPLOYMENT_IP_ADDRESS:/home/sadislands/b/
+  - scp -i ./travis_id_rsa -r ./docker-compose.yml ./build/config sadislands@$DEPLOYMENT_IP_ADDRESS:/home/sadislands/b/
   - ssh -i ./travis_id_rsa sadislands@$DEPLOYMENT_IP_ADDRESS '
     cd /home/sadislands/b;
+    docker-compose down;
     docker-compose up -d'
