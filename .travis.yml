@@ -15,8 +15,7 @@ services:
   - docker
 
 env:
-  - GO111MODULE=on
-  - DOCKER_COMPOSE_VERSION=1.24.0
+  - GO111MODULE=on DOCKER_COMPOSE_VERSION=1.24.0
 
 before_install:
   - sudo rm /usr/local/bin/docker-compose
@@ -34,7 +33,7 @@ before_install:
 #  - ssh -i ./travis_id_rsa sadislands@$DEPLOYMENT_IP_ADDRESS
 
 before_script:
-  - docker-compose --f docker-compose.build.yml --pull || true
+  - docker-compose --f docker-compose.build.yml pull || true
 
 script:
   - docker-compose --f docker-compose.build.yml build --pull
