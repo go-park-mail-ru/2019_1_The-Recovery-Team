@@ -30,10 +30,6 @@ before_install:
   - chmod 600 ./travis_id_rsa
   - echo -e "Host $DEPLOYMENT_IP_ADDRESS\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   - ssh-add ./travis_id_rsa
-  - scp -i ~/.ssh/travis_id_rsa -r ./docker-compose.yml root@$DEPLOYMENT_IP_ADDRESS:/home/sadislands/b/
-  - ssh -i ./travis_id_rsa sadislands@$DEPLOYMENT_IP_ADDRESS
-  - cd /home/sadislands/b
-  - docker-compose up -d
 
 before_script:
   - docker-compose --f docker-compose.build.yml pull || true
@@ -42,3 +38,7 @@ script:
   - docker-compose --f docker-compose.build.yml build --pull
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker-compose --f docker-compose.build.yml push
+  - scp -i ./travis_id_rsa -r ./docker-compose.yml root@$DEPLOYMENT_IP_ADDRESS:/home/sadislands/b/
+  - ssh -i ./travis_id_rsa sadislands@$DEPLOYMENT_IP_ADDRESS
+  - cd /home/sadislands/b
+  - docker-compose up -d
