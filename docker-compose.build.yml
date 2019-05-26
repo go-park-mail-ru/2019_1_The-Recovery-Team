@@ -1,0 +1,47 @@
+version: '3.3'
+services:
+
+  api:
+    image: zorinarsenij/api
+    build:
+      context: .
+      cache_from:
+        - zorinarsenij/api:latest
+      dockerfile: build/docker/server/Dockerfile
+    container_name: api
+
+  profile:
+    image: zorinarsenij/profile
+    build:
+      context: .
+      cache_from:
+        - zorinarsenij/profile:latest
+      dockerfile: build/docker/service/profile/Dockerfile
+    container_name: profile
+
+  session:
+    image: zorinarsenij/session
+    build:
+      context: .
+      cache_from:
+        - zorinarsenij/session:latest
+      dockerfile: build/docker/service/session/Dockerfile
+    container_name: session
+
+  game:
+    image: zorinarsenij/game
+    build:
+      context: .
+      cache_from:
+        - zorinarsenij/game:latest
+      dockerfile: build/docker/service/game/Dockerfile
+    container_name: game
+
+  chat:
+    image: zorinarsenij/chat
+    build:
+      context: .
+      cache_from:
+        - zorinarsenij/chat:latest
+      dockerfile: build/docker/service/chat/Dockerfile
+    container_name: chat
