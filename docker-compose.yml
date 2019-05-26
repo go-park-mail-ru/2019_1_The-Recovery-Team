@@ -7,9 +7,7 @@ services:
       - 8500:8500
 
   api:
-    build:
-      context: .
-      dockerfile: build/docker/server/Dockerfile
+    image: zorinarsenij/api
     command: /bin/sh -c "/app/api -client_id ${VK_CLIENT_ID:-recoveryteam} -client_secret ${VK_CLIENT_SECRET:-recoveryteam}"
     container_name: api
     links:
@@ -25,9 +23,7 @@ services:
       - ./.env
 
   profile:
-    build:
-      context: .
-      dockerfile: build/docker/service/profile/Dockerfile
+    image: zorinarsenij/profile
     command: /bin/sh -c "/app/wait-for-it.sh db_profile:5432 && /app/profile -db_user ${POSTGRES_USER:-recoveryteam} -db_password ${POSTGRES_PASSWORD:-123456} -db_name ${POSTGRES_DB:-sadislands}"
     container_name: profile
     links:
@@ -39,9 +35,7 @@ services:
       - ./.env
 
   session:
-    build:
-      context: .
-      dockerfile: build/docker/service/session/Dockerfile
+    image: zorinarsenij/session
     command: /bin/sh -c "/app/wait-for-it.sh redis:6379 && /app/session"
     container_name: session
     links:
@@ -51,9 +45,7 @@ services:
       - 50052:50052
 
   game:
-    build:
-      context: .
-      dockerfile: build/docker/service/game/Dockerfile
+    image: zorinarsenij/game
     command: /bin/sh -c "/app/game"
     container_name: game
     links:
@@ -65,9 +57,7 @@ services:
       - 8081:8081
 
   chat:
-    build:
-      context: .
-      dockerfile: build/docker/service/chat/Dockerfile
+    image: zorinarsenij/chat
     command: /bin/sh -c "/app/wait-for-it.sh db_chat:5432 && /app/chat -db_user ${POSTGRES_USER:-recoveryteam} -db_password ${POSTGRES_PASSWORD:-123456} -db_name ${POSTGRES_DB_CHAT:-sadislandschat}"
     container_name: chat
     links:
