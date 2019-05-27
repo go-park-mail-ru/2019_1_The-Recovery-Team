@@ -7,7 +7,7 @@ services:
       - 8500:8500
 
   api:
-    image: zorinarsenij/api
+    image: zorinarsenij/api:latest
     command: /bin/sh -c "/app/api -client_id ${VK_CLIENT_ID:-recoveryteam} -client_secret ${VK_CLIENT_SECRET:-recoveryteam}"
     container_name: api
     links:
@@ -23,7 +23,7 @@ services:
       - ./.env
 
   profile:
-    image: zorinarsenij/profile
+    image: zorinarsenij/profile:latest
     command: /bin/sh -c "/app/wait-for-it.sh db_profile:5432 && /app/profile -db_user ${POSTGRES_USER:-recoveryteam} -db_password ${POSTGRES_PASSWORD:-123456} -db_name ${POSTGRES_DB:-sadislands}"
     container_name: profile
     links:
@@ -35,7 +35,7 @@ services:
       - ./.env
 
   session:
-    image: zorinarsenij/session
+    image: zorinarsenij/session:latest
     command: /bin/sh -c "/app/wait-for-it.sh redis:6379 && /app/session"
     container_name: session
     links:
@@ -45,7 +45,7 @@ services:
       - 50052:50052
 
   game:
-    image: zorinarsenij/game
+    image: zorinarsenij/game:latest
     command: /bin/sh -c "/app/game"
     container_name: game
     links:
@@ -57,7 +57,7 @@ services:
       - 8081:8081
 
   chat:
-    image: zorinarsenij/chat
+    image: zorinarsenij/chat:latest
     command: /bin/sh -c "/app/wait-for-it.sh db_chat:5432 && /app/chat -db_user ${POSTGRES_USER:-recoveryteam} -db_password ${POSTGRES_PASSWORD:-123456} -db_name ${POSTGRES_DB_CHAT:-sadislandschat}"
     container_name: chat
     links:
