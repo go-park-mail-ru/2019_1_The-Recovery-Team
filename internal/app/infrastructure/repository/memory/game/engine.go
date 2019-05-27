@@ -669,9 +669,11 @@ func (e *Engine) collectActions() {
 	for action := range e.ReceivedActions {
 		if action.Type == game.InitEngineStop {
 			var winnerId string
-			for id, player := range e.State.Players {
-				if player.LoseRound == nil {
-					winnerId = id
+			if e.State != nil {
+				for id, player := range e.State.Players {
+					if player.LoseRound == nil {
+						winnerId = id
+					}
 				}
 			}
 			e.Transport.SendOut(&game.Action{
