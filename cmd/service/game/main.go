@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/service"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/metric"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/resolver"
@@ -18,15 +19,13 @@ import (
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/memory/game"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
 
-	"google.golang.org/grpc/balancer/roundrobin"
-
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 )
 
 func main() {
 	dev := flag.Bool("local", false, "local config flag")
 	flag.Parse()
+
 	if *dev {
 		viper.SetConfigName("local")
 	} else {
@@ -37,18 +36,18 @@ func main() {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Can't read config files:", err)
 	}
-
 	consulAddr := viper.GetString("consul.address")
 	consulPort := viper.GetInt("consul.port")
+	port := viper.GetInt("game.port")
+	profileName := viper.GetString("profile.name")
+	sessionName := viper.GetString("session.name")
+
+	// Start watching for updates in consul
 	resolver.RegisterDefault(consulAddr, consulPort, 5*time.Second)
 
 	// Register prometheus metrics
 	metric.RegisterTotalRoomsMetric("game_service")
 	metric.RegisterTotalPlayersMetric("game_service")
-
-	port := viper.GetInt("game.port")
-	profileName := viper.Get("profile.name")
-	sessionName := viper.Get("session.name")
 
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -56,22 +55,14 @@ func main() {
 	}
 	defer logger.Sync()
 
-	profileConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, profileName),
-		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
-	if err != nil {
-		log.Fatal("Can't connect to profile service:", err)
-	}
+	profileConn := service.Connect(consulAddr, profileName)
 	defer profileConn.Close()
-
-	sessionConn, err := grpc.Dial(fmt.Sprintf("srv://%s/%s", consulAddr, sessionName),
-		grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
-	if err != nil {
-		log.Fatal("Authentication service connection refused:", err)
-	}
-	defer sessionConn.Close()
-
-	sessionManager := session.NewSessionClient(sessionConn)
 	profileManager := profile.NewProfileClient(profileConn)
+
+	sessionConn := service.Connect(consulAddr, sessionName)
+	defer sessionConn.Close()
+	sessionManager := session.NewSessionClient(sessionConn)
+
 	gameManager := usecase.NewGameInteractor(game.NewGameRepo(logger))
 
 	api := gameApi.NewApi(&profileManager, &sessionManager, gameManager, logger)

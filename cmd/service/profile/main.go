@@ -6,14 +6,15 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/service"
+
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/database"
+
 	"github.com/spf13/viper"
 
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql"
 	profileRepo "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/postgresql/profile"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
-
-	consulapi "github.com/hashicorp/consul/api"
 
 	"github.com/jackc/pgx"
 	"google.golang.org/grpc"
@@ -43,13 +44,11 @@ func main() {
 	} else {
 		viper.SetConfigName("config")
 	}
-
 	viper.SetConfigType("json")
 	viper.AddConfigPath("build/config/")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Can't read config files:", err)
 	}
-
 	consulAddr := viper.GetString("consul.address")
 	consulPort := viper.GetInt("consul.port")
 	profileName := viper.GetString("profile.name")
@@ -63,70 +62,27 @@ func main() {
 		log.Fatal("Failed to listen port", port)
 	}
 
-	psqlConfig := pgx.ConnConfig{
-		Host:     postgresqlAddr,
-		Port:     uint16(postgresqlPort),
-		Database: *dbName,
-		User:     *dbUser,
-		Password: *dbPassword,
-	}
-
-	psqlConfigPool := pgx.ConnPoolConfig{
-		ConnConfig:     psqlConfig,
+	dbConfig := pgx.ConnPoolConfig{
+		ConnConfig: pgx.ConnConfig{
+			Host:     postgresqlAddr,
+			Port:     uint16(postgresqlPort),
+			Database: *dbName,
+			User:     *dbUser,
+			Password: *dbPassword,
+		},
 		MaxConnections: 50,
 	}
+	dbConnPool := database.Connect(dbConfig, migrationsFile)
+	defer dbConnPool.Close()
 
-	// Create connection for migrations
-	psqlConn, err := pgx.Connect(psqlConfig)
-	if err != nil {
-		log.Fatal("Postgresql connection refused")
-	}
-
-	if err := postgresql.MakeMigrations(psqlConn, migrationsFile); err != nil {
-		log.Fatal("Database migrations failed:", err)
-	}
-	pgxClose(psqlConn)
-
-	// Create new connection to database with updated OIDs
-	psqlConnPool, err := pgx.NewConnPool(psqlConfigPool)
-	if err != nil {
-		log.Fatal("Postgresql connection refused")
-	}
-	defer psqlConnPool.Close()
-
-	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(psqlConnPool))
-	service := profile.NewService(interactor)
+	interactor := usecase.NewProfileInteractor(profileRepo.NewRepo(dbConnPool))
+	profileService := profile.NewService(interactor)
 	server := grpc.NewServer()
 
-	profile.RegisterProfileServer(server, service)
+	profile.RegisterProfileServer(server, profileService)
 
-	config := consulapi.DefaultConfig()
-	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
-	consul, err := consulapi.NewClient(config)
-	if err != nil {
-		log.Fatal("Can't connect to consul:", err)
-		return
-	}
-
-	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
-		ID:      serviceIdPrefix + strconv.Itoa(*port),
-		Name:    profileName,
-		Port:    *port,
-		Address: profileAddr,
-	})
-	if err != nil {
-		log.Fatal("Can't add profile service to resolver:", err)
-		return
-	}
-	log.Println("Registered in resolver", serviceIdPrefix, port)
-
-	defer func() {
-		err := consul.Agent().ServiceDeregister(serviceIdPrefix + strconv.Itoa(*port))
-		if err != nil {
-			log.Fatal("Can't remove service from resolver:", err)
-		}
-		log.Println("Deregistered in resolver", serviceIdPrefix, port)
-	}()
+	service.RegisterInConsul(consulAddr, consulPort, profileName, profileAddr, *port)
+	defer service.DeregisterInConsul(consulAddr, consulPort, profileName, *port)
 
 	log.Print(server.Serve(lis))
 }

@@ -6,6 +6,8 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/pkg/service"
+
 	"github.com/go-redis/redis"
 
 	"github.com/spf13/viper"
@@ -13,8 +15,6 @@ import (
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
 	sessionRepo "github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/infrastructure/repository/redis/session"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/usecase"
-
-	consulapi "github.com/hashicorp/consul/api"
 
 	"google.golang.org/grpc"
 )
@@ -38,7 +38,6 @@ func main() {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Can't read config files:", err)
 	}
-
 	consulAddr := viper.GetString("consul.address")
 	consulPort := viper.GetInt("consul.port")
 	sessionName := viper.GetString("session.name")
@@ -62,36 +61,13 @@ func main() {
 	defer redisConn.Close()
 
 	interactor := usecase.NewSessionInteractor(sessionRepo.NewSessionRepo(redisConn))
-	service := session.NewService(interactor)
+	sessionService := session.NewService(interactor)
 	server := grpc.NewServer()
 
-	session.RegisterSessionServer(server, service)
+	session.RegisterSessionServer(server, sessionService)
 
-	config := consulapi.DefaultConfig()
-	config.Address = consulAddr + ":" + strconv.Itoa(consulPort)
-	consul, err := consulapi.NewClient(config)
-	if err != nil {
-		log.Fatal("Can't connect to consul:", err)
-	}
-
-	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
-		ID:      serviceIdPrefix + strconv.Itoa(*port),
-		Name:    sessionName,
-		Port:    *port,
-		Address: sessionAddr,
-	})
-	if err != nil {
-		log.Fatal("Can't add session service to resolver:", err)
-	}
-	log.Println("Registered in consul", serviceIdPrefix, port)
-
-	defer func() {
-		err := consul.Agent().ServiceDeregister(serviceIdPrefix + strconv.Itoa(*port))
-		if err != nil {
-			log.Fatal("Can't remove service from resolver:", err)
-		}
-		log.Println("Deregistered in resolver", serviceIdPrefix, port)
-	}()
+	service.RegisterInConsul(consulAddr, consulPort, sessionName, sessionAddr, *port)
+	defer service.DeregisterInConsul(consulAddr, consulPort, sessionName, *port)
 
 	log.Print(server.Serve(lis))
 }
