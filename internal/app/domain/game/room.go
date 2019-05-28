@@ -117,6 +117,10 @@ func (r *Room) Run(sendInto func(action interface{})) {
 
 // Broadcast sends messages to all users in room
 func (r *Room) Broadcast(action *Action) {
+	if r.Closing.Load() {
+		return
+	}
+
 	r.Users.Range(func(key, value interface{}) bool {
 		value.(*User).Messages <- action
 		return true
