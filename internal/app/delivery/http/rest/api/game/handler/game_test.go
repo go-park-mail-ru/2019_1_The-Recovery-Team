@@ -127,23 +127,37 @@ func TestSearch(t *testing.T) {
 	err = connSecond.WriteJSON(message)
 	assert.Empty(t, err, "Doesn't use item player2")
 
-	timeout := time.After(6 * time.Second)
+	time.Sleep(6 * time.Second)
+
 	for {
-		select {
-		case <-timeout:
-			{
-				return
-			}
-		default:
-			{
-				action := &gameDomain.Action{}
-				err := connFirst.ReadJSON(action)
-				assert.Empty(t, err, "Return error on correct reading")
-				fmt.Println(action)
-				if action.Type == gameDomain.SetGameOver {
-					return
-				}
-			}
+		action := &gameDomain.Action{}
+		err := connFirst.ReadJSON(action)
+		assert.Empty(t, err, "Return error on correct reading")
+		fmt.Println(action)
+		if action.Type == gameDomain.SetGameOver {
+			time.Sleep(3 * time.Second)
+			return
 		}
 	}
+
+	//timeout := time.After(8 * time.Second)
+	//for {
+	//	select {
+	//	case <-timeout:
+	//		{
+	//			return
+	//		}
+	//	default:
+	//		{
+	//			action := &gameDomain.Action{}
+	//			err := connFirst.ReadJSON(action)
+	//			assert.Empty(t, err, "Return error on correct reading")
+	//			fmt.Println(action)
+	//			if action.Type == gameDomain.SetGameOver {
+	//				time.Sleep(3 * time.Second)
+	//				return
+	//			}
+	//		}
+	//	}
+	//}
 }
