@@ -40,6 +40,7 @@ const (
 	vkOauthUrl               = "https://oauth.vk.com/access_token?client_id=%s&client_secret=%s&redirect_uri=%s&code=%s"
 	redirectUri              = "https://sadislands.ru/api/v1/oauth/redirect"
 	vkUserInfoUrl            = "https://api.vk.com/method/users.get?user_id=%s&v=5.95&fields=photo_100&access_token=%s"
+	nicknameForbiddenRegexp  = "^vk_"
 )
 
 func saveAvatar(profileManager *profileService.ProfileClient, avatar multipart.File, filename, dir string, id uint64) (string, error) {
@@ -110,6 +111,11 @@ func GetProfiles(profileManager *profileService.ProfileClient) httprouter.Handle
 
 		// Check nickname existence
 		if nickname != "" && govalidator.StringLength(nickname, "4", "20") {
+			if govalidator.Matches(nickname, nicknameForbiddenRegexp) {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
 			request := &profileService.GetByNicknameRequest{
 				Nickname: nickname,
 			}
@@ -236,7 +242,8 @@ func PutProfile(profileManager *profileService.ProfileClient) httprouter.Handle 
 		r.Body.Close()
 
 		if (data.Email != "" && !govalidator.IsEmail(data.Email)) ||
-			(data.Nickname != "" && !govalidator.StringLength(data.Nickname, "4", "20")) {
+			(data.Nickname != "" && (!govalidator.StringLength(data.Nickname, "4", "20") ||
+				govalidator.Matches(data.Nickname, nicknameForbiddenRegexp))) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
@@ -370,7 +377,7 @@ func PostProfile(profileManager *profileService.ProfileClient, sessionManager *s
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		if nickname == "" || email == "" || password == "" {
+		if nickname == "" || email == "" || password == "" || govalidator.Matches(nickname, nicknameForbiddenRegexp) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -641,7 +648,7 @@ func PostProfileOauth(profileManager *profileService.ProfileClient, sessionManag
 			}
 
 			isNew = true
-			avatar, err := GetAvatarOauth(data.UserId, data.Token)
+			avatar, err := getAvatarOauth(data.UserId, data.Token)
 			if err != nil {
 				log.Error(status.Convert(err).Message())
 				w.WriteHeader(http.StatusInternalServerError)
@@ -702,7 +709,7 @@ func PostProfileOauth(profileManager *profileService.ProfileClient, sessionManag
 	}
 }
 
-func GetAvatarOauth(id string, token string) (string, error) {
+func getAvatarOauth(id string, token string) (string, error) {
 	reqURL := fmt.Sprintf(vkUserInfoUrl, id, token)
 	req, err := http.NewRequest(http.MethodGet, reqURL, nil)
 	if err != nil {
