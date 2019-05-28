@@ -78,6 +78,35 @@ const (
 	QueryProfileCount = `SELECT COUNT(*) 
 	FROM profile`
 
+	QueryProfileRatingById = `SELECT record 
+	FROM profile 
+	WHERE id = $1`
+
+	QueryUpdateProfileRatingWinner = `UPDATE profile 
+	SET record = record + $1, 
+	win = win + 1
+	WHERE id = $2`
+
+	QueryUpdateProfileRatingLoser = `UPDATE profile 
+	SET record = record - $1, 
+	loss = loss + 1
+	WHERE id = $2`
+
+	QueryProfileIdOauth = `SELECT profile_id
+	FROM token 
+	WHERE user_id = $1`
+
+	QueryCreateOauthToken = `INSERT INTO token (user_id, profile_id, token, oauth)
+	VALUES ($1, $2, $3, $4)`
+
+	QueryUpdateOauthToken = `UPDATE token 
+	SET token = $1 
+	WHERE user_id = $2`
+
+	QueryCreateProfileOAuth = `INSERT INTO profile (nickname, avatar) 
+	VALUES ($1, $2) 
+	RETURNING id`
+
 	QueryOauthByProfileId = `SELECT oauth, user_id 
 	FROM token 
 	WHERE profile_id = $1`
@@ -102,6 +131,9 @@ var (
 	MessageEdited          = false
 	Oauth                  = "vk"
 	OauthId                = "1"
+	Winner          uint64 = 1
+	Loser           uint64 = 2
+	Rating          int64  = 0
 
 	ConflictProfileEmail    = "conflict"
 	ConflictProfileNickname = "conflict"
@@ -110,7 +142,7 @@ var (
 	ForbiddenEmail                = "forbidden"
 	ForbiddenLimit         int64  = 101
 	ForbiddenMessageAuthor uint64 = 101
-	ForbiddenMessageLimit  int    = 101
+	ForbiddenMessageLimit         = 101
 	ForbiddenMessageId     uint64 = 101
 	ForbiddenMessageText          = "forbidden"
 
@@ -362,6 +394,18 @@ func (t *TxMock) Exec(sql string, arguments ...interface{}) (commandTag pgx.Comm
 		{
 			return "", nil
 		}
+	case QueryUpdateProfileRatingWinner, QueryUpdateProfileRatingLoser:
+		{
+			return "", nil
+		}
+	case QueryUpdateOauthToken:
+		{
+			return "", nil
+		}
+	case QueryCreateOauthToken:
+		{
+			return "", nil
+		}
 	}
 	return "", errors.New(DefaultError)
 }
@@ -454,6 +498,33 @@ func (t *TxMock) QueryRow(sql string, args ...interface{}) Row {
 	case QueryDeleteMessage:
 		{
 			return &RowMock{}
+		}
+	case QueryProfileRatingById:
+		{
+			row := RowMock{
+				values: []interface{}{
+					&Rating,
+				},
+			}
+			return &row
+		}
+	case QueryProfileIdOauth:
+		{
+			row := RowMock{
+				values: []interface{}{
+					&ProfileId,
+				},
+			}
+			return &row
+		}
+	case QueryCreateProfileOAuth:
+		{
+			row := RowMock{
+				values: []interface{}{
+					&ProfileId,
+				},
+			}
+			return &row
 		}
 	}
 	return nil

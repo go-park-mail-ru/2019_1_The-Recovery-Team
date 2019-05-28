@@ -296,5 +296,26 @@ func TestCount(t *testing.T) {
 	repo := repo()
 
 	_, err := repo.Count()
-	assert.Empty(t, err, "Return error on correct data")
+	assert.Equal(t, nil, err, "Return incorrect error value")
+}
+
+func TestUpdateRating(t *testing.T) {
+	repo := repo()
+
+	err := repo.UpdateRating(postgresql.Winner, postgresql.Loser)
+	assert.Equal(t, nil, err, "Return incorrect error value")
+}
+
+func TestPutProfileOauth(t *testing.T) {
+	repo := repo()
+
+	_, err := repo.PutProfileOauth("1", "")
+	assert.Equal(t, nil, err, "Return incorrect error value")
+}
+
+func TestCreateProfileOauth(t *testing.T) {
+	repo := repo()
+
+	_, err := repo.CreateProfileOauth(&profile.CreateOauth{})
+	assert.Equal(t, nil, err, "Return incorrect error value")
 }
