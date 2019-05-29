@@ -1,0 +1,45 @@
+language: go
+go:
+  - 1.12.x
+
+branches:
+  only:
+    - production
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+services:
+  - docker
+
+env:
+  - GO111MODULE=on DOCKER_COMPOSE_VERSION=1.24.0
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - docker-compose --version
+
+  - openssl aes-256-cbc -K $encrypted_5408d52059ff_key -iv $encrypted_5408d52059ff_iv
+    -in travis_id_rsa.enc -out ./travis_id_rsa -d
+  - eval "$(ssh-agent -s)"
+  - chmod 600 ./travis_id_rsa
+  - echo -e "Host $DEPLOYMENT_IP_ADDRESS\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+  - ssh-add ./travis_id_rsa
+
+before_script:
+  - docker-compose --f docker-compose.build.yml pull || true
+
+script:
+  - docker-compose --f docker-compose.build.yml build --pull
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker-compose --f docker-compose.build.yml push
+  - scp -i ./travis_id_rsa -r ./docker-compose.yml ./build sadislands@$DEPLOYMENT_IP_ADDRESS:/home/sadislands/b/
+  - ssh -i ./travis_id_rsa sadislands@$DEPLOYMENT_IP_ADDRESS '
+    cd /home/sadislands/b;
+    docker-compose down;
+    docker-compose up -d'

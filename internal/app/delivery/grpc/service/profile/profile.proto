@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+// protoc --go_out=plugins=grpc:. *.proto
+
+service Profile {
+    rpc Get(GetRequest) returns (GetResponse) {}
+    rpc Create(CreateRequest) returns (CreateResponse) {}
+    rpc Update(UpdateRequest) returns (Nothing) {}
+    rpc UpdateAvatar(UpdateAvatarRequest) returns (Nothing) {}
+    rpc UpdatePassword(UpdatePasswordRequest) returns (Nothing) {}
+    rpc GetByEmail(GetByEmailRequest) returns (GetResponse) {}
+    rpc GetByNickname(GetByNicknameRequest) returns (GetResponse) {}
+    rpc GetByEmailAndPassword(GetByEmailAndPasswordRequest) returns (GetResponse) {}
+    rpc List(ListRequest) returns (ListResponse) {}
+    rpc Count(Nothing) returns (CountResponse) {}
+    rpc UpdateRating(UpdateRatingRequest) returns (Nothing) {}
+    rpc PutProfileOauth(PutProfileOauthRequest) returns (ProfileId) {}
+    rpc CreateProfileOauth(CreateProfileOauthRequest) returns (ProfileId) {}
+}
+
+message GetRequest {
+    uint64 id = 1;
+}
+
+message ProfileId {
+    uint64 id = 1;
+}
+
+message GetResponse {
+    Info info = 1;
+    string email = 2;
+}
+
+message CreateRequest {
+    string email = 1;
+    string nickname = 2;
+    string password = 3;
+}
+
+message CreateResponse {
+    uint64 id = 1;
+    string email = 2;
+    string nickname = 3;
+    string avatar = 4;
+}
+
+message UpdateRequest {
+    uint64 id = 1;
+    string email = 2;
+    string nickname = 3;
+}
+
+message UpdateAvatarRequest {
+    uint64 id = 1;
+    string avatar = 2;
+}
+
+message UpdatePasswordRequest {
+    uint64 id = 1;
+    string password = 2;
+    string passwordOld = 3;
+}
+
+message GetByEmailRequest {
+    string email = 1;
+}
+
+message GetByNicknameRequest {
+    string nickname = 1;
+}
+
+message GetByEmailAndPasswordRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message ListRequest {
+    int64 limit = 1;
+    int64 offset = 2;
+}
+
+message ListResponse {
+    repeated Info list = 1;
+}
+
+message CountResponse {
+    int64 count = 1;
+}
+
+message Info {
+    uint64 id = 1;
+    string nickname = 2;
+    string avatar = 3;
+    string oauth = 4;
+    string oauthId = 5;
+    Score score = 6;
+}
+
+message Score {
+    int64 record = 1;
+    int64 win = 2;
+    int64 loss = 3;
+}
+
+message UpdateRatingRequest {
+    uint64 winner = 1;
+    uint64 loser = 2;
+}
+
+message Nothing {}
+
+message PutProfileOauthRequest {
+    string id = 1;
+    string token = 2;
+}
+
+message CreateProfileOauthRequest {
+    string userId = 1;
+    string token = 2;
+    string avatar = 3;
+    string oauth = 4;
+}

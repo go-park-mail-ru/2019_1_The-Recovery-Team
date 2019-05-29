@@ -1,0 +1,42 @@
+{
+  "server": {
+    "port": "8080"
+  },
+  "consul": {
+    "address": "localhost",
+    "port": 8500
+  },
+  "profile": {
+    "name": "profile-service",
+    "address": "localhost"
+  },
+  "session": {
+    "name": "session-service",
+    "address": "localhost"
+  },
+  "game": {
+    "port": 8081
+  },
+  "postgresql": {
+    "address": "0.0.0.0",
+    "port": 5432,
+    "migrations": {
+      "file": "build/schema/0_initial.sql"
+    }
+  },
+  "redis": {
+    "address": "0.0.0.0",
+    "port": 6379
+  },
+  "chat": {
+    "address": "0.0.0.0",
+    "port": 8082,
+    "database": {
+      "address": "0.0.0.0",
+      "port": 5432,
+      "migrations": {
+        "file": "build/schema/1_chat.sql"
+      }
+    }
+  }
+}

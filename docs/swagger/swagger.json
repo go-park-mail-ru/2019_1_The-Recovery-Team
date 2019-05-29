@@ -1,0 +1,585 @@
+{
+    "info": {
+        "contact": {},
+        "license": {}
+    },
+    "paths": {
+        "/avatars": {
+            "put": {
+                "description": "Update profile avatar",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Put avatar",
+                "operationId": "put-avatar",
+                "parameters": [
+                    {
+                        "description": "Avatar",
+                        "name": "avatar",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile avatar is updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.Avatar"
+                        }
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            }
+        },
+        "/profiles": {
+            "get": {
+                "description": "Check profile existence with email or nickname",
+                "summary": "Get profiles",
+                "operationId": "get-profiles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Profile email",
+                        "name": "email",
+                        "in": "path"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Profile nickname",
+                        "name": "nickname",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Profile found successfully"
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            },
+            "post": {
+                "description": "Create profile",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Post profile",
+                "operationId": "post-profile",
+                "parameters": [
+                    {
+                        "description": "Email, nickname, password",
+                        "name": "profile_info",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.Create"
+                        }
+                    },
+                    {
+                        "description": "Avatar",
+                        "name": "avatar",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Profile created successfully",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.Created"
+                        }
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "409": {
+                        "description": "Email or nickname already exists"
+                    },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/handler.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            }
+        },
+        "/profiles/{id}": {
+            "get": {
+                "description": "Get profile info (for profile owner returns info with email)",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get profile",
+                "operationId": "get-profile",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Profile ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile found successfully",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.Profile"
+                        }
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            },
+            "put": {
+                "description": "Update profile info",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Put profile",
+                "operationId": "put-profile",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Profile ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Email, nickname",
+                        "name": "profile_info",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.UpdateInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Profile info is updated successfully"
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/handler.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            }
+        },
+        "/profiles/{id}/password": {
+            "put": {
+                "description": "Update profile password",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Put profile password",
+                "operationId": "put-profile_password",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Profile ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Password",
+                        "name": "profile_info",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.UpdatePassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Profile password is updated successfully"
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/handler.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            }
+        },
+        "/scores": {
+            "get": {
+                "description": "Get score",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get score",
+                "operationId": "get-score",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit number",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "start index",
+                        "name": "start",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Scoreboard found successfully",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.Profiles"
+                        }
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "500": {
+                        "description": "Database error"
+                    }
+                }
+            }
+        },
+        "/sessions": {
+            "get": {
+                "description": "Get profile id of authorized client",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get session",
+                "operationId": "get-session",
+                "responses": {
+                    "200": {
+                        "description": "Profile ID found successfully",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.ID"
+                        }
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates client session",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Post session",
+                "operationId": "post-session",
+                "parameters": [
+                    {
+                        "description": "Email, password",
+                        "name": "profile_login",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.Login"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session is created successfully",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/profile.Profile"
+                        }
+                    },
+                    "400": {
+                        "description": "Incorrect request data"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "422": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/handler.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes client session",
+                "summary": "Delete session",
+                "operationId": "delete-session",
+                "responses": {
+                    "200": {
+                        "description": "Session is deleted successfully"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "404": {
+                        "description": "Session not found"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handler.Error": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "profile.Avatar": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                }
+            }
+        },
+        "profile.Create": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "profile.Created": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                }
+            }
+        },
+        "profile.ID": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "profile.Info": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "loss": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "record": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "win": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "profile.Login": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "profile.Profile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "upload/img/1.png"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "loss": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "record": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "win": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "profile.Profiles": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/profile.Info"
+                    }
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 50
+                }
+            }
+        },
+        "profile.UpdateInfo": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@mail.ru"
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "test"
+                }
+            }
+        },
+        "profile.UpdatePassword": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "password_old": {
+                    "type": "string",
+                    "example": "password_old"
+                }
+            }
+        }
+    }
+}

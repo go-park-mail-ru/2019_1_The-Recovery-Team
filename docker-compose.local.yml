@@ -1,0 +1,130 @@
+version: '3.1'
+services:
+
+  consul:
+    image: consul
+    ports:
+      - 8500:8500
+
+  api:
+    build:
+      context: .
+      dockerfile: build/docker/server/Dockerfile
+    command: /bin/sh -c "/app/api -client_id ${VK_CLIENT_ID:-recoveryteam} -client_secret ${VK_CLIENT_SECRET:-recoveryteam}"
+    container_name: api
+    links:
+      - profile
+      - session
+      - consul
+      - prometheus
+    volumes:
+      - ./upload/img:/app/upload/img
+    ports:
+      - 8080:8080
+
+  profile:
+    build:
+      context: .
+      dockerfile: build/docker/service/profile/Dockerfile
+    command: /bin/sh -c "/app/wait-for-it.sh db_profile:5432 && /app/profile -db_user ${POSTGRES_USER:-recoveryteam} -db_password ${POSTGRES_PASSWORD:-123456} -db_name ${POSTGRES_DB:-sadislands}"
+    container_name: profile
+    links:
+      - db_profile
+      - consul
+    ports:
+      - 50051:50051
+
+  session:
+    build:
+      context: .
+      dockerfile: build/docker/service/session/Dockerfile
+    command: /bin/sh -c "/app/wait-for-it.sh redis:6379 && /app/session"
+    container_name: session
+    links:
+      - redis
+      - consul
+    ports:
+      - 50052:50052
+
+  game:
+    build:
+      context: .
+      dockerfile: build/docker/service/game/Dockerfile
+    command: /bin/sh -c "/app/game"
+    container_name: game
+    links:
+      - session
+      - profile
+      - consul
+      - prometheus
+    ports:
+      - 8081:8081
+
+  chat:
+    build:
+      context: .
+      dockerfile: build/docker/service/chat/Dockerfile
+    command: /bin/sh -c "/app/wait-for-it.sh db_chat:5432 && /app/chat -db_user ${POSTGRES_USER:-recoveryteam} -db_password ${POSTGRES_PASSWORD:-123456} -db_name ${POSTGRES_DB_CHAT:-sadislandschat}"
+    container_name: chat
+    links:
+      - db_chat
+      - consul
+      - prometheus
+    ports:
+      - 8082:8082
+
+  db_profile:
+    image: postgres
+    container_name: db_profile
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-recoveryteam}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456}
+      POSTGRES_DB: ${POSTGRES_DB:-sadislands}
+    volumes:
+      - db_profile:/var/lib/postgresql/data
+
+  db_chat:
+    image: postgres
+    container_name: db_chat
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-recoveryteam}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456}
+      POSTGRES_DB: ${POSTGRES_DB_CHAT:-sadislandschat}
+    volumes:
+      - db_chat:/var/lib/postgresql/data
+
+  redis:
+    image: redis
+    container_name: redis
+
+  prometheus:
+    image: quay.io/prometheus/prometheus
+    container_name: prometheus
+    volumes:
+      - ./build/config:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - 9090:9090
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    links:
+      - prometheus
+    ports:
+      - 3000:3000
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  db_profile:
+  db_chat:
