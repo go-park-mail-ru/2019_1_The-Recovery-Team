@@ -300,15 +300,10 @@ func (r *Repo) UpdateRating(winner, loser uint64) error {
 
 	// Calculating rating increase
 	increase := DefaultRatingIncrease + (loserRating-winnerRating)/RatingStep
-	decrease := increase
 	if increase <= 0 {
 		increase = MinRatingIncrease
 	}
 
-	// Updating rating
-	if loserRating < decrease {
-		decrease = loserRating
-	}
 	if _, err := tx.Exec(QueryUpdateProfileRatingLoser, increase, loser); err != nil {
 		return err
 	}

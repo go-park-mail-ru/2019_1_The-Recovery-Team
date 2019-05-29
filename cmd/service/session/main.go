@@ -19,10 +19,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	serviceIdPrefix = "SSession"
-)
-
 func main() {
 	port := flag.Int("port", 50052, "service port")
 	dev := flag.Bool("local", false, "local config flag")

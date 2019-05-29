@@ -22,13 +22,6 @@ import (
 	"go.uber.org/zap"
 )
 
-func pgxClose(conn *pgx.Conn) {
-	err := conn.Close()
-	if err != nil {
-		log.Fatal("pgx connection close failed", err)
-	}
-}
-
 func main() {
 	dev := flag.Bool("local", false, "local config flag")
 	dbUser := flag.String("db_user", "recoveryteam", "database username")
