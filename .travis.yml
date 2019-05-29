@@ -4,7 +4,7 @@ go:
 
 branches:
   only:
-    - production
+    - master
 
 addons:
   apt:
@@ -42,4 +42,5 @@ script:
   - ssh -i ./travis_id_rsa sadislands@$DEPLOYMENT_IP_ADDRESS '
     cd /home/sadislands/b;
     docker-compose down;
+    docker image prune --all;
     docker-compose up -d'
