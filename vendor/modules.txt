@@ -193,9 +193,9 @@ golang.org/x/tools/go/internal/cgo
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.20.0
 google.golang.org/grpc
-google.golang.org/grpc/balancer/roundrobin
 google.golang.org/grpc/status
 google.golang.org/grpc/resolver
+google.golang.org/grpc/balancer/roundrobin
 google.golang.org/grpc/balancer
 google.golang.org/grpc/codes
 google.golang.org/grpc/connectivity
