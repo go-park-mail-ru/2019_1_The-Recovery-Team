@@ -88,6 +88,9 @@ const (
 	FROM token 
 	WHERE profile_id = $1`
 
+	QueryRatingPosition = `SELECT COUNT(*) FROM profile 
+	WHERE record >= $1`
+
 	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	EmailAlreadyExists       = "EmailAlreadyExists"
 	IncorrectProfilePassword = "IncorrectProfilePassword"
@@ -122,6 +125,10 @@ func (r *Repo) Get(id interface{}) (*profile.Profile, error) {
 
 	if email != nil {
 		profile.Email = *email
+	}
+
+	if err := r.conn.QueryRow(QueryRatingPosition, profile.Record).Scan(&profile.Position); err != nil {
+		return nil, err
 	}
 
 	err := r.conn.QueryRow(QueryOauthByProfileId, id).Scan(&profile.Oauth, &profile.OauthId)

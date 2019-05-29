@@ -19,9 +19,10 @@ type Info struct {
 
 //easyjson:json
 type Score struct {
-	Record int64 `json:"record" example:"1500"`
-	Win    int64 `json:"win" example:"100"`
-	Loss   int64 `json:"loss" example:"50"`
+	Position uint64 `json:"position" example:"1"`
+	Record   int64  `json:"record" example:"1500"`
+	Win      int64  `json:"win" example:"100"`
+	Loss     int64  `json:"loss" example:"50"`
 }
 
 //easyjson:json

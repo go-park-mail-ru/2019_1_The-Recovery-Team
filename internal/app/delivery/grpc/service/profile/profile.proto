@@ -97,9 +97,10 @@ message Info {
 }
 
 message Score {
-    int64 record = 1;
-    int64 win = 2;
-    int64 loss = 3;
+    uint64 position = 1;
+    int64 record = 2;
+    int64 win = 3;
+    int64 loss = 4;
 }
 
 message UpdateRatingRequest {

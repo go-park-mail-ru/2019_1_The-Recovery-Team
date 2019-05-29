@@ -192,9 +192,10 @@ func GetProfile(profileManager *profileService.ProfileClient) httprouter.Handle 
 				Oauth:    prof.Info.Oauth,
 				OauthId:  prof.Info.OauthId,
 				Score: profile.Score{
-					Record: prof.Info.Score.Record,
-					Win:    prof.Info.Score.Win,
-					Loss:   prof.Info.Score.Loss,
+					Position: prof.Info.Score.Position,
+					Record:   prof.Info.Score.Record,
+					Win:      prof.Info.Score.Win,
+					Loss:     prof.Info.Score.Loss,
 				},
 			},
 			Email: prof.Email,

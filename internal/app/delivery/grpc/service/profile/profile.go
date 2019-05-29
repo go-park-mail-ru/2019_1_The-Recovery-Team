@@ -31,9 +31,10 @@ func (s *Service) Get(ctx context.Context, in *GetRequest) (*GetResponse, error)
 			Oauth:    prof.Oauth,
 			OauthId:  prof.OauthId,
 			Score: &Score{
-				Record: prof.Score.Record,
-				Win:    prof.Score.Win,
-				Loss:   prof.Score.Loss,
+				Position: prof.Score.Position,
+				Record:   prof.Score.Record,
+				Win:      prof.Score.Win,
+				Loss:     prof.Score.Loss,
 			},
 		},
 		Email: prof.Email,

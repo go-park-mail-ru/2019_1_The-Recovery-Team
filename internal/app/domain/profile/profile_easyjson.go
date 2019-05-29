@@ -202,6 +202,8 @@ func easyjson521a5691DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 			continue
 		}
 		switch key {
+		case "position":
+			out.Position = uint64(in.Uint64())
 		case "record":
 			out.Record = int64(in.Int64())
 		case "win":
@@ -222,6 +224,16 @@ func easyjson521a5691EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 	out.RawByte('{')
 	first := true
 	_ = first
+	{
+		const prefix string = ",\"position\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint64(uint64(in.Position))
+	}
 	{
 		const prefix string = ",\"record\":"
 		if first {
@@ -519,6 +531,8 @@ func easyjson521a5691DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 			out.Oauth = string(in.String())
 		case "oauthId":
 			out.OauthId = string(in.String())
+		case "position":
+			out.Position = uint64(in.Uint64())
 		case "record":
 			out.Record = int64(in.Int64())
 		case "win":
@@ -598,6 +612,16 @@ func easyjson521a5691EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 			out.RawString(prefix)
 		}
 		out.String(string(in.OauthId))
+	}
+	{
+		const prefix string = ",\"position\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint64(uint64(in.Position))
 	}
 	{
 		const prefix string = ",\"record\":"
@@ -1107,6 +1131,8 @@ func easyjson521a5691DecodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 			out.Oauth = string(in.String())
 		case "oauthId":
 			out.OauthId = string(in.String())
+		case "position":
+			out.Position = uint64(in.Uint64())
 		case "record":
 			out.Record = int64(in.Int64())
 		case "win":
@@ -1176,6 +1202,16 @@ func easyjson521a5691EncodeGithubComGoParkMailRu20191TheRecoveryTeamInternalAppD
 			out.RawString(prefix)
 		}
 		out.String(string(in.OauthId))
+	}
+	{
+		const prefix string = ",\"position\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint64(uint64(in.Position))
 	}
 	{
 		const prefix string = ",\"record\":"
