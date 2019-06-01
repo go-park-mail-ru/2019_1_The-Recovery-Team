@@ -96,7 +96,7 @@ func initField() *game.Field {
 			cell := game.Cell{
 				Row:    i,
 				Col:    j,
-				Type:   types[i+j*FieldWidth],
+				Type:   types[j+i*FieldWidth],
 				HasBox: false,
 			}
 
