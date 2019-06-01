@@ -126,9 +126,10 @@ func PostSession(profileManager *profileService.ProfileClient, sessionManager *s
 				Nickname: prof.Info.Nickname,
 				Avatar:   prof.Info.Avatar,
 				Score: profile.Score{
-					Record: prof.Info.Score.Record,
-					Win:    prof.Info.Score.Win,
-					Loss:   prof.Info.Score.Loss,
+					Record:   prof.Info.Score.Record,
+					Win:      prof.Info.Score.Win,
+					Loss:     prof.Info.Score.Loss,
+					Position: prof.Info.Score.Position,
 				},
 			},
 			Email: prof.Email,

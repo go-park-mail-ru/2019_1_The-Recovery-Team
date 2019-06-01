@@ -6,8 +6,6 @@ import (
 
 	"google.golang.org/grpc/status"
 
-	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/domain/game"
-
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/profile"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/grpc/service/session"
 	"github.com/go-park-mail-ru/2019_1_The-Recovery-Team/internal/app/delivery/http/rest/api/game/handler"
@@ -20,19 +18,6 @@ import (
 
 type Api struct {
 	Router *httprouter.Router
-}
-
-func startUpdatingRating(profileManager *profile.ProfileClient, in chan *game.UpdateRating) {
-	for update := range in {
-		r := &profile.UpdateRatingRequest{
-			Winner: update.Winner,
-			Loser:  update.Loser,
-		}
-		_, err := (*profileManager).UpdateRating(context.Background(), r)
-		if err != nil {
-
-		}
-	}
 }
 
 func NewApi(

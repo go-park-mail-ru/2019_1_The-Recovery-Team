@@ -178,6 +178,10 @@ func (u *User) listen() {
 			continue
 		}
 
+		if !u.Room.EngineStarted.Load() {
+			continue
+		}
+
 		u.Room.Actions <- action
 	}
 }

@@ -20,17 +20,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	serviceIdPrefix = "SProfile"
-)
-
-func pgxClose(conn *pgx.Conn) {
-	err := conn.Close()
-	if err != nil {
-		log.Fatal("pgx connection close failed", err)
-	}
-}
-
 func main() {
 	port := flag.Int("port", 50051, "service port")
 	dev := flag.Bool("local", false, "local config flag")

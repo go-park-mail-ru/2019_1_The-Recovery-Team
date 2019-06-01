@@ -111,6 +111,9 @@ const (
 	FROM token 
 	WHERE profile_id = $1`
 
+	QueryRatingPosition = `SELECT COUNT(*) FROM profile 
+	WHERE record >= $1`
+
 	ProfileEmailKey    = "profile_email_key"
 	ProfileNicknameKey = "profile_nickname_key"
 )
@@ -134,6 +137,7 @@ var (
 	Winner          uint64 = 1
 	Loser           uint64 = 2
 	Rating          int64  = 0
+	Position        uint64 = 1
 
 	ConflictProfileEmail    = "conflict"
 	ConflictProfileNickname = "conflict"
@@ -215,6 +219,15 @@ func (c *ConnMock) Query(sql string, args ...interface{}) (Rows, error) {
 
 func (c *ConnMock) QueryRow(sql string, args ...interface{}) Row {
 	switch sql {
+	case QueryRatingPosition:
+		{
+			row := RowMock{
+				values: []interface{}{
+					&Position,
+				},
+			}
+			return &row
+		}
 	case QueryProfileById:
 		{
 			if args[0].(uint64) == ForbiddenProfileId {

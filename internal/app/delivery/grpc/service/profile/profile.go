@@ -31,9 +31,10 @@ func (s *Service) Get(ctx context.Context, in *GetRequest) (*GetResponse, error)
 			Oauth:    prof.Oauth,
 			OauthId:  prof.OauthId,
 			Score: &Score{
-				Record: prof.Score.Record,
-				Win:    prof.Score.Win,
-				Loss:   prof.Score.Loss,
+				Position: prof.Score.Position,
+				Record:   prof.Score.Record,
+				Win:      prof.Score.Win,
+				Loss:     prof.Score.Loss,
 			},
 		},
 		Email: prof.Email,
@@ -57,6 +58,12 @@ func (s *Service) Create(ctx context.Context, in *CreateRequest) (*CreateRespons
 		Email:    created.Email,
 		Nickname: created.Nickname,
 		Avatar:   created.Avatar,
+		Score: &Score{
+			Position: created.Score.Position,
+			Record:   created.Score.Record,
+			Win:      created.Score.Win,
+			Loss:     created.Score.Loss,
+		},
 	}
 	return r, nil
 }
@@ -144,9 +151,10 @@ func (s *Service) GetByEmailAndPassword(ctx context.Context, in *GetByEmailAndPa
 			Nickname: prof.Nickname,
 			Avatar:   prof.Avatar,
 			Score: &Score{
-				Record: prof.Score.Record,
-				Win:    prof.Score.Win,
-				Loss:   prof.Score.Loss,
+				Record:   prof.Score.Record,
+				Win:      prof.Score.Win,
+				Loss:     prof.Score.Loss,
+				Position: prof.Score.Position,
 			},
 		},
 		Email: prof.Email,
