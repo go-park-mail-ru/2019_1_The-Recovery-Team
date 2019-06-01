@@ -196,6 +196,11 @@ func (e *Engine) setItemTime(action *game.Action) {
 func (e *Engine) setItemStop(action *game.Action) {
 	payload := action.Payload.(*game.SetItemPayload)
 	delete(e.State.ActiveItems, payload.PlayerId)
+
+	for key, value := range e.State.ActiveItems {
+		e.StateDiff.ActiveItems[key] = value
+	}
+
 	delete(e.StateDiff.ActiveItems, payload.PlayerId)
 
 	// Check player death
@@ -432,12 +437,6 @@ func (e *Engine) initStateDiff() {
 		Players:     make(map[string]game.Player),
 		ActiveItems: make(map[uint64]game.Item),
 	}
-
-	if e.State != nil {
-		for key, value := range e.State.ActiveItems {
-			e.StateDiff.ActiveItems[key] = value
-		}
-	}
 }
 
 // copyState creates copy of current game state
@@ -633,6 +632,10 @@ func (e *Engine) updateState(actions *[]*game.Action) {
 	}
 
 	if forceStateSend || !e.StateDiff.Empty() {
+		for key, value := range e.State.ActiveItems {
+			e.StateDiff.ActiveItems[key] = value
+		}
+
 		go e.Transport.SendOut(&game.Action{
 			Type:    game.SetStateDiff,
 			Payload: e.StateDiff,
