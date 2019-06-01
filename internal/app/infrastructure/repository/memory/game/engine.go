@@ -88,6 +88,7 @@ func initField() *game.Field {
 
 	// Player position shouldn't be water
 	types[0] = Sand
+	types[FieldWidth-1] = Sand
 
 	// Initialize game field
 	for i := 0; i < FieldHeight; i++ {
@@ -295,12 +296,13 @@ func (e *Engine) initPlayers(action *game.Action) {
 
 	payload := action.Payload.(*game.InitPlayersPayload)
 
-	for _, id := range payload.PlayersId {
+	for i, id := range payload.PlayersId {
 		idStr := strconv.FormatUint(id, 10)
 
 		player := game.Player{
 			Id:    id,
 			Items: make(map[string]uint64),
+			X:     (i % 2) * (FieldWidth*CellSize - 1),
 		}
 		player.Items[Lifebuoy] = 3
 		player.Items[Bomb] = 0
