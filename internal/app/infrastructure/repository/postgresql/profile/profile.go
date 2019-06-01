@@ -17,7 +17,7 @@ const (
 
 	QueryCreateProfile = `INSERT INTO profile (email, nickname, password) 
 	VALUES ($1, $2, $3) 
-	RETURNING id, email, nickname`
+	RETURNING id, email, nickname, record`
 
 	QueryUpdateProfile = `UPDATE profile
 	SET email = (CASE WHEN $1 = '' THEN email ELSE $1 END),
@@ -88,8 +88,8 @@ const (
 	FROM token 
 	WHERE profile_id = $1`
 
-	QueryRatingPosition = `SELECT COUNT(*) FROM profile 
-	WHERE record >= $1`
+	QueryRatingPosition = `SELECT COUNT(*) + 1 FROM profile 
+	WHERE record > $1`
 
 	NicknameAlreadyExists    = "NicknameAlreadyExists"
 	EmailAlreadyExists       = "EmailAlreadyExists"
@@ -116,27 +116,27 @@ type Repo struct {
 
 // Get gets profile data by id
 func (r *Repo) Get(id interface{}) (*profile.Profile, error) {
-	profile := &profile.Profile{}
+	prof := &profile.Profile{}
 	var email *string
-	if err := r.conn.QueryRow(QueryProfileById, id).Scan(&profile.ID, &profile.Nickname, &email,
-		&profile.Avatar, &profile.Record, &profile.Win, &profile.Loss); err != nil {
+	if err := r.conn.QueryRow(QueryProfileById, id).Scan(&prof.ID, &prof.Nickname, &email,
+		&prof.Avatar, &prof.Record, &prof.Win, &prof.Loss); err != nil {
 		return nil, err
 	}
 
 	if email != nil {
-		profile.Email = *email
+		prof.Email = *email
 	}
 
-	if err := r.conn.QueryRow(QueryRatingPosition, profile.Record).Scan(&profile.Position); err != nil {
+	if err := r.conn.QueryRow(QueryRatingPosition, prof.Record).Scan(&prof.Position); err != nil {
 		return nil, err
 	}
 
-	err := r.conn.QueryRow(QueryOauthByProfileId, id).Scan(&profile.Oauth, &profile.OauthId)
+	err := r.conn.QueryRow(QueryOauthByProfileId, id).Scan(&prof.Oauth, &prof.OauthId)
 	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
 
-	return profile, nil
+	return prof, nil
 }
 
 // Create creates new profile
@@ -149,7 +149,7 @@ func (r *Repo) Create(data *profile.Create) (*profile.Created, error) {
 
 	created := &profile.Created{}
 	if err = tx.QueryRow(QueryCreateProfile, data.Email, data.Nickname, data.Password).
-		Scan(&created.ID, &created.Email, &created.Nickname); err != nil {
+		Scan(&created.ID, &created.Email, &created.Nickname, &created.Record); err != nil {
 		if pgErr, ok := err.(pgx.PgError); ok {
 			switch pgErr.ConstraintName {
 			case ProfileEmailKey:
@@ -162,6 +162,10 @@ func (r *Repo) Create(data *profile.Create) (*profile.Created, error) {
 				}
 			}
 		}
+		return nil, err
+	}
+
+	if err := tx.QueryRow(QueryRatingPosition, created.Record).Scan(&created.Position); err != nil {
 		return nil, err
 	}
 
@@ -254,6 +258,10 @@ func (r *Repo) GetByEmailAndPassword(data *profile.Login) (*profile.Profile, err
 		return nil, pgx.ErrNoRows
 	}
 
+	if err := r.conn.QueryRow(QueryRatingPosition, received.Record).Scan(&received.Position); err != nil {
+		return nil, err
+	}
+
 	return received, nil
 }
 
@@ -304,7 +312,12 @@ func (r *Repo) UpdateRating(winner, loser uint64) error {
 		increase = MinRatingIncrease
 	}
 
-	if _, err := tx.Exec(QueryUpdateProfileRatingLoser, increase, loser); err != nil {
+	decrease := increase
+	if loserRating-increase < 0 {
+		decrease = 0
+	}
+
+	if _, err := tx.Exec(QueryUpdateProfileRatingLoser, decrease, loser); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(QueryUpdateProfileRatingWinner, increase, winner); err != nil {

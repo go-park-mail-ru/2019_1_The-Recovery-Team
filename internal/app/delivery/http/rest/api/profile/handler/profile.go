@@ -471,6 +471,12 @@ func PostProfile(profileManager *profileService.ProfileClient, sessionManager *s
 			Email:    created.Email,
 			Nickname: created.Nickname,
 			Avatar:   created.Avatar,
+			Score: profile.Score{
+				Position: created.Score.Position,
+				Record:   created.Score.Record,
+				Win:      created.Score.Win,
+				Loss:     created.Score.Loss,
+			},
 		})
 	}
 }

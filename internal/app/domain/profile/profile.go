@@ -73,6 +73,7 @@ type Created struct {
 	Email    string `json:"email,omitempty" example:"test@mail.ru" valid:"required~Email is required,email~Incorrect email"`
 	Nickname string `json:"nickname,omitempty" example:"test" valid:"required~Nickname is required,stringlength(4|20)~Incorrect nickname length(4-20)"`
 	Avatar   string `json:"avatar,omitempty" example:"upload/img/1.png"`
+	Score
 }
 
 //easyjson:json

@@ -42,6 +42,7 @@ message CreateResponse {
     string email = 2;
     string nickname = 3;
     string avatar = 4;
+    Score score = 5;
 }
 
 message UpdateRequest {
